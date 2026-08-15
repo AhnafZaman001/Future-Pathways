@@ -43,7 +43,93 @@
 }
 .btn-secondary:hover{ background: var(--surface-2); border-color: var(--ink-soft); }
 
-/* --- progress --- */
+/* --- layout: form + manifest rail --- */
+.fp-layout{
+  display:grid;
+  grid-template-columns: 1fr 260px;
+  gap: 28px;
+  align-items:start;
+}
+@media (max-width:860px){
+  .fp-layout{ grid-template-columns: 1fr; }
+  .fp-manifest-rail{ order:-1; }
+}
+
+/* --- manifest: the signature element ---
+   A live, ticking readout of what's been captured so far.
+   Every line is real state, not decoration. */
+.fp-manifest-rail{ position: sticky; top: 20px; }
+.fp-manifest{
+  background: var(--surface);
+  border:1px solid var(--line);
+  border-radius: var(--radius);
+  overflow:hidden;
+}
+.fp-manifest-head{
+  font-family: var(--font-mono);
+  font-size:.7rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+  color: var(--ink-faint);
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.fp-manifest-body{ padding: 6px 0; }
+.fp-manifest-line{
+  display:flex; align-items:baseline; gap:10px;
+  padding: 8px 16px;
+  font-family: var(--font-mono);
+  font-size:.74rem;
+  letter-spacing:.02em;
+  border-left: 2px solid transparent;
+}
+.fp-manifest-line .fp-m-glyph{ flex-shrink:0; width:12px; color: var(--ink-faint); }
+.fp-manifest-line .fp-m-label{ color: var(--ink-faint); flex-shrink:0; min-width:76px; text-transform:uppercase; }
+.fp-manifest-line .fp-m-value{ color: var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.fp-manifest-line.is-done{ border-left-color: var(--violet); }
+.fp-manifest-line.is-done .fp-m-glyph{ color: var(--violet); }
+.fp-manifest-line.is-done .fp-m-label{ color: var(--ink-soft); }
+.fp-manifest-line.is-done .fp-m-value{ color: var(--ink); }
+.fp-manifest-line.is-current{ background: var(--violet-dim); border-left-color: var(--amber); }
+.fp-manifest-line.is-current .fp-m-glyph{ color: var(--amber); }
+.fp-manifest-line.is-current .fp-m-label{ color: var(--ink); }
+.fp-manifest-footer{
+  font-family: var(--font-mono);
+  font-size:.72rem; letter-spacing:.08em; color: var(--ink-faint);
+  padding: 10px 16px; border-top:1px solid var(--line);
+  display:flex; justify-content:space-between;
+  margin: 0;
+}
+
+/* --- review step: the finale. The small rail disappears and
+   the review content itself takes on the manifest's ledger
+   language — mono labels, resolved values, one confident action. --- */
+body.is-review-step .fp-layout{ grid-template-columns: 1fr; max-width: 640px; margin: 0 auto; }
+body.is-review-step .fp-manifest-rail{ display:none; }
+body.is-review-step .fp-card{ border-color: var(--violet); box-shadow: 0 0 0 1px rgba(110,118,240,.1), 0 8px 32px rgba(110,118,240,.08); }
+body.is-review-step .fp-step-title{ font-family: var(--font-mono); text-transform:uppercase; letter-spacing:.06em; font-size:1.1rem; color: var(--violet); }
+body.is-review-step .fp-review-section h4{ font-family: var(--font-mono); letter-spacing:.08em; }
+body.is-review-step .fp-review-row{ font-family: var(--font-mono); font-size:.85rem; }
+body.is-review-step .fp-review-row span:first-child{ text-transform:uppercase; font-size:.72rem; letter-spacing:.06em; }
+body.is-review-step .fp-actions{ margin-top:28px; padding-top:20px; border-top:1px solid var(--line); }
+
+.fp-transmit-row{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  margin-top: 20px;
+}
+.fp-transmit-stamp{
+  font-family: var(--font-mono); font-size:.72rem; color: var(--ink-faint); letter-spacing:.04em;
+}
+.btn-transmit{
+  font-family: var(--font-mono); font-weight:700; font-size:.85rem; letter-spacing:.04em; text-transform:uppercase;
+  background: var(--violet); color:#fff; border:none; border-radius: var(--radius-sm);
+  padding: 14px 26px; cursor:pointer; transition: background .15s ease, transform .1s ease;
+  box-shadow: 0 1px 0 rgba(255,255,255,.14) inset, 0 6px 20px rgba(110,118,240,.3);
+}
+.btn-transmit:hover{ background:#7B82F3; }
+.btn-transmit:active{ transform: translateY(1px); }
+.btn-transmit:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
+
+/* --- legacy simple progress bar: kept for pages that don't
+   opt into the manifest rail, harmless if unused --- */
 .fp-progress{ display:flex; gap:6px; margin-bottom:24px; }
 .fp-progress-step{
   flex:1; height:4px; border-radius:3px; background: var(--surface-2);
@@ -100,6 +186,28 @@
 }
 .fp-status-banner.submitted{ background: var(--green-dim); color: var(--green); border-color: rgba(79,195,138,.25); }
 .fp-status-banner.draft{ background: var(--amber-dim); color: var(--amber); border-color: rgba(232,163,61,.25); }
+
+/* --- admin: command-center stats strip --- */
+.fp-stats-strip{
+  display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap:1px; background: var(--line);
+  border:1px solid var(--line); border-radius: var(--radius);
+  overflow:hidden; margin-bottom:20px;
+}
+.fp-stat{
+  background: var(--surface); padding: 16px 18px;
+}
+.fp-stat-value{
+  font-family: var(--font-mono); font-size:1.6rem; font-weight:700; color: var(--ink);
+  line-height:1;
+}
+.fp-stat-label{
+  font-family: var(--font-mono); font-size:.68rem; letter-spacing:.08em; text-transform:uppercase;
+  color: var(--ink-faint); margin-top:6px;
+}
+.fp-stat.accent-violet .fp-stat-value{ color: var(--violet); }
+.fp-stat.accent-green .fp-stat-value{ color: var(--green); }
+.fp-stat.accent-amber .fp-stat-value{ color: var(--amber); }
 
 /* --- admin table --- */
 .fp-admin-table{ width:100%; border-collapse:collapse; font-size:.88rem; }

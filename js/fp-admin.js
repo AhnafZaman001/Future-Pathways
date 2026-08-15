@@ -45,8 +45,28 @@
       .then(function(r){
         if(r.error){ console.error(r.error); return; }
         submissions = r.data || [];
+        renderStatsStrip();
         renderTable();
       });
+  }
+
+  function renderStatsStrip(){
+    var el = document.getElementById("fp-stats-strip");
+    if(!el) return;
+    var submitted = submissions.filter(function(s){ return s.status === "submitted"; }).length;
+    var draft = submissions.filter(function(s){ return s.status === "draft"; }).length;
+    var engineering = submissions.filter(function(s){ return s.pathway === "engineering"; }).length;
+    var medical = submissions.filter(function(s){ return s.pathway === "medical"; }).length;
+    var stats = [
+      ["TOTAL", submissions.length, ""],
+      ["SUBMITTED", submitted, "accent-green"],
+      ["DRAFT", draft, "accent-amber"],
+      ["ENGINEERING", engineering, "accent-violet"],
+      ["MEDICAL", medical, "accent-violet"]
+    ];
+    el.innerHTML = stats.map(function(s){
+      return '<div class="fp-stat ' + s[2] + '"><div class="fp-stat-value">' + s[1] + '</div><div class="fp-stat-label">' + s[0] + '</div></div>';
+    }).join("");
   }
 
   function renderTable(){

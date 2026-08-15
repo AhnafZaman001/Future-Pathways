@@ -49,15 +49,24 @@
 
     <div id="fp-status-banner"></div>
 
-    <div class="fp-progress" id="fp-progress"></div>
-    <p class="fp-progress-label" id="fp-progress-label"></p>
-
-    <div class="fp-card">
-      <div id="fp-step-container"><!-- rendered by js/fp-app.js --></div>
-      <div class="fp-actions">
-        <button type="button" class="btn-secondary" id="fp-back">Back</button>
-        <button type="button" class="btn-primary" id="fp-next">Save &amp; Continue</button>
+    <div class="fp-layout">
+      <div class="fp-main">
+        <div class="fp-card">
+          <div id="fp-step-container"><!-- rendered by js/fp-app.js --></div>
+          <div class="fp-actions">
+            <button type="button" class="btn-secondary" id="fp-back">Back</button>
+            <button type="button" class="btn-primary" id="fp-next">Save &amp; Continue</button>
+          </div>
+        </div>
       </div>
+
+      <aside class="fp-manifest-rail">
+        <div class="fp-manifest">
+          <div class="fp-manifest-head">Manifest</div>
+          <div class="fp-manifest-body" id="fp-progress"><!-- rendered by js/fp-app.js --></div>
+          <p class="fp-manifest-footer" id="fp-progress-label"></p>
+        </div>
+      </aside>
     </div>
   </main>
 

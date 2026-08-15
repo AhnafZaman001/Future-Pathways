@@ -180,6 +180,7 @@
         if(!r.data) return;
         state.futurePathwayId = r.data.id;
         state.status = r.data.status;
+        state.submittedAt = r.data.submitted_at ? new Date(r.data.submitted_at) : null;
         state.pathway = r.data.pathway;
         state.additionalInfo = r.data.additional_information || "";
         state.instituteGroups = emptyGroups(groupCount());
@@ -244,18 +245,67 @@
 
     document.getElementById("fp-back").style.visibility = state.stepIndex === 0 ? "hidden" : "visible";
     var nextBtn = document.getElementById("fp-next");
-    nextBtn.textContent = step === "review" ? (state.status === "submitted" ? "Already submitted" : "Submit") : "Save & Continue";
+    nextBtn.textContent = step === "review" ? (state.status === "submitted" ? "Already submitted" : "Transmit application") : "Save & Continue";
     nextBtn.disabled = state.status === "submitted";
+    nextBtn.classList.toggle("btn-transmit", step === "review");
+    nextBtn.classList.toggle("btn-primary", step !== "review");
+  }
+
+  var MANIFEST_LABELS = {
+    profile: "STUDENT", pathway: "PATHWAY", careers: "CAREERS",
+    institutes: "INSTITUTES", faculties: "FACULTIES", additional: "NOTES", review: "REVIEW"
+  };
+
+  // Real state, not step position — a line ticks the moment the
+  // data exists, whether or not the student has reached that step yet.
+  function manifestValue(stepKey){
+    if(stepKey === "profile"){
+      var p = state.profile;
+      var required = ["student_name","father_name","contact","discipline","roll_number","matric_marks","first_year_marks"];
+      var filled = required.filter(function(k){ return p[k] || p[k] === 0; }).length;
+      if(filled === 0) return null;
+      return filled === required.length ? "COMPLETE" : (filled + "/" + required.length + " FILLED");
+    }
+    if(stepKey === "pathway"){
+      return state.pathway ? state.pathway.toUpperCase() : null;
+    }
+    if(stepKey === "careers"){
+      var n = state.careerIds.length + (state.customCareer ? 1 : 0);
+      return n > 0 ? (n + " SELECTED") : null;
+    }
+    if(stepKey === "institutes" || stepKey === "faculties"){
+      var groups = stepKey === "institutes" ? state.instituteGroups : state.facultyGroups;
+      if(!groups || !groups.length) return null;
+      var filled2 = 0, total = 0;
+      groups.forEach(function(g){ g.forEach(function(v){ total++; if(v) filled2++; }); });
+      return filled2 > 0 ? (filled2 + "/" + total + " RANKED") : null;
+    }
+    if(stepKey === "additional"){
+      return state.additionalInfo && state.additionalInfo.trim() ? "ADDED" : null;
+    }
+    if(stepKey === "review"){
+      return state.status === "submitted" ? "SUBMITTED" : null;
+    }
+    return null;
   }
 
   function renderProgress(){
     var wrap = document.getElementById("fp-progress");
     wrap.innerHTML = STEPS.map(function(s, i){
-      var cls = i < state.stepIndex ? "is-done" : (i === state.stepIndex ? "is-current" : "");
-      return '<div class="fp-progress-step ' + cls + '"></div>';
+      var value = manifestValue(s);
+      var isCurrent = i === state.stepIndex;
+      var cls = value ? "is-done" : (isCurrent ? "is-current" : "");
+      var glyph = value ? "\u2713" : (isCurrent ? "\u25B8" : "\u2013");
+      return '<div class="fp-manifest-line ' + cls + '">' +
+        '<span class="fp-m-glyph">' + glyph + '</span>' +
+        '<span class="fp-m-label">' + MANIFEST_LABELS[s] + '</span>' +
+        '<span class="fp-m-value">' + esc(value || "") + '</span>' +
+      '</div>';
     }).join("");
-    document.getElementById("fp-progress-label").textContent =
-      "Step " + (state.stepIndex+1) + " of " + STEPS.length + " — " + STEP_LABELS[STEPS[state.stepIndex]];
+    document.getElementById("fp-progress-label").innerHTML =
+      "<span>STEP " + String(state.stepIndex+1).padStart(2,"0") + " / " + String(STEPS.length).padStart(2,"0") + "</span>" +
+      "<span>" + esc(STEP_LABELS[STEPS[state.stepIndex]].toUpperCase()) + "</span>";
+    document.body.classList.toggle("is-review-step", STEPS[state.stepIndex] === "review");
   }
 
   function renderStatusBanner(){
@@ -367,7 +417,15 @@
       var instHtml = groupsReviewHtml(state.instituteGroups, state.instituteCustom, state.allInstitutes.filter(function(i){ return i.pathway===state.pathway; }));
       var facHtml = groupsReviewHtml(state.facultyGroups, state.facultyCustom, state.allFaculties.filter(function(f){ return f.pathway===state.pathway; }));
 
+      var stampHtml = "";
+      if(state.status === "submitted"){
+        var stampDate = state.submittedAt || new Date();
+        stampHtml = '<div class="fp-transmit-stamp" style="margin-bottom:20px;">' +
+          '&#10003; TRANSMITTED &mdash; ' + esc(stampDate.toISOString().replace("T"," ").slice(0,19)) + ' UTC</div>';
+      }
+
       return '<h2 class="fp-step-title">Review</h2>' +
+        stampHtml +
         '<p class="fp-step-desc">Check everything before submitting. You cannot edit after you submit.</p>' +
         reviewSection("Student information", [
           ["Name", p.student_name], ["Father's name", p.father_name], ["Father's profession", p.father_profession],
@@ -599,11 +657,13 @@
   }
 
   function submit(){
+    var stamp = new Date();
     return FP.client.from("future_pathways").update({
-      status: "submitted", submitted_at: new Date().toISOString()
+      status: "submitted", submitted_at: stamp.toISOString()
     }).eq("id", state.futurePathwayId).then(function(r){
       if(r.error) throw r.error;
       state.status = "submitted";
+      state.submittedAt = stamp;
     });
   }
 

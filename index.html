@@ -102,6 +102,7 @@
         <span class="eyebrow">02 &mdash; Suggested preferences</span>
         <h2 id="results-heading">Preferences for <span id="resultsName">you</span></h2>
         <div class="score-strip" id="scoreStrip"></div>
+        <p class="save-status" id="saveStatus" aria-live="polite"></p>
       </div>
 
       <div class="results-list" id="resultsList"></div>
@@ -119,9 +120,11 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/data.js"></script>
   <script src="js/calculations.js"></script>
   <script src="js/suggestions.js"></script>
+  <script src="js/supabase-client.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
 </body>

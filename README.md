@@ -18,18 +18,38 @@ no `npm install`, nothing to build.
 
 ```
 Future-Pathways/
-├── index.html            — page shell, form markup
+├── index.html              — page shell, form markup
 ├── styles/
-│   ├── base.css           — tokens: colors, type, resets
-│   ├── layout.css         — structure/grid only
-│   └── components.css    — inputs, buttons, cards, badges, gauge
-└── js/
-    ├── data.js            — fields, cities, merit weights, UNIVERSITIES dataset
-    ├── calculations.js   — pure functions: percentages, provisional merit score
-    ├── suggestions.js    — matches/ranks universities against a student profile
-    ├── ui.js              — DOM rendering
-    └── app.js            — form event wiring, glues the modules together
+│   ├── base.css             — tokens: colors, type, resets
+│   ├── layout.css           — structure/grid only
+│   └── components.css      — inputs, buttons, cards, badges, gauge
+├── js/
+│   ├── data.js              — fields, cities, merit weights, UNIVERSITIES dataset
+│   ├── calculations.js     — pure functions: percentages, provisional merit score
+│   ├── suggestions.js      — matches/ranks universities against a student profile
+│   ├── supabase-client.js — only file that talks to Supabase (insert-only)
+│   ├── ui.js                — DOM rendering
+│   └── app.js              — form event wiring, glues the modules together
+└── supabase/
+    └── schema.sql          — run once in the Supabase SQL Editor
 ```
+
+## Database (Supabase)
+
+Every submission is written to a `student_submissions` table in Supabase
+instead of staying only in the browser.
+
+**One-time setup:** open your Supabase project → SQL Editor → paste and
+run `supabase/schema.sql`. It creates the table and locks it down with
+Row Level Security so the public key used in `js/supabase-client.js` can
+only **insert** rows — it can't read, edit, or delete anything. View
+collected submissions from the Supabase dashboard's Table Editor, which
+has full access regardless of RLS.
+
+`js/supabase-client.js` holds the project URL and the **publishable
+(anon) key** — this key is meant to be public/client-side, unlike the
+service role key or database password, which should never go in this
+repo or in browser code.
 
 ## How it works
 

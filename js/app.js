@@ -11,6 +11,7 @@
   const resultsName      = document.getElementById("resultsName");
   const scoreStrip        = document.getElementById("scoreStrip");
   const resultsList      = document.getElementById("resultsList");
+  const saveStatus        = document.getElementById("saveStatus");
 
   function init(){
     Counsellor.UI.populateSelect(fieldSelect, Counsellor.FIELDS);
@@ -53,11 +54,46 @@
 
     resultsSection.hidden = false;
     resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    saveToDatabase(data, matricPct, fscPct, provisional);
+  }
+
+  function saveToDatabase(data, matricPct, fscPct, provisional){
+    setSaveStatus("pending", "Saving your record\u2026");
+
+    Counsellor.saveSubmission({
+      student_name:        data.studentName,
+      matric_obtained:      data.matricObtained,
+      matric_total:        data.matricTotal,
+      fsc_obtained:        data.fscObtained,
+      fsc_total:            data.fscTotal,
+      field_of_study:      data.fieldOfStudy,
+      area:                data.area,
+      matric_pct:          Math.round(matricPct * 10) / 10,
+      fsc_pct:              Math.round(fscPct * 10) / 10,
+      provisional_score:    provisional.scoreSoFar,
+      provisional_ceiling: provisional.ceiling
+    }).then(function(result){
+      if(result && result.error){
+        setSaveStatus("error", "Couldn't save to the database: " + result.error.message);
+      } else {
+        setSaveStatus("ok", "Saved to the database.");
+      }
+    }).catch(function(err){
+      setSaveStatus("error", "Couldn't save to the database: " + err.message);
+    });
+  }
+
+  function setSaveStatus(kind, message){
+    saveStatus.className = "save-status save-status--" + kind;
+    saveStatus.textContent = message;
   }
 
   function handleReset(){
     resultsSection.hidden = true;
     Counsellor.UI.clearFieldErrors(form);
+    saveStatus.textContent = "";
+    saveStatus.className = "save-status";
   }
 
   function collectFormData(){

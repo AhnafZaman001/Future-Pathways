@@ -159,6 +159,16 @@ select{ appearance: none; background: #fff
   color: var(--ink);
 }
 
+/* --- save status (Supabase write) --- */
+.save-status{
+  font-family: var(--font-mono);
+  font-size: .76rem;
+  margin: 10px 0 0;
+}
+.save-status--pending{ color: var(--ink-soft); }
+.save-status--ok{ color: var(--green); }
+.save-status--error{ color: var(--red); }
+
 /* --- empty / no-results state --- */
 .empty-state{
   border: 1px dashed var(--line-strong);

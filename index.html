@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rah &mdash; University Counsellor</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+
+  <div class="bearing-line" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <span class="brand-mark">&#9670;</span>
+        <span class="brand-name">Rah</span>
+        <span class="brand-tag">university counsellor</span>
+      </div>
+      <p class="header-note">Enter your marks once. See where you stand.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <section class="intake" id="intake-section">
+      <div class="intake-head">
+        <span class="eyebrow">01 &mdash; Your profile</span>
+        <h1>Where could your marks take you?</h1>
+        <p class="lede">Fill this in with your actual results. Everything is calculated locally in your browser &mdash; nothing leaves this page.</p>
+      </div>
+
+      <form id="intake-form" class="intake-form" novalidate>
+
+        <div class="field">
+          <label for="studentName">Full name</label>
+          <input type="text" id="studentName" name="studentName" placeholder="e.g. Ahnaf Zaman" autocomplete="name" required>
+        </div>
+
+        <fieldset class="field-group">
+          <legend>Matriculation / O-Level result</legend>
+          <div class="field-row">
+            <div class="field">
+              <label for="matricObtained">Marks obtained</label>
+              <input type="number" id="matricObtained" name="matricObtained" min="0" step="1" placeholder="e.g. 980" required>
+            </div>
+            <div class="field">
+              <label for="matricTotal">Total marks</label>
+              <input type="number" id="matricTotal" name="matricTotal" min="1" step="1" placeholder="e.g. 1100" required>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="field-group">
+          <legend>FSc / A-Level Part 1 result</legend>
+          <div class="field-row">
+            <div class="field">
+              <label for="fscObtained">Marks obtained</label>
+              <input type="number" id="fscObtained" name="fscObtained" min="0" step="1" placeholder="e.g. 470" required>
+            </div>
+            <div class="field">
+              <label for="fscTotal">Total marks</label>
+              <input type="number" id="fscTotal" name="fscTotal" min="1" step="1" placeholder="e.g. 550" required>
+            </div>
+          </div>
+          <p class="field-hint">Part 2 and entry test marks aren't out yet &mdash; results below are marked provisional until you have those.</p>
+        </fieldset>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="fieldOfStudy">Field of study</label>
+            <select id="fieldOfStudy" name="fieldOfStudy" required>
+              <option value="" disabled selected>Choose a field</option>
+              <!-- populated from js/data.js -->
+            </select>
+          </div>
+          <div class="field">
+            <label for="area">Preferred area</label>
+            <select id="area" name="area" required>
+              <option value="" disabled selected>Choose a city</option>
+              <!-- populated from js/data.js -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Suggest universities</button>
+          <button type="reset" class="btn-ghost">Clear</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="results" id="results-section" hidden>
+      <div class="results-head">
+        <span class="eyebrow">02 &mdash; Suggested preferences</span>
+        <h2 id="results-heading">Preferences for <span id="resultsName">you</span></h2>
+        <div class="score-strip" id="scoreStrip"></div>
+      </div>
+
+      <div class="results-list" id="resultsList"></div>
+
+      <p class="results-footnote">
+        Closing merits shown are placeholders until real data is loaded &mdash; see <code>js/data.js</code>. Provisional score excludes your entry test and FSc Part 2, so treat these as a starting shortlist, not a final decision.
+      </p>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Rah &mdash; built for quick iteration. Structure: <code>index.html</code> / <code>styles/</code> / <code>js/</code>.</p>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/calculations.js"></script>
+  <script src="js/suggestions.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

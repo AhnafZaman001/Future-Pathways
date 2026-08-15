@@ -1,0 +1,178 @@
+/* =========================================================
+   components.css — reusable UI pieces
+   ========================================================= */
+
+/* --- inputs --- */
+label{
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+input[type="text"],
+input[type="number"],
+select{
+  font-family: var(--font-body);
+  font-size: .96rem;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  width: 100%;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+input:hover, select:hover{ border-color: var(--ink-soft); }
+
+input:focus, select:focus{
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-dim);
+}
+
+input.field-error, select.field-error{
+  border-color: var(--red);
+}
+
+select{ appearance: none; background: #fff
+  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M0 0l5 6 5-6z" fill="%234A5262"/></svg>') no-repeat right 14px center;
+  padding-right: 32px;
+}
+
+/* --- buttons --- */
+.btn-primary, .btn-ghost{
+  font-weight: 600;
+  font-size: .92rem;
+  padding: 11px 22px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform .1s ease, background .15s ease, border-color .15s ease;
+}
+
+.btn-primary{
+  background: var(--ink);
+  color: #fff;
+}
+.btn-primary:hover{ background: var(--blue); }
+.btn-primary:active{ transform: translateY(1px); }
+
+.btn-ghost{
+  background: transparent;
+  color: var(--ink-soft);
+  border-color: var(--line-strong);
+}
+.btn-ghost:hover{ border-color: var(--ink-soft); color: var(--ink); }
+
+/* --- score summary strip (intake results) --- */
+.score-pill{
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.score-pill .num{
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--ink);
+}
+.score-pill .label{
+  font-size: .74rem;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+/* --- result card --- */
+.uni-card{
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 18px;
+  align-items: center;
+}
+
+.uni-card .gauge{ flex-shrink: 0; }
+
+.uni-card .info h3{
+  font-size: 1.05rem;
+  margin-bottom: 2px;
+}
+
+.uni-card .meta{
+  font-size: .82rem;
+  color: var(--ink-soft);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.uni-card .meta span{ display: inline-flex; align-items: center; gap: 4px; }
+
+.badge{
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  justify-self: end;
+}
+
+.badge-strong{ background: var(--green-dim); color: var(--green); }
+.badge-competitive{ background: var(--amber-dim); color: var(--amber); }
+.badge-unlikely{ background: var(--red-dim); color: var(--red); }
+.badge-unknown{ background: var(--paper-dim); color: var(--ink-soft); }
+
+/* --- gauge: simple radial arc built from conic-gradient --- */
+.gauge{
+  --pct: 0;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: conic-gradient(var(--gauge-color, var(--blue)) calc(var(--pct) * 1%), var(--paper-dim) 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.gauge::before{
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.gauge span{
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* --- empty / no-results state --- */
+.empty-state{
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  padding: 28px 22px;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.empty-state strong{ color: var(--ink); display: block; margin-bottom: 6px; }
+
+@media (max-width: 560px){
+  .uni-card{
+    grid-template-columns: auto 1fr;
+  }
+  .badge{ grid-column: 1 / -1; justify-self: start; margin-top: 4px; }
+}

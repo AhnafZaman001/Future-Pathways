@@ -1,0 +1,100 @@
+/* =========================================================
+   base.css — reset, design tokens, typography
+   Edit color/type tokens here; everything else references them.
+   ========================================================= */
+
+:root{
+  /* --- palette --- */
+  --paper:      #F5F4EF;
+  --paper-dim:  #ECEAE2;
+  --ink:        #1B2430;
+  --ink-soft:   #4A5262;
+  --line:       #D9D5C9;
+  --line-strong:#BFBAAA;
+
+  --blue:       #3057D5;   /* primary / acceptance */
+  --blue-dim:   #E7ECFB;
+  --green:      #1F8A55;   /* strong chance */
+  --green-dim:  #E4F3EA;
+  --amber:      #C97A2B;   /* competitive / borderline */
+  --amber-dim:  #FBEEE0;
+  --red:        #B5442E;   /* unlikely */
+  --red-dim:    #F8E9E4;
+
+  /* --- type --- */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:    'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+
+  /* --- layout --- */
+  --wrap: 780px;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+
+html{ scroll-behavior: smooth; }
+
+body{
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3{
+  font-family: var(--font-display);
+  color: var(--ink);
+  margin: 0 0 .4em;
+  line-height: 1.15;
+  font-weight: 600;
+}
+
+h1{ font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.4rem); }
+h2{ font-size: clamp(1.35rem, 1.1rem + 1vw, 1.8rem); }
+
+p{ margin: 0 0 1em; color: var(--ink-soft); }
+
+.eyebrow{
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: .6em;
+}
+
+.lede{
+  font-size: 1.02rem;
+  max-width: 52ch;
+}
+
+code{
+  font-family: var(--font-mono);
+  background: var(--paper-dim);
+  padding: .1em .4em;
+  border-radius: 4px;
+  font-size: .85em;
+}
+
+a{ color: var(--blue); }
+
+button{ font-family: inherit; }
+
+::selection{ background: var(--blue-dim); color: var(--ink); }
+
+/* visible keyboard focus everywhere */
+:focus-visible{
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}

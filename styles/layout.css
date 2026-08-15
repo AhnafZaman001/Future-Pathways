@@ -1,0 +1,151 @@
+/* =========================================================
+   layout.css — structural layout only, no color/type decisions
+   ========================================================= */
+
+.wrap{
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* signature: a single ruled line at the very top, like a
+   compass bearing / ledger rule — the one graphic flourish */
+.bearing-line{
+  height: 4px;
+  background: linear-gradient(90deg, var(--blue) 0%, var(--blue) 33%, var(--amber) 33%, var(--amber) 66%, var(--green) 66%);
+}
+
+.site-header{
+  padding: 28px 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.header-inner{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+}
+
+.brand{
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.brand-mark{
+  color: var(--blue);
+  font-size: .8rem;
+}
+
+.brand-name{
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.brand-tag{
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  color: var(--ink-soft);
+  letter-spacing: .03em;
+}
+
+.header-note{
+  margin: 0;
+  font-size: .88rem;
+  color: var(--ink-soft);
+}
+
+main.wrap{ padding-top: 44px; padding-bottom: 60px; }
+
+.intake-head{ margin-bottom: 28px; }
+
+.intake-form{
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.field-group{
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px 14px;
+  margin: 0;
+}
+
+.field-group legend{
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding: 0 6px;
+}
+
+.field-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-group .field-row{ margin-top: 4px; }
+
+.field-hint{
+  margin: 10px 0 0;
+  font-size: .82rem;
+}
+
+.form-actions{
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.results{ margin-top: 60px; }
+
+.results-head{ margin-bottom: 24px; }
+
+.score-strip{
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.results-list{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.results-footnote{
+  margin-top: 26px;
+  font-size: .82rem;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.site-footer{
+  border-top: 1px solid var(--line);
+  padding: 18px 0 40px;
+}
+
+.site-footer p{
+  margin: 0;
+  font-size: .78rem;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 560px){
+  .field-row{ grid-template-columns: 1fr; }
+  main.wrap{ padding-top: 32px; }
+}

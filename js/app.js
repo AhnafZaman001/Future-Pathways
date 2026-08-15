@@ -18,6 +18,85 @@
     Counsellor.UI.populateSelect(areaSelect, Counsellor.AREAS);
     form.addEventListener("submit", handleSubmit);
     form.addEventListener("reset", handleReset);
+    initUniModal();
+  }
+
+  /* ---------------------------------------------------------
+     "View all universities" modal — groups Counsellor.UNIVERSITIES
+     by field into Engineering / Medical / Other buckets. A
+     university with programs in more than one bucket is listed
+     under each, showing only the programs relevant to that bucket.
+     --------------------------------------------------------- */
+  function initUniModal(){
+    const openBtn  = document.getElementById("viewUnisBtn");
+    const overlay  = document.getElementById("uniModalOverlay");
+    const closeBtn = document.getElementById("uniModalClose");
+    const body      = document.getElementById("uniModalBody");
+    if(!openBtn || !overlay || !closeBtn || !body) return;
+
+    function open(){
+      body.innerHTML = renderUniGroups();
+      overlay.hidden = false;
+      document.addEventListener("keydown", onKeydown);
+    }
+    function close(){
+      overlay.hidden = true;
+      document.removeEventListener("keydown", onKeydown);
+    }
+    function onKeydown(e){ if(e.key === "Escape") close(); }
+
+    openBtn.addEventListener("click", open);
+    closeBtn.addEventListener("click", close);
+    overlay.addEventListener("click", function(e){
+      if(e.target === overlay) close();
+    });
+  }
+
+  function renderUniGroups(){
+    const ENGINEERING_FIELDS = ["engineering", "cs"];
+    const MEDICAL_FIELDS      = ["medical"];
+
+    const buckets = {
+      "Engineering": [],
+      "Medical": [],
+      "Other": []
+    };
+
+    (Counsellor.UNIVERSITIES || []).forEach(function(uni){
+      const byBucket = { "Engineering": [], "Medical": [], "Other": [] };
+      uni.programs.forEach(function(program){
+        if(ENGINEERING_FIELDS.indexOf(program.field) !== -1){
+          byBucket["Engineering"].push(program.programName);
+        } else if(MEDICAL_FIELDS.indexOf(program.field) !== -1){
+          byBucket["Medical"].push(program.programName);
+        } else {
+          byBucket["Other"].push(program.programName);
+        }
+      });
+      Object.keys(byBucket).forEach(function(bucketName){
+        if(byBucket[bucketName].length){
+          buckets[bucketName].push({ name: uni.name, programs: byBucket[bucketName] });
+        }
+      });
+    });
+
+    return Object.keys(buckets).map(function(bucketName){
+      const entries = buckets[bucketName];
+      const listHtml = entries.length
+        ? "<ul>" + entries.map(function(e){
+            return "<li><span>" + escapeHtml(e.name) + "</span>" +
+                   "<span class=\"uni-modal-programs\">" + escapeHtml(e.programs.join(", ")) + "</span></li>";
+          }).join("") + "</ul>"
+        : "<p class=\"uni-modal-empty\">No universities listed yet.</p>";
+
+      return "<div class=\"uni-modal-group\"><h3>" + bucketName + " (" + entries.length + ")</h3>" + listHtml + "</div>";
+    }).join("");
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(c){
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c];
+    });
   }
 
   function handleSubmit(e){

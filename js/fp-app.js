@@ -63,6 +63,7 @@
       loadMasterData()
     ]).then(function(){
       render();
+      initUniModal();
     });
   }).catch(function(err){
     console.error(err);
@@ -71,6 +72,72 @@
   document.getElementById("fp-logout").addEventListener("click", function(){
     FP.signOut();
   });
+
+  // ---------------------------------------------------------
+  // "View all universities" modal — groups state.allInstitutes
+  // (all active institutes, both pathways, already loaded via
+  // loadMasterData) into Engineering / Medical / Other buckets
+  // by their `pathway` column. "Other" only appears if any
+  // institute has a pathway value outside engineering/medical.
+  // ---------------------------------------------------------
+  function initUniModal(){
+    var openBtn  = document.getElementById("viewUnisBtn");
+    var overlay  = document.getElementById("uniModalOverlay");
+    var closeBtn = document.getElementById("uniModalClose");
+    var body      = document.getElementById("uniModalBody");
+    if(!openBtn || !overlay || !closeBtn || !body) return;
+
+    function open(){
+      body.innerHTML = renderUniGroups();
+      overlay.hidden = false;
+      document.addEventListener("keydown", onKeydown);
+    }
+    function close(){
+      overlay.hidden = true;
+      document.removeEventListener("keydown", onKeydown);
+    }
+    function onKeydown(e){ if(e.key === "Escape") close(); }
+
+    openBtn.addEventListener("click", open);
+    closeBtn.addEventListener("click", close);
+    overlay.addEventListener("click", function(e){
+      if(e.target === overlay) close();
+    });
+  }
+
+  function renderUniGroups(){
+    var all = state.allInstitutes || [];
+    var buckets = { "Engineering": [], "Medical": [], "Other": [] };
+
+    all.forEach(function(inst){
+      var bucket = inst.pathway === "engineering" ? "Engineering"
+                 : inst.pathway === "medical"      ? "Medical"
+                 : "Other";
+      buckets[bucket].push(inst);
+    });
+
+    var order = ["Engineering", "Medical", "Other"];
+    return order
+      .filter(function(name){ return name !== "Other" || buckets["Other"].length > 0; })
+      .map(function(name){
+        var entries = buckets[name];
+        var listHtml = entries.length
+          ? "<ul>" + entries.map(function(inst){
+              var meta = inst.location || (inst.campuses && inst.campuses.length ? inst.campuses.join(", ") : "");
+              return "<li><span>" + escapeHtml(inst.name) + "</span>" +
+                     "<span class=\"uni-modal-programs\">" + escapeHtml(meta) + "</span></li>";
+            }).join("") + "</ul>"
+          : "<p class=\"uni-modal-empty\">No universities listed yet.</p>";
+
+        return "<div class=\"uni-modal-group\"><h3>" + name + " (" + entries.length + ")</h3>" + listHtml + "</div>";
+      }).join("");
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(c){
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c];
+    });
+  }
 
   function loadProfile(){
     return FP.client.from("students").select("*").eq("id", state.studentId).maybeSingle()

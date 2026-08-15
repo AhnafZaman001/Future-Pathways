@@ -26,9 +26,20 @@
       </div>
       <p class="header-note">Enter your marks once. See where you stand.</p>
       <a href="pathways.html" class="header-note" style="text-decoration:underline;">Full Future Pathways form &rarr;</a>
+      <button type="button" id="viewUnisBtn" class="header-note" style="background:none;border:none;text-decoration:underline;cursor:pointer;color:var(--ink-soft);font-family:inherit;padding:0;">View all universities</button>
       <button type="button" id="fp-logout" class="header-note" style="background:none;border:none;text-decoration:underline;cursor:pointer;color:var(--ink-soft);font-family:inherit;padding:0;">Log out</button>
     </div>
   </header>
+
+  <div id="uniModalOverlay" class="uni-modal-overlay" hidden>
+    <div class="uni-modal" role="dialog" aria-modal="true" aria-labelledby="uniModalTitle">
+      <div class="uni-modal-head">
+        <h2 id="uniModalTitle">All listed universities</h2>
+        <button type="button" id="uniModalClose" class="uni-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="uni-modal-body" id="uniModalBody"><!-- populated by js/app.js --></div>
+    </div>
+  </div>
 
   <main class="wrap">
 

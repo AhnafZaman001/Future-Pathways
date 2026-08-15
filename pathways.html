@@ -31,7 +31,18 @@
   <main class="wrap" style="max-width:720px;">
     <div class="fp-topbar">
       <span id="fp-user-email"></span>
+      <button type="button" id="viewUnisBtn">View all universities</button>
       <button type="button" id="fp-logout">Log out</button>
+    </div>
+
+    <div id="uniModalOverlay" class="uni-modal-overlay" hidden>
+      <div class="uni-modal" role="dialog" aria-modal="true" aria-labelledby="uniModalTitle">
+        <div class="uni-modal-head">
+          <h2 id="uniModalTitle">All listed universities</h2>
+          <button type="button" id="uniModalClose" class="uni-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="uni-modal-body" id="uniModalBody"><!-- populated by js/fp-app.js --></div>
+      </div>
     </div>
 
     <div id="fp-status-banner"></div>

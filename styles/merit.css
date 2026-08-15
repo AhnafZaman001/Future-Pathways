@@ -1,0 +1,180 @@
+/* =========================================================
+   merit.css — merit formula cards, weight bars, and the
+   dedicated merit.html guide page. Reuses base.css tokens.
+   ========================================================= */
+
+/* --- flagship intro banner (merit.html hero + inline teaser) --- */
+.merit-hero{
+  border: 1px solid var(--violet-dim);
+  background: linear-gradient(180deg, var(--violet-dim), transparent);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 28px;
+}
+.merit-hero .eyebrow{ color: var(--violet); }
+.merit-hero h1{ margin-bottom: 8px; }
+.merit-hero p{ max-width: 62ch; }
+
+/* --- filters --- */
+.merit-filters{
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.merit-filters input[type="search"],
+.merit-filters select{
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  padding: 9px 12px;
+  font-family: var(--font-body);
+  font-size: .9rem;
+}
+.merit-filters input[type="search"]{ flex: 1 1 220px; min-width: 180px; }
+
+/* --- institute grouping --- */
+.merit-institute-group{
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+  background: var(--surface);
+}
+.merit-institute-group h3{
+  font-size: 1.05rem;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.merit-institute-pathway-tag{
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--ink-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+/* --- card --- */
+.merit-card{
+  border-top: 1px solid var(--line);
+  padding: 14px 0;
+}
+.merit-institute-group .merit-card:first-of-type{ border-top: none; padding-top: 6px; }
+
+.merit-card-head{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.merit-card-head h4{
+  font-family: var(--font-body);
+  font-size: .92rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.merit-conf-badge{
+  font-family: var(--font-mono);
+  font-size: .66rem;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: var(--surface-2);
+  color: var(--ink-soft);
+}
+.merit-conf-high{ background: var(--green-dim); color: var(--green); }
+.merit-conf-medium-high{ background: var(--amber-dim); color: var(--amber); }
+.merit-conf-medium{ background: var(--amber-dim); color: var(--amber); }
+
+/* --- weight bar --- */
+.merit-bar{
+  display: flex;
+  height: 8px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--surface-2);
+  margin-bottom: 6px;
+}
+.merit-bar-seg{ height: 100%; }
+
+.merit-legend{
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: .76rem;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+.merit-legend-item{ display: inline-flex; align-items: center; gap: 5px; }
+.merit-legend-dot{ width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+.merit-holistic{
+  font-size: .82rem;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin: 4px 0 8px;
+}
+
+.merit-formula-text{
+  font-size: .86rem;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+
+.merit-meta{
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: .78rem;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+
+.merit-notes{
+  font-size: .78rem;
+  color: var(--ink-faint);
+  margin: 0 0 6px;
+}
+
+.merit-source{
+  font-size: .78rem;
+  color: var(--violet);
+  text-decoration: none;
+}
+.merit-source:hover{ text-decoration: underline; }
+
+.merit-none{
+  font-size: .82rem;
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+/* --- inline teaser link (used inside uni-modal list items) --- */
+.merit-toggle{
+  background: none;
+  border: none;
+  color: var(--violet);
+  font-size: .76rem;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font-body);
+  text-decoration: underline;
+}
+.merit-inline-section{ margin-top: 10px; }
+
+.merit-empty-state{
+  text-align: center;
+  color: var(--ink-soft);
+  padding: 40px 20px;
+}

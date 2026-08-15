@@ -127,3 +127,51 @@ doesn't need to change.
 **Not done yet:** admin management UI for adding/editing institutes,
 faculties, and program/career options (currently edited directly via
 `supabase/future_pathways_seed.sql` or the Supabase dashboard).
+
+## Merit & Entry Test Guide (`merit.html`)
+
+A dedicated, searchable database of how each institute actually
+calculates admission merit — matric/HSSC weightages, the entry test
+required, sourced from each institute's own prospectus/admissions page.
+This is a flagship feature, not an afterthought: it's in the nav on
+every page, and every place an institute name appears (the "View all
+universities" modal on `index.html` and `pathways.html`) has an inline
+"View merit formula" toggle pulling from the same data.
+
+```
+merit.html          — the dedicated guide: search + pathway/test filters
+js/fp-merit.js      — shared loader + card/weight-bar renderer (used by
+                       merit.html AND the inline toggles elsewhere)
+js/merit-guide.js   — controller for merit.html only (filters, grouping)
+styles/merit.css    — weight bars, confidence badges, filter controls
+supabase/merit_formulas_schema.sql     — table, RLS, grant (run once)
+supabase/merit_formulas_seed_data.sql  — 84 formula rows, generated from
+                                          a sourced CSV (run once, after
+                                          the schema file)
+```
+
+**One-time setup**, in the Supabase SQL Editor, after the Future
+Pathways setup above:
+1. `supabase/merit_formulas_schema.sql`
+2. `supabase/merit_formulas_seed_data.sql`
+3. Run `select public.link_merit_formulas_to_institutes();` once, to
+   link each formula row to its `institutes` row by matching name +
+   pathway (best-effort; the guide works fine even before this runs,
+   it just enables future features that need the FK).
+
+**Data shape:** one institute can have *multiple* formula rows — e.g.
+NUST has a separate formula for NET-basis vs ACT/SAT-basis admission;
+ITU has three depending on the program. Some institutes (LUMS, IBA,
+NCA, PIFD, Aga Khan) have **no fixed percentage formula** — admission
+is holistic — and the UI shows that plainly instead of faking a
+weight bar. Every row also carries a `confidence` rating and a
+`source_url`; treat `Medium` confidence rows as needing a manual
+re-check before relying on them.
+
+**Not done yet:** deep-linking the merit formula into the actual
+ranked-institute-preference step of the form (right now it's the "View
+all universities" modal only, on both pages); an admin UI for editing
+formulas (edit via `supabase/merit_formulas_seed_data.sql` or the
+Supabase dashboard for now); re-verifying `2026-27`-dated rows before
+next admission cycle, since a couple of institutes' policies are
+already dated ahead.

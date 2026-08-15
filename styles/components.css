@@ -287,15 +287,27 @@ select{ appearance: none; background: var(--surface-2)
 }
 
 .uni-modal-group li{
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
   padding: 8px 10px;
   border-radius: var(--radius-sm);
   background: var(--surface-2);
   color: var(--ink);
   font-size: .92rem;
 }
+
+.uni-modal-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.uni-modal-row .merit-toggle{
+  font-size: .74rem;
+  white-space: nowrap;
+}
+
+.merit-inline-container{ margin-top: 4px; }
 
 .uni-modal-group li span.uni-modal-programs{
   color: var(--ink-soft);

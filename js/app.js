@@ -28,6 +28,9 @@
     initUniModal();
     initEnterToAdvance();
     loadInstitutesWithLoadingState();
+    if(typeof FP !== "undefined" && FP.loadMeritFormulas){
+      FP.loadMeritFormulas().catch(function(err){ console.error("Merit formulas failed to load:", err); });
+    }
   }
 
   /* ---------------------------------------------------------
@@ -132,6 +135,20 @@
     overlay.addEventListener("click", function(e){
       if(e.target === overlay) close();
     });
+    body.addEventListener("click", function(e){
+      if(!e.target.classList.contains("merit-toggle")) return;
+      var instName = e.target.dataset.inst;
+      var container = e.target.closest("li").querySelector(".merit-inline-container");
+      var isOpen = !container.hidden;
+      if(isOpen){
+        container.hidden = true;
+        e.target.textContent = "View merit formula";
+        return;
+      }
+      container.innerHTML = FP.renderMeritSectionForInstitute(instName);
+      container.hidden = false;
+      e.target.textContent = "Hide merit formula";
+    });
   }
 
   function renderUniGroups(){
@@ -164,8 +181,10 @@
         const listHtml = entries.length
           ? "<ul>" + entries.map(function(inst){
               const meta = inst.location || (inst.campuses && inst.campuses.length ? inst.campuses.join(", ") : "");
-              return "<li><span>" + escapeHtml(inst.name) + "</span>" +
-                     "<span class=\"uni-modal-programs\">" + escapeHtml(meta) + "</span></li>";
+              return "<li><div class=\"uni-modal-row\"><span>" + escapeHtml(inst.name) + "</span>" +
+                     "<span class=\"uni-modal-programs\">" + escapeHtml(meta) + "</span>" +
+                     "<button type=\"button\" class=\"merit-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View merit formula</button></div>" +
+                     "<div class=\"merit-inline-container\" hidden></div></li>";
             }).join("") + "</ul>"
           : "<p class=\"uni-modal-empty\">No universities listed yet.</p>";
 

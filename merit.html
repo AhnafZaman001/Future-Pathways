@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Merit &amp; Entry Test Guide &mdash; Rah</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/pathways.css">
+<link rel="stylesheet" href="styles/merit.css">
+</head>
+<body style="visibility:hidden">
+
+  <div class="bearing-line" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <span class="brand-mark">&#9670;</span>
+        <span class="brand-name">Rah</span>
+        <span class="brand-tag">merit &amp; entry test guide</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" style="max-width:820px;">
+    <div class="fp-topbar">
+      <span id="fp-user-email"></span>
+      <a href="index.html" class="header-note" style="text-decoration:underline;">&larr; Back to calculator</a>
+      <a href="pathways.html" class="header-note" style="text-decoration:underline;">Future Pathways form</a>
+      <button type="button" id="fp-logout" class="header-note" style="background:none;border:none;text-decoration:underline;cursor:pointer;color:var(--ink-soft);font-family:inherit;padding:0;">Log out</button>
+    </div>
+
+    <div class="merit-hero">
+      <span class="eyebrow">The part everyone Googles separately</span>
+      <h1>How each university actually calculates your merit</h1>
+      <p>Every entry test, every weightage, sourced straight from each institute's own prospectus or admissions page &mdash; matric %, HSSC %, and the entry test you're on the hook for, laid out the same way for every university so you can actually compare them.</p>
+    </div>
+
+    <div class="merit-filters">
+      <input type="search" id="meritSearch" placeholder="Search an institute\u2026" autocomplete="off">
+      <select id="meritPathwayFilter">
+        <option value="all">All pathways</option>
+        <option value="engineering">Engineering / General</option>
+        <option value="medical">Medical</option>
+      </select>
+      <select id="meritTestFilter">
+        <option value="all">All entry tests</option>
+      </select>
+    </div>
+
+    <div id="meritResultsCount" class="fp-hint" style="margin-bottom:14px;"></div>
+
+    <div id="meritList"><!-- populated by js/merit-guide.js --></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/fp-client.js"></script>
+  <script src="js/fp-merit.js"></script>
+  <script src="js/merit-guide.js"></script>
+</body>
+</html>

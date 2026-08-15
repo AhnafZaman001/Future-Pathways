@@ -7,6 +7,19 @@
 
 window.Counsellor = window.Counsellor || {};
 
+/* -----------------------------------------------------------
+   TEMPORARY KILL-SWITCH — set to true once real, sourced
+   closing-merit data and per-university formulas are loaded.
+   While false: every program shows as "Merit data pending"
+   (no Strong/Competitive/Unlikely badge, no gauge score), and
+   the results list is NOT sorted/reordered by merit chance —
+   it just follows field + area match. This avoids showing
+   confident-looking green/red badges based on the placeholder
+   10/40/50 weight guess. Flip to true when ready; nothing else
+   needs to change.
+   ----------------------------------------------------------- */
+Counsellor.MERIT_FEATURE_ENABLED = false;
+
 Counsellor.FIELDS = [
   { id: "engineering",  label: "Engineering" },
   { id: "cs",            label: "Computer Science / IT" },

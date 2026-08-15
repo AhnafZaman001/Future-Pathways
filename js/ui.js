@@ -84,21 +84,30 @@ Counsellor.UI = {
     const card = document.createElement("article");
     card.className = "uni-card";
 
-    const pct = s.closingMerit !== null ? Math.min(100, Math.round((s.scoreSoFar / 100) * 100)) : 0;
+    const showGauge = Counsellor.MERIT_FEATURE_ENABLED;
+    const pct = showGauge && s.closingMerit !== null ? Math.min(100, Math.round((s.scoreSoFar / 100) * 100)) : 0;
+
+    const gaugeHtml = showGauge
+      ? '<div class="gauge" style="--pct:' + pct + '; --gauge-color:' + meta.gaugeColor + ';">' +
+          '<span>' + s.scoreSoFar + '</span>' +
+        '</div>'
+      : '';
+
+    const badgeHtml = showGauge
+      ? '<span class="badge ' + meta.badgeClass + '">' + meta.label + '</span>'
+      : '<span class="badge badge-unknown">Merit data pending</span>';
 
     card.innerHTML =
-      '<div class="gauge" style="--pct:' + pct + '; --gauge-color:' + meta.gaugeColor + ';">' +
-        '<span>' + s.scoreSoFar + '</span>' +
-      '</div>' +
+      gaugeHtml +
       '<div class="info">' +
         '<h3>' + s.universityName + '</h3>' +
         '<div class="meta">' +
           '<span>' + s.programName + '</span>' +
           '<span>&middot; ' + capitalize(s.area) + '</span>' +
-          '<span>&middot; Closing merit: ' + (s.closingMerit !== null ? s.closingMerit : "TBD") + '</span>' +
+          (showGauge ? '<span>&middot; Closing merit: ' + (s.closingMerit !== null ? s.closingMerit : "TBD") + '</span>' : '') +
         '</div>' +
       '</div>' +
-      '<span class="badge ' + meta.badgeClass + '">' + meta.label + '</span>';
+      badgeHtml;
 
     return card;
   }

@@ -11,31 +11,38 @@ label{
 
 input[type="text"],
 input[type="number"],
-select{
+input[type="email"],
+input[type="password"],
+select,
+textarea{
   font-family: var(--font-body);
   font-size: .96rem;
   color: var(--ink);
-  background: #fff;
-  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
   width: 100%;
-  transition: border-color .15s ease, box-shadow .15s ease;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
 }
 
-input:hover, select:hover{ border-color: var(--ink-soft); }
+input::placeholder, textarea::placeholder{ color: var(--ink-faint); }
 
-input:focus, select:focus{
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px var(--blue-dim);
+input:hover, select:hover, textarea:hover{ border-color: var(--border-strong); }
+
+input:focus, select:focus, textarea:focus{
+  outline: none;
+  border-color: var(--violet);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--violet-dim);
 }
 
 input.field-error, select.field-error{
   border-color: var(--red);
 }
 
-select{ appearance: none; background: #fff
-  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M0 0l5 6 5-6z" fill="%234A5262"/></svg>') no-repeat right 14px center;
+select{ appearance: none; background: var(--surface-2)
+  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M0 0l5 6 5-6z" fill="%238B8F98"/></svg>') no-repeat right 14px center;
   padding-right: 32px;
 }
 
@@ -47,22 +54,23 @@ select{ appearance: none; background: #fff
   border-radius: var(--radius-sm);
   cursor: pointer;
   border: 1px solid transparent;
-  transition: transform .1s ease, background .15s ease, border-color .15s ease;
+  transition: transform .1s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
 
 .btn-primary{
-  background: var(--ink);
+  background: var(--violet);
   color: #fff;
+  box-shadow: 0 1px 0 rgba(255,255,255,.12) inset, 0 4px 14px rgba(110,118,240,.25);
 }
-.btn-primary:hover{ background: var(--blue); }
+.btn-primary:hover{ background: #7B82F3; }
 .btn-primary:active{ transform: translateY(1px); }
 
 .btn-ghost{
   background: transparent;
   color: var(--ink-soft);
-  border-color: var(--line-strong);
+  border-color: var(--border-strong);
 }
-.btn-ghost:hover{ border-color: var(--ink-soft); color: var(--ink); }
+.btn-ghost:hover{ border-color: var(--ink-soft); color: var(--ink); background: var(--surface-2); }
 
 /* --- score summary strip (intake results) --- */
 .score-pill{
@@ -87,13 +95,16 @@ select{ appearance: none; background: #fff
 .uni-card{
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: #fff;
+  background: var(--surface);
   padding: 18px 20px;
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 18px;
   align-items: center;
+  transition: border-color .15s ease, background .15s ease;
 }
+
+.uni-card:hover{ border-color: var(--border-strong); background: var(--surface-2); }
 
 .uni-card .gauge{ flex-shrink: 0; }
 
@@ -128,7 +139,7 @@ select{ appearance: none; background: #fff
 .badge-strong{ background: var(--green-dim); color: var(--green); }
 .badge-competitive{ background: var(--amber-dim); color: var(--amber); }
 .badge-unlikely{ background: var(--red-dim); color: var(--red); }
-.badge-unknown{ background: var(--paper-dim); color: var(--ink-soft); }
+.badge-unknown{ background: var(--surface-2); color: var(--ink-soft); }
 
 /* --- gauge: simple radial arc built from conic-gradient --- */
 .gauge{
@@ -136,7 +147,7 @@ select{ appearance: none; background: #fff
   width: 58px;
   height: 58px;
   border-radius: 50%;
-  background: conic-gradient(var(--gauge-color, var(--blue)) calc(var(--pct) * 1%), var(--paper-dim) 0);
+  background: conic-gradient(var(--gauge-color, var(--violet)) calc(var(--pct) * 1%), var(--surface-2) 0);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -148,7 +159,7 @@ select{ appearance: none; background: #fff
   position: absolute;
   inset: 6px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface);
 }
 
 .gauge span{
@@ -171,7 +182,7 @@ select{ appearance: none; background: #fff
 
 /* --- empty / no-results state --- */
 .empty-state{
-  border: 1px dashed var(--line-strong);
+  border: 1px dashed var(--border-strong);
   border-radius: var(--radius);
   padding: 28px 22px;
   text-align: center;

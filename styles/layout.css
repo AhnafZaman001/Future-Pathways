@@ -8,11 +8,12 @@
   padding: 0 24px;
 }
 
-/* signature: a single ruled line at the very top, like a
-   compass bearing / ledger rule — the one graphic flourish */
+/* signature: a single hairline at the very top with a soft
+   violet glow — the one graphic flourish, Linear-style restraint */
 .bearing-line{
-  height: 4px;
-  background: linear-gradient(90deg, var(--blue) 0%, var(--blue) 33%, var(--amber) 33%, var(--amber) 66%, var(--green) 66%);
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--violet) 50%, transparent 100%);
+  opacity: .6;
 }
 
 .site-header{
@@ -35,7 +36,7 @@
 }
 
 .brand-mark{
-  color: var(--blue);
+  color: var(--violet);
   font-size: .8rem;
 }
 
@@ -71,6 +72,7 @@ main.wrap{ padding-top: 44px; padding-bottom: 60px; }
 .field-group{
   border: 1px solid var(--line);
   border-radius: var(--radius);
+  background: var(--surface);
   padding: 16px 18px 14px;
   margin: 0;
 }

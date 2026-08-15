@@ -1,44 +1,67 @@
 /* =========================================================
    base.css — reset, design tokens, typography
+   Direction: Linear-inspired. Near-black canvas, restrained
+   violet accent used only for state (selection, links, focus,
+   progress) — never as decoration. Tight, confident type scale.
    Edit color/type tokens here; everything else references them.
    ========================================================= */
 
 :root{
-  /* --- palette --- */
-  --paper:      #F5F4EF;
-  --paper-dim:  #ECEAE2;
-  --ink:        #1B2430;
-  --ink-soft:   #4A5262;
-  --line:       #D9D5C9;
-  --line-strong:#BFBAAA;
+  /* --- surface --- */
+  --canvas:      #08090A;   /* page background */
+  --surface:     #0D0E10;   /* cards, inputs */
+  --surface-2:   #17181B;   /* hover / raised */
+  --border:      rgba(255,255,255,.09);
+  --border-strong: rgba(255,255,255,.16);
 
-  --blue:       #3057D5;   /* primary / acceptance */
-  --blue-dim:   #E7ECFB;
-  --green:      #1F8A55;   /* strong chance */
-  --green-dim:  #E4F3EA;
-  --amber:      #C97A2B;   /* competitive / borderline */
-  --amber-dim:  #FBEEE0;
-  --red:        #B5442E;   /* unlikely */
-  --red-dim:    #F8E9E4;
+  /* --- text --- */
+  --ink:         #F3F4F6;
+  --ink-soft:    #8B8F98;
+  --ink-faint:   #5C5F66;
+
+  /* legacy aliases kept for older markup */
+  --paper:       var(--canvas);
+  --paper-dim:   var(--surface-2);
+  --line:        var(--border);
+  --line-strong: var(--border-strong);
+
+  /* --- accent: violet, used for interactive state only --- */
+  --violet:      #6E76F0;
+  --violet-dim:  rgba(110,118,240,.14);
+  --blue:        var(--violet);
+  --blue-dim:    var(--violet-dim);
+
+  --green:       #4FC38A;
+  --green-dim:   rgba(79,195,138,.14);
+  --amber:       #E8A33D;
+  --amber-dim:   rgba(232,163,61,.14);
+  --red:         #EF6461;
+  --red-dim:     rgba(239,100,97,.14);
 
   /* --- type --- */
-  --font-display: 'Fraunces', Georgia, serif;
+  --font-display: 'Inter Tight', 'Inter', -apple-system, sans-serif;
   --font-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono:    'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
 
   /* --- layout --- */
   --wrap: 780px;
   --radius: 10px;
-  --radius-sm: 6px;
+  --radius-sm: 7px;
 }
 
 *, *::before, *::after{ box-sizing: border-box; }
+
+[hidden]{ display: none !important; }
 
 html{ scroll-behavior: smooth; }
 
 body{
   margin: 0;
-  background: var(--paper);
+  background: var(--canvas);
+  background-image:
+    radial-gradient(680px 420px at 12% -8%, rgba(110,118,240,.10), transparent 60%),
+    radial-gradient(520px 360px at 100% 0%, rgba(110,118,240,.05), transparent 55%);
+  background-repeat: no-repeat;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
@@ -50,12 +73,13 @@ h1, h2, h3{
   font-family: var(--font-display);
   color: var(--ink);
   margin: 0 0 .4em;
-  line-height: 1.15;
-  font-weight: 600;
+  line-height: 1.12;
+  font-weight: 700;
+  letter-spacing: -.015em;
 }
 
 h1{ font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.4rem); }
-h2{ font-size: clamp(1.35rem, 1.1rem + 1vw, 1.8rem); }
+h2{ font-size: clamp(1.3rem, 1.08rem + 1vw, 1.7rem); }
 
 p{ margin: 0 0 1em; color: var(--ink-soft); }
 
@@ -65,7 +89,7 @@ p{ margin: 0 0 1em; color: var(--ink-soft); }
   font-size: .72rem;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: var(--blue);
+  color: var(--violet);
   margin-bottom: .6em;
 }
 
@@ -76,21 +100,23 @@ p{ margin: 0 0 1em; color: var(--ink-soft); }
 
 code{
   font-family: var(--font-mono);
-  background: var(--paper-dim);
+  background: var(--surface-2);
+  color: var(--ink);
   padding: .1em .4em;
   border-radius: 4px;
   font-size: .85em;
 }
 
-a{ color: var(--blue); }
+a{ color: var(--violet); text-decoration: none; }
+a:hover{ text-decoration: underline; }
 
 button{ font-family: inherit; }
 
-::selection{ background: var(--blue-dim); color: var(--ink); }
+::selection{ background: var(--violet-dim); color: var(--ink); }
 
 /* visible keyboard focus everywhere */
 :focus-visible{
-  outline: 2px solid var(--blue);
+  outline: 2px solid var(--violet);
   outline-offset: 2px;
   border-radius: 4px;
 }

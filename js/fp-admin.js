@@ -31,7 +31,7 @@
   function loadLookups(){
     return Promise.all([
       FP.client.from("institutes").select("id,name"),
-      FP.client.from("faculties").select("id,name"),
+      FP.client.from("fp_faculties").select("id,name"),
       FP.client.from("career_options").select("id,name")
     ]).then(function(r){
       (r[0].data||[]).forEach(function(x){ lookups.institutes[x.id] = x.name; });

@@ -136,7 +136,7 @@
   function loadMasterData(){
     return Promise.all([
       FP.client.from("institutes").select("*").eq("active", true).order("display_order"),
-      FP.client.from("faculties").select("*").eq("active", true).order("display_order"),
+      FP.client.from("fp_faculties").select("*").eq("active", true).order("display_order"),
       FP.client.from("career_options").select("*").eq("active", true).order("display_order")
     ]).then(function(results){
       state.allInstitutes = results[0].data || [];

@@ -4,7 +4,7 @@
 -- Safe to re-run: clears and re-inserts each table below.
 -- =========================================================
 
-truncate table public.institutes, public.faculties, public.program_options, public.career_options;
+truncate table public.institutes, public.fp_faculties, public.program_options, public.career_options;
 
 -- ---------------------------------------------------------
 -- Engineering / Non-Medical institutes
@@ -38,7 +38,7 @@ insert into public.institutes (name, category, location, campuses, pathway, disp
 -- ---------------------------------------------------------
 -- Engineering / Non-Medical faculties
 -- ---------------------------------------------------------
-insert into public.faculties (name, category, pathway, display_order) values
+insert into public.fp_faculties (name, category, pathway, display_order) values
 ('Electrical', 'engineering', 'engineering', 1),
 ('Mechatronics', 'engineering', 'engineering', 2),
 ('Mechanical', 'engineering', 'engineering', 3),
@@ -157,7 +157,7 @@ insert into public.institutes (name, category, location, pathway, display_order)
 -- Medical programs (faculties table reused as "programs" for
 -- the medical pathway's 2x5 faculty preference groups)
 -- ---------------------------------------------------------
-insert into public.faculties (name, category, pathway, display_order) values
+insert into public.fp_faculties (name, category, pathway, display_order) values
 ('MBBS', 'medical', 'medical', 1),
 ('BDS', 'medical', 'medical', 2),
 ('Pharm D', 'medical', 'medical', 3),
@@ -176,8 +176,8 @@ insert into public.faculties (name, category, pathway, display_order) values
 -- ---------------------------------------------------------
 insert into public.program_options (name, category, pathway, display_order)
 select name, category, 'engineering', display_order
-from public.faculties where pathway = 'engineering' and category = 'computer_it';
+from public.fp_faculties where pathway = 'engineering' and category = 'computer_it';
 
 insert into public.program_options (name, category, pathway, display_order)
 select name, category, 'medical', display_order
-from public.faculties where pathway = 'medical';
+from public.fp_faculties where pathway = 'medical';

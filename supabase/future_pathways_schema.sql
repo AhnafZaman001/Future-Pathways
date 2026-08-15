@@ -106,7 +106,7 @@ create table if not exists public.institutes (
   display_order  integer not null default 0
 );
 
-create table if not exists public.faculties (
+create table if not exists public.fp_faculties (
   id             uuid primary key default gen_random_uuid(),
   name           text not null,
   category       text,
@@ -133,7 +133,7 @@ create table if not exists public.career_options (
 );
 
 alter table public.institutes enable row level security;
-alter table public.faculties enable row level security;
+alter table public.fp_faculties enable row level security;
 alter table public.program_options enable row level security;
 alter table public.career_options enable row level security;
 
@@ -159,14 +159,14 @@ create policy "Staff delete institutes"
   to authenticated
   using (public.current_role() in ('counsellor','admin'));
 
-drop policy if exists "Anyone can read active faculties" on public.faculties;
+drop policy if exists "Anyone can read active faculties" on public.fp_faculties;
 create policy "Anyone can read active faculties"
-  on public.faculties for select
+  on public.fp_faculties for select
   to anon, authenticated
   using (active = true or public.current_role() in ('counsellor','admin'));
-drop policy if exists "Staff manage faculties" on public.faculties;
+drop policy if exists "Staff manage faculties" on public.fp_faculties;
 create policy "Staff manage faculties"
-  on public.faculties for all
+  on public.fp_faculties for all
   to authenticated
   using (public.current_role() in ('counsellor','admin'))
   with check (public.current_role() in ('counsellor','admin'));
@@ -195,8 +195,8 @@ create policy "Staff manage careers"
   using (public.current_role() in ('counsellor','admin'))
   with check (public.current_role() in ('counsellor','admin'));
 
-grant select on public.institutes, public.faculties, public.program_options, public.career_options to anon, authenticated;
-grant insert, update, delete on public.institutes, public.faculties, public.program_options, public.career_options to authenticated;
+grant select on public.institutes, public.fp_faculties, public.program_options, public.career_options to anon, authenticated;
+grant insert, update, delete on public.institutes, public.fp_faculties, public.program_options, public.career_options to authenticated;
 grant select, insert, update on public.app_users to authenticated;
 grant select, insert, update on public.students to authenticated;
 
@@ -264,7 +264,7 @@ create table if not exists public.student_faculty_preferences (
   future_pathway_id   uuid not null references public.future_pathways(id) on delete cascade,
   preference_group    integer not null,
   rank                integer not null check (rank between 1 and 5),
-  faculty_id          uuid references public.faculties(id),
+  faculty_id          uuid references public.fp_faculties(id),
   custom_faculty_name text,
   unique (future_pathway_id, preference_group, rank)
 );

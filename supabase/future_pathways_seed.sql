@@ -4,7 +4,18 @@
 -- Safe to re-run: clears and re-inserts each table below.
 -- =========================================================
 
-truncate table public.institutes, public.fp_faculties, public.program_options, public.career_options;
+-- Note: institutes/fp_faculties/program_options are referenced
+-- by student_*_preferences via foreign keys, so a plain TRUNCATE
+-- fails once any preference rows exist. CASCADE also empties
+-- those preference tables. Since institutes/fp_faculties are
+-- master/reference data (not something students should have real
+-- picks against yet if this table was previously empty), this is
+-- expected to be a no-op on real data the first time you run this
+-- — but it WILL wipe any student_institute_preferences /
+-- student_faculty_preferences / student_program_preferences rows
+-- that already exist, so don't re-run this after real students
+-- have submitted picks without checking first.
+truncate table public.institutes, public.fp_faculties, public.program_options, public.career_options cascade;
 
 -- ---------------------------------------------------------
 -- Engineering / Non-Medical institutes

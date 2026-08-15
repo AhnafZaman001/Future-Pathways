@@ -15,6 +15,11 @@
 
   const submitBtn = form.querySelector(".btn-primary");
 
+  // Tracks the actual fetch state so the modal/UI can tell "still
+  // fetching" apart from "fetch finished, zero rows came back" —
+  // those need very different messages.
+  let institutesLoadState = "loading"; // "loading" | "loaded" | "error"
+
   function init(){
     Counsellor.UI.populateSelect(fieldSelect, Counsellor.FIELDS);
     Counsellor.UI.populateSelect(areaSelect, Counsellor.AREAS);
@@ -34,16 +39,19 @@
      "Retry loading universities" label so the user isn't stuck.
      --------------------------------------------------------- */
   function loadInstitutesWithLoadingState(){
+    institutesLoadState = "loading";
     if(submitBtn){
       submitBtn.disabled = true;
       submitBtn.textContent = "Loading universities\u2026";
     }
     return Counsellor.loadInstitutes().then(function(){
+      institutesLoadState = "loaded";
       if(submitBtn){
         submitBtn.disabled = false;
         submitBtn.textContent = "Suggest universities";
       }
     }).catch(function(err){
+      institutesLoadState = "error";
       console.error("Failed to load institutes from Supabase:", err);
       if(submitBtn){
         submitBtn.disabled = false;
@@ -102,6 +110,16 @@
       body.innerHTML = renderUniGroups();
       overlay.hidden = false;
       document.addEventListener("keydown", onKeydown);
+
+      // If institutes never loaded (e.g. opened before the initial
+      // fetch settled, or after it failed), retry now and refresh
+      // the modal body once it resolves — instead of leaving the
+      // modal stuck on its initial render forever.
+      if(institutesLoadState !== "loaded"){
+        loadInstitutesWithLoadingState().then(function(){
+          if(!overlay.hidden) body.innerHTML = renderUniGroups();
+        });
+      }
     }
     function close(){
       overlay.hidden = true;
@@ -117,9 +135,16 @@
   }
 
   function renderUniGroups(){
+    if(institutesLoadState === "loading"){
+      return '<p class="uni-modal-empty">Loading universities from the database\u2026</p>';
+    }
+    if(institutesLoadState === "error"){
+      return '<p class="uni-modal-empty">Couldn\u2019t load universities from the database. Check your connection and try reopening this window.</p>';
+    }
+
     const all = Counsellor.INSTITUTES || [];
     if(all.length === 0){
-      return '<p class="uni-modal-empty">Loading universities from the database\u2026</p>';
+      return '<p class="uni-modal-empty">No universities are in the database yet. Run the seed script in Supabase, then reopen this window.</p>';
     }
 
     const buckets = { "Engineering": [], "Medical": [], "Other": [] };

@@ -1,10 +1,13 @@
 /* =========================================================
-   fp-client.js — shared Supabase client for the Future
-   Pathways form + admin pages. Uses the publishable (anon)
-   key; no login required. Each browser gets a random,
-   persistent anonymous ID (localStorage) that is used as the
-   student's row identifier, so a return visit on the same
-   device/browser resumes their draft automatically.
+   fp-client.js — shared Supabase client + auth helpers for
+   the Future Pathways form + admin pages.
+
+   Login mechanism mirrors AXIOM (github.com/AhnafZaman001/AXIOM):
+   email/password sign-in only, no self-serve signup. Accounts
+   are created directly in the Supabase dashboard (Authentication
+   -> Add user); the on_auth_user_created trigger in
+   future_pathways_schema.sql then creates the matching
+   public.app_users row (role defaults to 'student').
    ========================================================= */
 
 window.FP = window.FP || {};
@@ -12,7 +15,6 @@ window.FP = window.FP || {};
 (function(){
   var SUPABASE_URL = "https://sqaehbedobvvannzqbow.supabase.co";
   var SUPABASE_ANON_KEY = "sb_publishable_iJ9vEuA-0mBCKYpLOOr2YQ_k4zy5rVb";
-  var ANON_ID_KEY = "fp_anon_student_id";
 
   if(typeof window.supabase === "undefined"){
     console.error("Supabase JS library did not load — check your internet connection.");
@@ -23,23 +25,41 @@ window.FP = window.FP || {};
 
   FP.client = client;
 
-  function uuidv4(){
-    if(window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
-    // Fallback for older browsers.
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c){
-      var r = Math.random() * 16 | 0, v = c === "x" ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  }
+  FP.signIn = function(email, password){
+    return client.auth.signInWithPassword({ email: email, password: password })
+      .then(function(r){
+        if(r.error) throw r.error;
+        return r.data;
+      });
+  };
 
-  /** Returns this browser's anonymous student id, creating and storing one on first visit. */
-  FP.getAnonId = function(){
-    var id = null;
-    try { id = window.localStorage.getItem(ANON_ID_KEY); } catch(e){ /* storage unavailable */ }
-    if(!id){
-      id = uuidv4();
-      try { window.localStorage.setItem(ANON_ID_KEY, id); } catch(e){ /* storage unavailable */ }
-    }
-    return id;
+  FP.signOut = function(){
+    return client.auth.signOut().then(function(){
+      window.location.href = "login.html";
+    });
+  };
+
+  /** Returns {session, profile} for the signed-in user, or null if not signed in. */
+  FP.getSessionAndProfile = function(){
+    return client.auth.getSession().then(function(r){
+      var session = r.data.session;
+      if(!session) return null;
+      return client.from("app_users").select("*").eq("id", session.user.id).single()
+        .then(function(r2){
+          if(r2.error){ console.error(r2.error); return null; }
+          return { session: session, profile: r2.data };
+        });
+    });
+  };
+
+  /** Call at the top of any protected page. Redirects to login.html if not signed in. */
+  FP.requireAuth = function(){
+    return FP.getSessionAndProfile().then(function(result){
+      if(!result){
+        window.location.href = "login.html";
+        return null;
+      }
+      return result;
+    });
   };
 })();

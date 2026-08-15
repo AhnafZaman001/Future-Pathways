@@ -16,6 +16,7 @@
   };
 
   var state = {
+    session: null,
     studentId: null,
     stepIndex: 0,
     profile: { student_name:"", father_name:"", father_profession:"", contact:"", discipline:"", section:"", roll_number:"", matric_marks:"", first_year_marks:"" },
@@ -48,18 +49,27 @@
   }
 
   // ---------------------------------------------------------
-  // Boot: get/create anonymous id, load profile + existing draft/submission
+  // Boot: auth check, load profile + existing draft/submission
   // ---------------------------------------------------------
-  state.studentId = FP.getAnonId();
+  FP.requireAuth().then(function(result){
+    if(!result) return; // requireAuth already redirected to login.html
+    state.session = result.session;
+    state.studentId = result.session.user.id;
+    document.getElementById("fp-user-email").textContent = result.session.user.email;
 
-  Promise.all([
-    loadProfile(),
-    loadFuturePathway(),
-    loadMasterData()
-  ]).then(function(){
-    render();
+    return Promise.all([
+      loadProfile(),
+      loadFuturePathway(),
+      loadMasterData()
+    ]).then(function(){
+      render();
+    });
   }).catch(function(err){
     console.error(err);
+  });
+
+  document.getElementById("fp-logout").addEventListener("click", function(){
+    FP.signOut();
   });
 
   function loadProfile(){

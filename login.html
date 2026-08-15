@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in &mdash; Rah</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/pathways.css">
+</head>
+<body>
+
+  <div class="bearing-line" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <span class="brand-mark">&#9670;</span>
+        <span class="brand-name">Rah</span>
+        <span class="brand-tag">university counsellor</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" style="max-width:380px; padding-top:48px;">
+    <div class="fp-card">
+      <p class="fp-error" id="login-error" hidden></p>
+      <form id="login-form" class="fp-form">
+        <label>Email
+          <input type="email" id="login-email" required autocomplete="username">
+        </label>
+        <label>Password
+          <input type="password" id="login-password" required autocomplete="current-password">
+        </label>
+        <button type="submit" class="btn-primary" id="login-btn">Sign In</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/fp-client.js"></script>
+  <script>
+    (function(){
+      // If already signed in, skip straight to the app.
+      FP.getSessionAndProfile().then(function(existing){
+        if(existing) window.location.href = "index.html";
+      });
+
+      var form = document.getElementById("login-form");
+      var errBox = document.getElementById("login-error");
+      var btn = document.getElementById("login-btn");
+
+      form.addEventListener("submit", function(e){
+        e.preventDefault();
+        errBox.hidden = true;
+        btn.disabled = true; btn.textContent = "Signing in\u2026";
+        var email = document.getElementById("login-email").value.trim();
+        var password = document.getElementById("login-password").value;
+        FP.signIn(email, password).then(function(){
+          window.location.href = "index.html";
+        }).catch(function(err){
+          errBox.textContent = (err && err.message) || "Could not sign in. Check your email and password.";
+          errBox.hidden = false;
+          btn.disabled = false; btn.textContent = "Sign In";
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

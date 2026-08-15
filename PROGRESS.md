@@ -101,6 +101,20 @@ insert/select will silently fail with no obvious error.
   institute-preference step of the form — only in the "View all
   universities" modal and the dedicated `merit.html` page.
 
+## Frontend design pass (Manifest)
+
+`pathways.html` now has a live-updating "Manifest" side rail
+(`#fp-progress` repurposed, see `renderProgress()` / `manifestValue()`
+in `js/fp-app.js`) — each line reflects real form state, not just step
+position. At the review step it becomes the finale: `.fp-layout`
+collapses to one column, `body.is-review-step` styling kicks in, the
+submit button becomes `.btn-transmit` ("Transmit application"), and a
+mono UTC timestamp stamps in on success (`state.submittedAt`).
+`admin.html` got a `#fp-stats-strip` (total/submitted/draft/by-pathway
+counts, computed client-side from the already-loaded `submissions`
+array — no new query). No IDs or data flow changed; this was a
+CSS + presentation-layer pass on top of the existing logic.
+
 ## If something seems broken
 
 Don't trust old chat descriptions of "current state" — clone the repo

@@ -39,15 +39,25 @@ window.FP = window.FP || {};
     return client.auth.signInWithPassword({ email: email, password: password });
   };
 
+  /** Redirect to Google's OAuth consent screen; returns to `nextPath` (relative, e.g. "index.html") on success. */
+  FP.signInWithGoogle = function(nextPath){
+    var redirectTo = window.location.origin + window.location.pathname.replace(/[^/]*$/, "") + (nextPath || "index.html");
+    return client.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: redirectTo }
+    });
+  };
+
   FP.signOut = function(){
     return client.auth.signOut();
   };
 
-  /** Require a logged-in session; redirect to auth.html if missing. */
+  /** Require a logged-in session; redirect to auth.html (preserving the page the user asked for) if missing. */
   FP.requireAuth = function(){
     return FP.getSession().then(function(session){
       if(!session){
-        window.location.href = "auth.html";
+        var here = window.location.pathname.split("/").pop() || "index.html";
+        window.location.href = "auth.html?next=" + encodeURIComponent(here);
         return null;
       }
       return session;

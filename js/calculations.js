@@ -38,10 +38,15 @@ Counsellor.computeProvisionalScore = function computeProvisionalScore(fieldId, m
 
   const provisionalPct = coveredWeight > 0 ? (scoreSoFar / coveredWeight) * 100 : 0;
 
+  // Best-case ceiling: score so far plus the full pending (entry-test)
+  // weight, as if that portion were scored 100% — capped at 100.
+  const ceiling = Math.min(100, Math.round((scoreSoFar + pendingWeight) * 10) / 10);
+
   return {
     scoreSoFar: Math.round(scoreSoFar * 10) / 10,
     coveredWeight,
     pendingWeight,
+    ceiling,
     provisionalPct: Math.round(provisionalPct * 10) / 10
   };
 };

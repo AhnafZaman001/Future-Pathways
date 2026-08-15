@@ -11,6 +11,19 @@
   margin-bottom: 24px;
 }
 
+.fp-google-btn{
+  width:100%; display:flex; align-items:center; justify-content:center; gap:10px;
+  margin-bottom:18px;
+}
+
+.fp-divider{
+  display:flex; align-items:center; gap:12px; margin-bottom:18px;
+  color: var(--ink-faint); font-size:.78rem; text-transform:uppercase; letter-spacing:.04em;
+}
+.fp-divider::before, .fp-divider::after{
+  content:""; flex:1; height:1px; background: var(--line);
+}
+
 .fp-tabs{ display:flex; gap:4px; margin-bottom:20px; border-bottom:1px solid var(--line); }
 .fp-tab{
   font-family: var(--font-body); font-weight:600; font-size:.9rem;

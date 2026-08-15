@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="styles/layout.css">
 <link rel="stylesheet" href="styles/components.css">
 </head>
-<body>
+<body style="visibility:hidden">
 
   <div class="bearing-line" aria-hidden="true"></div>
 
@@ -26,6 +26,7 @@
       </div>
       <p class="header-note">Enter your marks once. See where you stand.</p>
       <a href="pathways.html" class="header-note" style="text-decoration:underline;">Full Future Pathways form &rarr;</a>
+      <button type="button" id="fp-logout" class="header-note" style="background:none;border:none;text-decoration:underline;cursor:pointer;color:var(--ink-soft);font-family:inherit;padding:0;">Log out</button>
     </div>
   </header>
 
@@ -54,7 +55,7 @@
             </div>
             <div class="field">
               <label for="matricTotal">Total marks</label>
-              <input type="number" id="matricTotal" name="matricTotal" min="1" step="1" placeholder="e.g. 1100" required>
+              <input type="number" id="matricTotal" name="matricTotal" value="1200" readonly aria-readonly="true">
             </div>
           </div>
         </fieldset>
@@ -68,7 +69,12 @@
             </div>
             <div class="field">
               <label for="fscTotal">Total marks</label>
-              <input type="number" id="fscTotal" name="fscTotal" min="1" step="1" placeholder="e.g. 550" required>
+              <select id="fscTotal" name="fscTotal" required>
+                <option value="" disabled selected>Choose total</option>
+                <option value="555">555</option>
+                <option value="560">560</option>
+                <option value="570">570</option>
+              </select>
             </div>
           </div>
           <p class="field-hint">Part 2 and entry test marks aren't out yet &mdash; results below are marked provisional until you have those.</p>
@@ -122,6 +128,19 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/fp-client.js"></script>
+  <script>
+    FP.requireAuth().then(function(session){
+      if(!session) return; // requireAuth already redirected to auth.html
+      document.body.style.visibility = "visible";
+      var logoutBtn = document.getElementById("fp-logout");
+      if(logoutBtn){
+        logoutBtn.addEventListener("click", function(){
+          FP.signOut().then(function(){ window.location.href = "auth.html"; });
+        });
+      }
+    });
+  </script>
   <script src="js/data.js"></script>
   <script src="js/calculations.js"></script>
   <script src="js/suggestions.js"></script>

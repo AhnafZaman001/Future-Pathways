@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Future Pathways &mdash; Admin</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/pathways.css">
+</head>
+<body>
+
+  <div class="bearing-line" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <span class="brand-mark">&#9670;</span>
+        <span class="brand-name">Rah</span>
+        <span class="brand-tag">counsellor / admin</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" style="max-width:960px;">
+    <div class="fp-topbar">
+      <span id="fp-user-email"></span>
+      <button type="button" id="fp-logout">Log out</button>
+    </div>
+
+    <div id="fp-admin-gate"></div>
+
+    <div id="fp-admin-list-view">
+      <div class="fp-card">
+        <h2 class="fp-step-title">Submissions</h2>
+        <div class="fp-grid-2" style="margin-bottom:16px;">
+          <label>Pathway
+            <select id="filter-pathway">
+              <option value="">All</option>
+              <option value="engineering">Engineering / Non-Medical</option>
+              <option value="medical">Medical / Health Sciences</option>
+            </select>
+          </label>
+          <label>Status
+            <select id="filter-status">
+              <option value="">All</option>
+              <option value="draft">Draft</option>
+              <option value="submitted">Submitted</option>
+            </select>
+          </label>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="fp-admin-table" id="fp-admin-table">
+            <thead>
+              <tr><th>Student</th><th>Pathway</th><th>Status</th><th>Submitted</th></tr>
+            </thead>
+            <tbody id="fp-admin-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="fp-admin-detail-view" hidden></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/fp-client.js"></script>
+  <script src="js/fp-admin.js"></script>
+</body>
+</html>

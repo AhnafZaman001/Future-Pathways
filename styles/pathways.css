@@ -1,0 +1,109 @@
+/* =========================================================
+   pathways.css — multi-step form, auth, admin.
+   Reuses tokens from base.css; do not redefine colors here.
+   ========================================================= */
+
+.fp-card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.fp-tabs{ display:flex; gap:4px; margin-bottom:20px; border-bottom:1px solid var(--line); }
+.fp-tab{
+  font-family: var(--font-body); font-weight:600; font-size:.9rem;
+  background:none; border:none; padding:10px 4px; margin-right:20px;
+  color: var(--ink-soft); cursor:pointer; border-bottom:2px solid transparent;
+}
+.fp-tab.is-active{ color: var(--blue); border-bottom-color: var(--blue); }
+
+.fp-form{ display:flex; flex-direction:column; gap:16px; }
+.fp-form label{ display:flex; flex-direction:column; gap:6px; }
+.fp-hint{ font-weight:400; color: var(--ink-soft); }
+.fp-error{ color: var(--red); font-size:.85rem; margin:0; }
+.fp-note{ color: var(--green); font-size:.85rem; margin:0; }
+
+.btn-primary{
+  font-family: var(--font-body); font-weight:600; font-size:.95rem;
+  background: var(--blue); color:#fff; border:none; border-radius: var(--radius-sm);
+  padding: 12px 20px; cursor:pointer; transition: opacity .15s ease;
+}
+.btn-primary:hover{ opacity:.9; }
+.btn-primary:disabled{ opacity:.5; cursor:not-allowed; }
+
+.btn-secondary{
+  font-family: var(--font-body); font-weight:600; font-size:.95rem;
+  background:#fff; color: var(--ink); border:1px solid var(--line-strong); border-radius: var(--radius-sm);
+  padding: 12px 20px; cursor:pointer;
+}
+.btn-secondary:hover{ background: var(--paper-dim); }
+
+/* --- progress --- */
+.fp-progress{ display:flex; gap:6px; margin-bottom:24px; }
+.fp-progress-step{
+  flex:1; height:6px; border-radius:3px; background: var(--paper-dim);
+}
+.fp-progress-step.is-done{ background: var(--blue); }
+.fp-progress-step.is-current{ background: var(--amber); }
+.fp-progress-label{ font-size:.8rem; color: var(--ink-soft); margin-bottom:8px; }
+
+.fp-step-title{ margin-bottom:4px; }
+.fp-step-desc{ color: var(--ink-soft); font-size:.9rem; margin-bottom:20px; }
+
+.fp-actions{ display:flex; justify-content:space-between; gap:12px; margin-top:24px; }
+
+.fp-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media (max-width:640px){ .fp-grid-2{ grid-template-columns:1fr; } }
+
+.fp-pathway-options{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media (max-width:640px){ .fp-pathway-options{ grid-template-columns:1fr; } }
+.fp-pathway-card{
+  border:2px solid var(--line); border-radius: var(--radius); padding:20px;
+  cursor:pointer; background:#fff; text-align:left;
+}
+.fp-pathway-card.is-selected{ border-color: var(--blue); background: var(--blue-dim); }
+.fp-pathway-card h3{ margin:0 0 4px; }
+.fp-pathway-card p{ margin:0; font-size:.85rem; }
+
+.fp-checkbox-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+@media (max-width:640px){ .fp-checkbox-grid{ grid-template-columns:1fr; } }
+.fp-checkbox-item{ display:flex; align-items:center; gap:8px; font-weight:400; font-size:.92rem; }
+.fp-checkbox-item input{ width:auto; }
+
+.fp-pref-group{ border:1px solid var(--line); border-radius: var(--radius-sm); padding:16px; margin-bottom:16px; }
+.fp-pref-group h4{ margin:0 0 10px; font-family: var(--font-body); font-size:.95rem; }
+.fp-pref-search{ margin-bottom:10px; }
+.fp-pref-ranks{ display:flex; flex-direction:column; gap:8px; }
+.fp-pref-rank{ display:flex; align-items:center; gap:10px; }
+.fp-pref-rank .fp-rank-badge{
+  flex-shrink:0; width:26px; height:26px; border-radius:50%; background: var(--paper-dim);
+  color: var(--ink-soft); font-size:.8rem; font-weight:700; display:flex; align-items:center; justify-content:center;
+}
+.fp-pref-rank select{ flex:1; }
+.fp-pref-rank.has-dupe select{ border-color: var(--red); }
+
+.fp-review-section{ margin-bottom:20px; }
+.fp-review-section h4{ font-family: var(--font-body); font-size:.9rem; color: var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; margin:0 0 8px; }
+.fp-review-row{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--paper-dim); font-size:.92rem; }
+.fp-review-row span:first-child{ color: var(--ink-soft); }
+
+.fp-status-banner{
+  padding:14px 16px; border-radius: var(--radius-sm); font-size:.9rem; margin-bottom:20px;
+}
+.fp-status-banner.submitted{ background: var(--green-dim); color: var(--green); }
+.fp-status-banner.draft{ background: var(--amber-dim); color: var(--amber); }
+
+/* --- admin table --- */
+.fp-admin-table{ width:100%; border-collapse:collapse; font-size:.88rem; }
+.fp-admin-table th, .fp-admin-table td{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); }
+.fp-admin-table th{ color: var(--ink-soft); font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; }
+.fp-admin-table tr:hover td{ background: var(--paper-dim); cursor:pointer; }
+
+.fp-badge{ display:inline-block; padding:2px 8px; border-radius:99px; font-size:.75rem; font-weight:600; }
+.fp-badge.draft{ background: var(--amber-dim); color: var(--amber); }
+.fp-badge.submitted{ background: var(--green-dim); color: var(--green); }
+
+.fp-topbar{ display:flex; justify-content:flex-end; align-items:center; gap:12px; padding: 12px 0; font-size:.85rem; }
+.fp-topbar a, .fp-topbar button{ color: var(--ink-soft); background:none; border:none; cursor:pointer; font-family:var(--font-body); font-size:.85rem; text-decoration:underline; padding:0; }

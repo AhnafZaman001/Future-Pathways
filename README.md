@@ -78,7 +78,52 @@ other file needs touching.
 
 ## Not in this prototype
 
-- No backend, no database, no auth
 - No historical merit data (placeholders only — see above)
-- No admin tooling for managing the university dataset (currently a
-  hand-edited array in `data.js`)
+
+## Future Pathways form (`pathways.html`, `auth.html`, `admin.html`)
+
+A separate, full multi-step preference-submission flow sits alongside the
+quick merit calculator above. It has its own auth, own Supabase tables,
+and its own JS modules — it does not touch `student_submissions` or the
+calculator's files.
+
+```
+auth.html          — student sign up / log in (Supabase Auth)
+pathways.html       — the multi-step form itself
+admin.html          — counsellor/admin: list submissions, filter, enter
+                       the 12-recommendation office evaluation
+js/fp-client.js     — shared Supabase client + auth helpers
+js/fp-app.js        — student form: steps, validation, draft save, submit
+js/fp-admin.js       — admin list + detail + evaluation form
+styles/pathways.css — styles for all three pages (reuses base.css tokens)
+supabase/future_pathways_schema.sql — tables, roles, RLS (run once)
+supabase/future_pathways_seed.sql   — institutes/faculties/programs/careers (run once, after schema)
+```
+
+**One-time setup**, in the Supabase SQL Editor, in order:
+1. `supabase/schema.sql` (if not already run)
+2. `supabase/future_pathways_schema.sql`
+3. `supabase/future_pathways_seed.sql`
+
+New signups default to the `student` role (via a trigger on
+`auth.users`). To make someone a counsellor/admin, update their row in
+`app_users` from the Supabase dashboard: `update public.app_users set
+role = 'counsellor' where id = '<their auth uid>';`
+
+**Flow:** student information → pathway (engineering/medical) →
+programs & career interests → ranked institute preferences (4 groups of
+5 for engineering, 2 of 5 for medical) → ranked faculty preferences
+(same grouping) → additional information → review → submit. Each step
+autosaves to a `future_pathways` draft row; a partial unique index
+blocks a second *submitted* row per student. Once submitted, RLS blocks
+further edits from the student side.
+
+**Ranking UI note:** preference ranking uses one dropdown per rank slot
+(with duplicate-selection warnings) rather than drag-and-drop, to keep
+this a no-build-step, vanilla-JS project. Swap in a drag-and-drop
+library later if wanted — the data model (`preference_group`, `rank`)
+doesn't need to change.
+
+**Not done yet:** admin management UI for adding/editing institutes,
+faculties, and program/career options (currently edited directly via
+`supabase/future_pathways_seed.sql` or the Supabase dashboard).

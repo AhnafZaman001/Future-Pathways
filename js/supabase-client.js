@@ -1,25 +1,26 @@
 /* =========================================================
-   supabase-client.js — the only file that talks to Supabase.
-   Uses the PUBLISHABLE (anon) key, which is safe to ship in
-   client-side code — it can only do what the RLS policies in
-   supabase/schema.sql allow (insert-only, see that file).
+   supabase-client.js — used only for saveSubmission(). Reuses
+   the single Supabase client created in js/fp-client.js
+   (FP.client) rather than creating a second client instance.
+   Two separate clients against the same project both run their
+   own background auth-refresh/session-lock logic, and contend
+   for the same browser storage lock — this was the actual
+   cause of the page-wide input lag (clicks/typing/dropdowns
+   feeling sluggish, needing multiple tries).
    ========================================================= */
 
 window.Counsellor = window.Counsellor || {};
 
 (function(){
-  var SUPABASE_URL = "https://sqaehbedobvvannzqbow.supabase.co";
-  var SUPABASE_ANON_KEY = "sb_publishable_iJ9vEuA-0mBCKYpLOOr2YQ_k4zy5rVb";
-
-  if(typeof window.supabase === "undefined"){
-    console.warn("Supabase JS library did not load — check your internet connection. Submissions will not be saved to the database.");
+  if(typeof window.FP === "undefined" || !window.FP.client){
+    console.warn("FP.client not available — make sure js/fp-client.js is loaded before js/supabase-client.js. Submissions will not be saved to the database.");
     Counsellor.saveSubmission = function(){
-      return Promise.resolve({ error: new Error("Supabase library not loaded") });
+      return Promise.resolve({ error: new Error("Supabase client not initialized") });
     };
     return;
   }
 
-  var client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  var client = window.FP.client;
 
   /**
    * Insert one student submission row.

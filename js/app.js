@@ -19,6 +19,38 @@
     form.addEventListener("submit", handleSubmit);
     form.addEventListener("reset", handleReset);
     initUniModal();
+    initEnterToAdvance();
+  }
+
+  /* ---------------------------------------------------------
+     Pressing Enter in any field moves to the next fillable
+     field instead of doing nothing / submitting early. Readonly
+     fields (matricTotal) are skipped. On the last field, Enter
+     submits the form.
+     --------------------------------------------------------- */
+  function initEnterToAdvance(){
+    var focusable = Array.prototype.slice.call(
+      form.querySelectorAll("input:not([readonly]), select")
+    );
+
+    focusable.forEach(function(el, idx){
+      el.addEventListener("keydown", function(e){
+        if(e.key !== "Enter") return;
+        e.preventDefault();
+
+        var next = focusable[idx + 1];
+        if(next){
+          next.focus();
+          if(typeof next.showPicker === "function" && next.tagName === "SELECT"){
+            try { next.showPicker(); } catch(err){ /* not supported everywhere, ignore */ }
+          }
+        } else if(typeof form.requestSubmit === "function"){
+          form.requestSubmit();
+        } else {
+          handleSubmit({ preventDefault: function(){} });
+        }
+      });
+    });
   }
 
   /* ---------------------------------------------------------

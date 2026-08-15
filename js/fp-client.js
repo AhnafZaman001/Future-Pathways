@@ -39,15 +39,6 @@ window.FP = window.FP || {};
     return client.auth.signInWithPassword({ email: email, password: password });
   };
 
-  /** Redirect to Google's OAuth consent screen; returns to `nextPath` (relative, e.g. "index.html") on success. */
-  FP.signInWithGoogle = function(nextPath){
-    var redirectTo = window.location.origin + window.location.pathname.replace(/[^/]*$/, "") + (nextPath || "index.html");
-    return client.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: redirectTo }
-    });
-  };
-
   FP.signOut = function(){
     return client.auth.signOut();
   };

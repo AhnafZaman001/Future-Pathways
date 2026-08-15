@@ -16,8 +16,7 @@
   };
 
   var state = {
-    session: null,
-    userId: null,
+    studentId: null,
     stepIndex: 0,
     profile: { student_name:"", father_name:"", father_profession:"", contact:"", discipline:"", section:"", roll_number:"", matric_marks:"", first_year_marks:"" },
     pathway: null,               // 'engineering' | 'medical'
@@ -49,31 +48,22 @@
   }
 
   // ---------------------------------------------------------
-  // Boot: auth check, load profile + existing draft/submission
+  // Boot: get/create anonymous id, load profile + existing draft/submission
   // ---------------------------------------------------------
-  FP.requireAuth().then(function(session){
-    if(!session) return;
-    state.session = session;
-    state.userId = session.user.id;
-    document.getElementById("fp-user-email").textContent = session.user.email;
+  state.studentId = FP.getAnonId();
 
-    return Promise.all([
-      loadProfile(),
-      loadFuturePathway(),
-      loadMasterData()
-    ]).then(function(){
-      render();
-    });
+  Promise.all([
+    loadProfile(),
+    loadFuturePathway(),
+    loadMasterData()
+  ]).then(function(){
+    render();
   }).catch(function(err){
     console.error(err);
   });
 
-  document.getElementById("fp-logout").addEventListener("click", function(){
-    FP.signOut().then(function(){ window.location.href = "auth.html"; });
-  });
-
   function loadProfile(){
-    return FP.client.from("students").select("*").eq("id", state.userId).maybeSingle()
+    return FP.client.from("students").select("*").eq("id", state.studentId).maybeSingle()
       .then(function(r){
         if(r.error){ console.error(r.error); return; }
         if(r.data){
@@ -86,7 +76,7 @@
 
   function loadFuturePathway(){
     return FP.client.from("future_pathways").select("*")
-      .eq("student_id", state.userId)
+      .eq("student_id", state.studentId)
       .order("created_at", { ascending:false })
       .limit(1).maybeSingle()
       .then(function(r){
@@ -434,7 +424,7 @@
   function ensureFuturePathwayRow(){
     if(state.futurePathwayId) return Promise.resolve(state.futurePathwayId);
     return FP.client.from("future_pathways").insert([{
-      student_id: state.userId, pathway: state.pathway || "engineering", status: "draft"
+      student_id: state.studentId, pathway: state.pathway || "engineering", status: "draft"
     }]).select().single().then(function(r){
       if(r.error){ throw r.error; }
       state.futurePathwayId = r.data.id;
@@ -444,7 +434,7 @@
   }
 
   function saveProfile(){
-    var record = Object.assign({ id: state.userId }, state.profile);
+    var record = Object.assign({ id: state.studentId }, state.profile);
     return FP.client.from("students").upsert([record]).then(function(r){
       if(r.error) throw r.error;
     });

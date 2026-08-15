@@ -9,25 +9,7 @@
   var submissions = [];
   var lookups = { institutes:{}, faculties:{}, careers:{} };
 
-  FP.requireAuth().then(function(session){
-    if(!session) return;
-    document.getElementById("fp-user-email").textContent = session.user.email;
-
-    return FP.getMyRole(session.user.id).then(function(role){
-      if(role !== "counsellor" && role !== "admin"){
-        document.getElementById("fp-admin-gate").innerHTML =
-          '<div class="fp-card"><p>This page is for counsellors and admins only.</p>' +
-          '<a href="pathways.html" class="btn-secondary" style="display:inline-block; text-decoration:none;">Go to the student form</a></div>';
-        document.getElementById("fp-admin-list-view").hidden = true;
-        return;
-      }
-      return loadLookups().then(loadSubmissions);
-    });
-  }).catch(function(e){ console.error(e); });
-
-  document.getElementById("fp-logout").addEventListener("click", function(){
-    FP.signOut().then(function(){ window.location.href = "auth.html"; });
-  });
+  loadLookups().then(loadSubmissions).catch(function(e){ console.error(e); });
 
   function loadLookups(){
     return Promise.all([

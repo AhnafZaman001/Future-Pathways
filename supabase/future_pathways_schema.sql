@@ -98,7 +98,7 @@ create policy "Student manages own profile"
 create table if not exists public.institutes (
   id             uuid primary key default gen_random_uuid(),
   name           text not null,
-  category       text not null check (category in ('engineering','medical')),
+  category       text not null check (category in ('engineering','medical','nums','private','other')),
   location       text,
   campuses       text[] default '{}',
   pathway        text not null check (pathway in ('engineering','medical')),

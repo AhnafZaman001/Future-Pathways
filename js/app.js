@@ -13,6 +13,8 @@
   const resultsList      = document.getElementById("resultsList");
   const saveStatus        = document.getElementById("saveStatus");
 
+  const submitBtn = form.querySelector(".btn-primary");
+
   function init(){
     Counsellor.UI.populateSelect(fieldSelect, Counsellor.FIELDS);
     Counsellor.UI.populateSelect(areaSelect, Counsellor.AREAS);
@@ -20,6 +22,35 @@
     form.addEventListener("reset", handleReset);
     initUniModal();
     initEnterToAdvance();
+    loadInstitutesWithLoadingState();
+  }
+
+  /* ---------------------------------------------------------
+     Institute data now comes live from Supabase (see
+     Counsellor.loadInstitutes in js/data.js) rather than a
+     static array, so it needs to be fetched once at boot.
+     The submit button is disabled with a loading label until
+     the fetch resolves; on failure it's re-enabled with a
+     "Retry loading universities" label so the user isn't stuck.
+     --------------------------------------------------------- */
+  function loadInstitutesWithLoadingState(){
+    if(submitBtn){
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Loading universities\u2026";
+    }
+    return Counsellor.loadInstitutes().then(function(){
+      if(submitBtn){
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Suggest universities";
+      }
+    }).catch(function(err){
+      console.error("Failed to load institutes from Supabase:", err);
+      if(submitBtn){
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Retry loading universities";
+        submitBtn.dataset.loadFailed = "true";
+      }
+    });
   }
 
   /* ---------------------------------------------------------
@@ -54,10 +85,11 @@
   }
 
   /* ---------------------------------------------------------
-     "View all universities" modal — groups Counsellor.UNIVERSITIES
-     by field into Engineering / Medical / Other buckets. A
-     university with programs in more than one bucket is listed
-     under each, showing only the programs relevant to that bucket.
+     "View all universities" modal — groups the live
+     Counsellor.INSTITUTES (loaded from Supabase) by their
+     `pathway` column into Engineering / Medical buckets, same
+     grouping fp-app.js uses on pathways.html. Opening the modal
+     before the institute fetch resolves shows a loading note.
      --------------------------------------------------------- */
   function initUniModal(){
     const openBtn  = document.getElementById("viewUnisBtn");
@@ -85,44 +117,35 @@
   }
 
   function renderUniGroups(){
-    const ENGINEERING_FIELDS = ["engineering", "cs"];
-    const MEDICAL_FIELDS      = ["medical"];
+    const all = Counsellor.INSTITUTES || [];
+    if(all.length === 0){
+      return '<p class="uni-modal-empty">Loading universities from the database\u2026</p>';
+    }
 
-    const buckets = {
-      "Engineering": [],
-      "Medical": [],
-      "Other": []
-    };
+    const buckets = { "Engineering": [], "Medical": [], "Other": [] };
 
-    (Counsellor.UNIVERSITIES || []).forEach(function(uni){
-      const byBucket = { "Engineering": [], "Medical": [], "Other": [] };
-      uni.programs.forEach(function(program){
-        if(ENGINEERING_FIELDS.indexOf(program.field) !== -1){
-          byBucket["Engineering"].push(program.programName);
-        } else if(MEDICAL_FIELDS.indexOf(program.field) !== -1){
-          byBucket["Medical"].push(program.programName);
-        } else {
-          byBucket["Other"].push(program.programName);
-        }
-      });
-      Object.keys(byBucket).forEach(function(bucketName){
-        if(byBucket[bucketName].length){
-          buckets[bucketName].push({ name: uni.name, programs: byBucket[bucketName] });
-        }
-      });
+    all.forEach(function(inst){
+      const bucket = inst.pathway === "engineering" ? "Engineering"
+                   : inst.pathway === "medical"      ? "Medical"
+                   : "Other";
+      buckets[bucket].push(inst);
     });
 
-    return Object.keys(buckets).map(function(bucketName){
-      const entries = buckets[bucketName];
-      const listHtml = entries.length
-        ? "<ul>" + entries.map(function(e){
-            return "<li><span>" + escapeHtml(e.name) + "</span>" +
-                   "<span class=\"uni-modal-programs\">" + escapeHtml(e.programs.join(", ")) + "</span></li>";
-          }).join("") + "</ul>"
-        : "<p class=\"uni-modal-empty\">No universities listed yet.</p>";
+    const order = ["Engineering", "Medical", "Other"];
+    return order
+      .filter(function(name){ return name !== "Other" || buckets["Other"].length > 0; })
+      .map(function(name){
+        const entries = buckets[name];
+        const listHtml = entries.length
+          ? "<ul>" + entries.map(function(inst){
+              const meta = inst.location || (inst.campuses && inst.campuses.length ? inst.campuses.join(", ") : "");
+              return "<li><span>" + escapeHtml(inst.name) + "</span>" +
+                     "<span class=\"uni-modal-programs\">" + escapeHtml(meta) + "</span></li>";
+            }).join("") + "</ul>"
+          : "<p class=\"uni-modal-empty\">No universities listed yet.</p>";
 
-      return "<div class=\"uni-modal-group\"><h3>" + bucketName + " (" + entries.length + ")</h3>" + listHtml + "</div>";
-    }).join("");
+        return "<div class=\"uni-modal-group\"><h3>" + name + " (" + entries.length + ")</h3>" + listHtml + "</div>";
+      }).join("");
   }
 
   function escapeHtml(str){
@@ -133,6 +156,15 @@
 
   function handleSubmit(e){
     e.preventDefault();
+
+    // Institute fetch failed earlier — retry instead of submitting
+    // with a stale/empty Counsellor.INSTITUTES list.
+    if(submitBtn && submitBtn.dataset.loadFailed === "true"){
+      delete submitBtn.dataset.loadFailed;
+      loadInstitutesWithLoadingState();
+      return;
+    }
+
     Counsellor.UI.clearFieldErrors(form);
 
     const data = collectFormData();

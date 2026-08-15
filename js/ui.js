@@ -56,8 +56,8 @@ Counsellor.UI = {
     if(suggestions.length === 0){
       container.innerHTML =
         '<div class="empty-state">' +
-          '<strong>No programs on file for that field yet.</strong>' +
-          'Add matching entries to <code>Counsellor.UNIVERSITIES</code> in js/data.js to see suggestions here.' +
+          '<strong>No institutes on file for that field yet.</strong>' +
+          'This list comes live from the Supabase <code>institutes</code> table — check that it has active rows for this pathway.' +
         '</div>';
       return;
     }
@@ -97,13 +97,16 @@ Counsellor.UI = {
       ? '<span class="badge ' + meta.badgeClass + '">' + meta.label + '</span>'
       : '<span class="badge badge-unknown">Merit data pending</span>';
 
+    const categoryLabel = (Counsellor.CATEGORY_LABELS && Counsellor.CATEGORY_LABELS[s.category]) || capitalize(s.category);
+    const locationLabel = s.location || "Location not listed";
+
     card.innerHTML =
       gaugeHtml +
       '<div class="info">' +
         '<h3>' + s.universityName + '</h3>' +
         '<div class="meta">' +
-          '<span>' + s.programName + '</span>' +
-          '<span>&middot; ' + capitalize(s.area) + '</span>' +
+          '<span>' + categoryLabel + '</span>' +
+          '<span>&middot; ' + locationLabel + '</span>' +
           (showGauge ? '<span>&middot; Closing merit: ' + (s.closingMerit !== null ? s.closingMerit : "TBD") + '</span>' : '') +
         '</div>' +
       '</div>' +

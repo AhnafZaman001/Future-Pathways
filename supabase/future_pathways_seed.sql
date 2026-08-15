@@ -114,10 +114,10 @@ insert into public.institutes (name, category, location, pathway, display_order)
 ('DG Khan Medical College', 'medical', null, 'medical', 17),
 ('Narowal Medical College', 'medical', null, 'medical', 18),
 -- BDS/Dental
-('De''Montmorency College of Dentistry', 'dental', null, 'medical', 19),
-('Nishtar Institute of Dentistry', 'dental', null, 'medical', 20),
-('Dental Section Punjab Medical College', 'dental', null, 'medical', 21),
-('Fatima Jinnah Institute of Dental Sciences', 'dental', null, 'medical', 22),
+('De''Montmorency College of Dentistry', 'medical', null, 'medical', 19),
+('Nishtar Institute of Dentistry', 'medical', null, 'medical', 20),
+('Dental Section Punjab Medical College', 'medical', null, 'medical', 21),
+('Fatima Jinnah Institute of Dental Sciences', 'medical', null, 'medical', 22),
 -- AKU/Other
 ('Aga Khan University', 'other', null, 'medical', 23),
 ('SZABMU', 'other', null, 'medical', 24),

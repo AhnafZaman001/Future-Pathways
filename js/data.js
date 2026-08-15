@@ -1,34 +1,51 @@
 /* =========================================================
-   data.js — all static data lives here.
-   When you have real university / closing-merit data, replace
-   the UNIVERSITIES array below. Nothing else needs to change —
-   calculations.js and suggestions.js just read this shape.
+   data.js — static reference data + the Supabase institute
+   loader. As of the index.html/Supabase switchover, the old
+   static Counsellor.UNIVERSITIES placeholder array is GONE —
+   institute data now comes live from the real `institutes`
+   table (86 seeded rows) via Counsellor.loadInstitutes(),
+   the same table pathways.html already reads through
+   FP.client (see js/fp-client.js).
    ========================================================= */
 
 window.Counsellor = window.Counsellor || {};
 
 /* -----------------------------------------------------------
    TEMPORARY KILL-SWITCH — set to true once real, sourced
-   closing-merit data and per-university formulas are loaded.
-   While false: every program shows as "Merit data pending"
-   (no Strong/Competitive/Unlikely badge, no gauge score), and
-   the results list is NOT sorted/reordered by merit chance —
-   it just follows field + area match. This avoids showing
-   confident-looking green/red badges based on the placeholder
-   10/40/50 weight guess. Flip to true when ready; nothing else
-   needs to change.
+   closing-merit data (see the planned `merit_records` table)
+   and per-university formulas are loaded. While false: every
+   institute shows as "Merit data pending" (no Strong/
+   Competitive/Unlikely badge, no gauge score), and the results
+   list is NOT sorted/reordered by merit chance — it just
+   follows field + area match. Flip to true when ready; nothing
+   else needs to change.
    ----------------------------------------------------------- */
 Counsellor.MERIT_FEATURE_ENABLED = false;
 
+/* -----------------------------------------------------------
+   FIELDS — trimmed to what the real Supabase data actually
+   supports. institutes.pathway only has two values:
+   'engineering' and 'medical'. There is no institute-level
+   program/faculty linkage table, so "Engineering" and
+   "Computer Science / IT" both resolve to the same set of
+   engineering-pathway institutes (the CS/IT vs. other-major
+   split lives in fp_faculties, not on individual institutes).
+   business/social/arts/natural were removed — there is no
+   institute data for those pathways in Supabase at all.
+   ----------------------------------------------------------- */
 Counsellor.FIELDS = [
   { id: "engineering",  label: "Engineering" },
   { id: "cs",            label: "Computer Science / IT" },
-  { id: "medical",      label: "Medical (MBBS/BDS)" },
-  { id: "business",      label: "Business / Commerce" },
-  { id: "social",        label: "Social Sciences" },
-  { id: "arts",          label: "Arts & Design" },
-  { id: "natural",      label: "Natural Sciences" }
+  { id: "medical",      label: "Medical (MBBS/BDS)" }
 ];
+
+/* Maps a Counsellor.FIELDS id to the institutes.pathway value
+   used to filter the live Supabase query. */
+Counsellor.FIELD_TO_PATHWAY = {
+  engineering: "engineering",
+  cs:          "engineering",
+  medical:      "medical"
+};
 
 Counsellor.AREAS = [
   { id: "islamabad", label: "Islamabad" },
@@ -41,6 +58,16 @@ Counsellor.AREAS = [
   { id: "any",        label: "No preference / anywhere" }
 ];
 
+/* Human-readable labels for institutes.category (institute
+   subtype, distinct from pathway). Used only for display. */
+Counsellor.CATEGORY_LABELS = {
+  engineering: "Engineering institute",
+  medical:      "Government medical college",
+  nums:        "NUMS-affiliated college",
+  private:      "Private medical college",
+  other:        "AKU / other medical"
+};
+
 /* Merit formula weights per field, as % of total 100.
    "test" is the entry-test / interview component that isn't
    available at intake time — its weight is shown to the user
@@ -49,127 +76,33 @@ Counsellor.AREAS = [
 Counsellor.MERIT_WEIGHTS = {
   engineering: { matric: 10, fsc: 40, test: 50 },
   cs:          { matric: 10, fsc: 40, test: 50 },
-  medical:      { matric: 10, fsc: 50, test: 40 },
-  business:    { matric: 10, fsc: 90, test: 0 },
-  social:      { matric: 10, fsc: 90, test: 0 },
-  arts:        { matric: 10, fsc: 90, test: 0 },
-  natural:      { matric: 10, fsc: 90, test: 0 }
+  medical:      { matric: 10, fsc: 50, test: 40 }
 };
 
 /* -----------------------------------------------------------
-   UNIVERSITIES — replace / extend this with real data.
-
-   Shape of each entry:
-   {
-     id:            unique string
-     name:          university name
-     area:          one id from Counsellor.AREAS (city it's in)
-     programs: [
-       {
-         field:        one id from Counsellor.FIELDS
-         programName:  display name, e.g. "BS Computer Science"
-         closingMerit: number 0-100, or null if unknown (TODO)
-       }
-     ]
-   }
-
-   closingMerit: null means "no data yet" — the UI will show a
-   clear "add data" state instead of guessing.
+   Counsellor.INSTITUTES — populated at runtime from Supabase
+   by Counsellor.loadInstitutes(). Empty until that resolves.
+   Shape of each row matches the `institutes` table: id, name,
+   category, location, campuses (text[]), pathway, active,
+   display_order.
    ----------------------------------------------------------- */
-Counsellor.UNIVERSITIES = [
-  {
-    id: "nust",
-    name: "NUST",
-    area: "islamabad",
-    programs: [
-      { field: "engineering", programName: "BE Software Engineering", closingMerit: null },
-      { field: "cs",          programName: "BS Computer Science",      closingMerit: null }
-    ]
-  },
-  {
-    id: "fast-isb",
-    name: "FAST-NUCES, Islamabad",
-    area: "islamabad",
-    programs: [
-      { field: "cs",          programName: "BS Computer Science", closingMerit: null },
-      { field: "business",    programName: "BBA",                  closingMerit: null }
-    ]
-  },
-  {
-    id: "quaid-i-azam",
-    name: "Quaid-i-Azam University",
-    area: "islamabad",
-    programs: [
-      { field: "natural",    programName: "BS Physics",            closingMerit: null },
-      { field: "social",      programName: "BS Economics",          closingMerit: null }
-    ]
-  },
-  {
-    id: "uet-lhr",
-    name: "UET Lahore",
-    area: "lahore",
-    programs: [
-      { field: "engineering", programName: "BSc Electrical Engineering", closingMerit: null }
-    ]
-  },
-  {
-    id: "lums",
-    name: "LUMS",
-    area: "lahore",
-    programs: [
-      { field: "cs",        programName: "BS Computer Science", closingMerit: null },
-      { field: "business",  programName: "BSc Accounting & Finance", closingMerit: null }
-    ]
-  },
-  {
-    id: "kemu",
-    name: "King Edward Medical University",
-    area: "lahore",
-    programs: [
-      { field: "medical", programName: "MBBS", closingMerit: null }
-    ]
-  },
-  {
-    id: "nedu",
-    name: "NED University",
-    area: "karachi",
-    programs: [
-      { field: "engineering", programName: "BE Civil Engineering", closingMerit: null }
-    ]
-  },
-  {
-    id: "iba-khi",
-    name: "IBA Karachi",
-    area: "karachi",
-    programs: [
-      { field: "business", programName: "BBA",                  closingMerit: null },
-      { field: "cs",        programName: "BS Computer Science", closingMerit: null }
-    ]
-  },
-  {
-    id: "duhs",
-    name: "Dow University of Health Sciences",
-    area: "karachi",
-    programs: [
-      { field: "medical", programName: "MBBS", closingMerit: null }
-    ]
-  },
-  {
-    id: "uop",
-    name: "University of Peshawar",
-    area: "peshawar",
-    programs: [
-      { field: "social",    programName: "BS Psychology",          closingMerit: null },
-      { field: "natural",  programName: "BS Chemistry",            closingMerit: null }
-    ]
-  },
-  {
-    id: "buitems",
-    name: "COMSATS Islamabad",
-    area: "islamabad",
-    programs: [
-      { field: "cs",          programName: "BS Software Engineering", closingMerit: null },
-      { field: "engineering", programName: "BS Electrical Engineering", closingMerit: null }
-    ]
+Counsellor.INSTITUTES = [];
+
+/**
+ * Loads all active institutes from Supabase into
+ * Counsellor.INSTITUTES. Requires FP.client (js/fp-client.js)
+ * to already be initialized. Safe to call more than once —
+ * each call re-fetches and replaces the cached list.
+ * @returns {Promise<Array>}
+ */
+Counsellor.loadInstitutes = function loadInstitutes(){
+  if(typeof window.FP === "undefined" || !window.FP.client){
+    return Promise.reject(new Error("FP.client not available — js/fp-client.js must load first."));
   }
-];
+  return FP.client.from("institutes").select("*").eq("active", true).order("display_order")
+    .then(function(r){
+      if(r.error) throw r.error;
+      Counsellor.INSTITUTES = r.data || [];
+      return Counsellor.INSTITUTES;
+    });
+};

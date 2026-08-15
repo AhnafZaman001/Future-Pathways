@@ -36,7 +36,14 @@ create policy "Public can insert submissions"
   to anon
   with check (true);
 
--- No select / update / delete policy is defined for `anon` on purpose —
--- with RLS enabled, that means the public key can write but never read
--- back, edit, or delete rows. View submissions from the Table Editor in
--- the Supabase dashboard (that uses your account's full access, not RLS).
+-- IMPORTANT: RLS policies alone are not enough. Supabase's Data API
+-- (PostgREST) only exposes tables that the `anon` role has an explicit
+-- Postgres GRANT on — this is separate from RLS and easy to miss. Without
+-- this line, every insert from the browser fails silently even though the
+-- policy above looks correct.
+grant insert on public.student_submissions to anon;
+
+-- No select / update / delete grant is given to `anon` on purpose — it
+-- can write but never read back, edit, or delete rows. View submissions
+-- from the Table Editor in the Supabase dashboard (that uses your
+-- account's full access, not the anon role).

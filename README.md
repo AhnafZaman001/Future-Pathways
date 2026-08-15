@@ -40,11 +40,13 @@ Every submission is written to a `student_submissions` table in Supabase
 instead of staying only in the browser.
 
 **One-time setup:** open your Supabase project → SQL Editor → paste and
-run `supabase/schema.sql`. It creates the table and locks it down with
-Row Level Security so the public key used in `js/supabase-client.js` can
-only **insert** rows — it can't read, edit, or delete anything. View
-collected submissions from the Supabase dashboard's Table Editor, which
-has full access regardless of RLS.
+run `supabase/schema.sql`. It creates the table, adds a Row Level
+Security policy so the public key can only **insert** rows, and grants
+the `anon` role the actual Postgres `insert` privilege — RLS policies
+alone don't expose a table to the Data API; the explicit `grant` is
+required too, and it's easy to miss. View collected submissions from the
+Supabase dashboard's Table Editor, which has full access regardless of
+RLS.
 
 `js/supabase-client.js` holds the project URL and the **publishable
 (anon) key** — this key is meant to be public/client-side, unlike the

@@ -27,6 +27,13 @@ window.Counsellor = window.Counsellor || {};
    * @returns {Promise<{ data, error }>}
    */
   Counsellor.saveSubmission = function(record){
-    return client.from("student_submissions").insert([record]);
+    return client.from("student_submissions").insert([record]).then(function(result){
+      if(result.error){
+        console.error("Supabase insert failed:", result.error);
+      } else {
+        console.log("Supabase insert succeeded:", result);
+      }
+      return result;
+    });
   };
 })();

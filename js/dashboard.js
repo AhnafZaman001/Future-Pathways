@@ -69,8 +69,8 @@ window.Dashboard = window.Dashboard || {};
     }).catch(function(err){
       console.error("Failed to load dashboard status:", err);
       el.innerHTML = '<div class="dash-status-card is-error">' +
-        '<h2>Couldn\u2019t load your status</h2>' +
-        '<p>Check your connection and reload this page. Your saved data on the server is unaffected.</p>' +
+        '<h2>Couldn\u2019t load case status</h2>' +
+        '<p>Check your connection and reload this page. Saved data on the server is unaffected.</p>' +
         '</div>';
     });
   }
@@ -84,8 +84,8 @@ window.Dashboard = window.Dashboard || {};
       var stampLabel = stamp ? stamp.toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" }) : "an earlier date";
       return '<div class="dash-status-card is-submitted">' +
         '<span class="dash-status-tag">Submitted</span>' +
-        '<h2>Your Future Pathways application is in.</h2>' +
-        '<p>Submitted on ' + escapeHtml(stampLabel) + '. It\u2019s locked for editing &mdash; contact your counsellor if something needs to change.</p>' +
+        '<h2>Future Pathways application submitted.</h2>' +
+        '<p>Submitted on ' + escapeHtml(stampLabel) + '. It\u2019s locked for editing &mdash; contact the admin office if something needs to change.</p>' +
         '<a class="btn-ghost dash-status-cta" href="pathways.html">Review submission</a>' +
         '</div>';
     }
@@ -93,16 +93,16 @@ window.Dashboard = window.Dashboard || {};
     if(status === "draft"){
       return '<div class="dash-status-card is-draft">' +
         '<span class="dash-status-tag">Draft saved</span>' +
-        '<h2>Pick up your Future Pathways application.</h2>' +
-        '<p>' + (hasMarks ? "Your marks are already on file &mdash; " : "") + 'You have a draft in progress. Continue where you left off; nothing is re-asked.</p>' +
+        '<h2>Continue this Future Pathways application.</h2>' +
+        '<p>' + (hasMarks ? "Marks are already on file &mdash; " : "") + 'A draft is in progress. Continue where it left off; nothing is re-entered.</p>' +
         '<a class="btn-primary dash-status-cta" href="pathways.html">Continue application</a>' +
         '</div>';
     }
 
     return '<div class="dash-status-card is-empty">' +
       '<span class="dash-status-tag">Not started</span>' +
-      '<h2>You haven\u2019t started your Future Pathways application yet.</h2>' +
-      '<p>This is the real counselling submission &mdash; your marks, ranked institute and faculty preferences, reviewed by staff.</p>' +
+      '<h2>This Future Pathways application hasn\u2019t been started yet.</h2>' +
+      '<p>The official counselling submission &mdash; marks, ranked institute and faculty preferences, reviewed by staff.</p>' +
       '<a class="btn-primary dash-status-cta" href="pathways.html">Start the form</a>' +
       '</div>';
   }

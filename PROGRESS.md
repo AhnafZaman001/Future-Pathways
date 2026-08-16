@@ -147,6 +147,23 @@ counts, computed client-side from the already-loaded `submissions`
 array — no new query). No IDs or data flow changed; this was a
 CSS + presentation-layer pass on top of the existing logic.
 
+## Home dashboard: "Recently saved student forms" widget
+
+`index.html` now has a small `#fp-dash-section` (new
+`js/fp-saved-forms.js`) below the tool cards, showing the 8
+most-recently-saved `future_pathways` rows with a click-to-open
+read-only preview modal (profile, careers, ranked institute/faculty
+preferences). It's `hidden` by default and only unhidden when the
+signed-in `app_users.role` is `counsellor` or `admin` — same gate
+`admin.html`/`js/fp-admin.js` already uses, checked client-side only
+(RLS on the underlying tables is what actually enforces this).
+
+This does **not** replace `admin.html` — that page still has the full
+filterable table, submission stats strip, and office-evaluation
+editing. The new widget is a lightweight glance + link out to
+`admin.html` for anyone who wants the full view, since `admin.html`
+isn't linked from the main nav.
+
 ## If something seems broken
 
 Don't trust old chat descriptions of "current state" — clone the repo

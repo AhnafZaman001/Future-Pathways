@@ -91,7 +91,38 @@
       </div>
     </section>
 
+    <section class="fp-dash" id="fp-dash-section" hidden>
+      <div class="fp-dash-head">
+        <div>
+          <span class="eyebrow">Counsellor view</span>
+          <h2>Recently saved student forms</h2>
+        </div>
+        <a href="admin.html" class="nav-link">Open full admin &rarr;</a>
+      </div>
+      <div class="fp-card">
+        <div style="overflow-x:auto;">
+          <table class="fp-admin-table" id="fp-dash-table">
+            <thead>
+              <tr><th>Student</th><th>Pathway</th><th>Status</th><th>Saved</th></tr>
+            </thead>
+            <tbody id="fp-dash-tbody"></tbody>
+          </table>
+        </div>
+        <p class="fp-dash-empty" id="fp-dash-empty" hidden>No saved forms yet.</p>
+      </div>
+    </section>
+
   </main>
+
+  <div id="fp-dash-modal-overlay" class="uni-modal-overlay" hidden>
+    <div class="uni-modal" role="dialog" aria-modal="true" aria-labelledby="fpDashModalTitle">
+      <div class="uni-modal-head">
+        <h2 id="fpDashModalTitle">Form preview</h2>
+        <button type="button" id="fpDashModalClose" class="uni-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="uni-modal-body" id="fpDashModalBody"><!-- populated by js/fp-saved-forms.js --></div>
+    </div>
+  </div>
 
   <footer class="site-footer">
     <div class="wrap">
@@ -101,6 +132,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/fp-client.js"></script>
+  <script src="js/fp-saved-forms.js"></script>
   <script>
     FP.requireAuth().then(function(result){
       if(!result) return; // requireAuth already redirected to login.html
@@ -110,6 +142,10 @@
         logoutBtn.addEventListener("click", function(){ FP.signOut(); });
       }
       window.Dashboard && window.Dashboard.init(result);
+      var role = result.profile ? result.profile.role : "student";
+      if(FP.initSavedSubmissionsWidget){
+        FP.initSavedSubmissionsWidget(role);
+      }
     });
   </script>
   <script src="js/fp-merit.js"></script>

@@ -4,10 +4,15 @@ A student-facing tool that takes matric marks, FSc Part 1 marks, field of
 study, and preferred city, and suggests university/program preferences —
 with eligibility against historical closing merits once that data is added.
 
-**Status: quick vanilla HTML/CSS/JS prototype.** No build step, no backend,
-no database — everything runs client-side in `index.html`. This replaces an
-earlier Next.js + FastAPI + Supabase architecture that was scaffolded but
-not built out; that plan is no longer what this repo tracks.
+**Note: this README describes an early prototype state and is out of date
+in several places (e.g. it predates `pathways.html`, `rankings.html`, and
+`merit.html`, and Supabase is now used throughout, not "no database").
+See `PROGRESS.md` for the current, maintained picture of the project —
+trust that file over this one where they disagree.**
+
+`index.html` was originally a standalone marks-in/universities-out
+calculator; it's now the post-login dashboard and no longer collects
+marks itself (see `PROGRESS.md`).
 
 ## Run it
 

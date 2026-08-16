@@ -12,7 +12,9 @@
 <link rel="stylesheet" href="styles/base.css">
 <link rel="stylesheet" href="styles/layout.css">
 <link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/pathways.css">
 <link rel="stylesheet" href="styles/merit.css">
+<link rel="stylesheet" href="styles/dashboard.css">
 </head>
 <body style="visibility:hidden">
 
@@ -26,7 +28,7 @@
           <span class="brand-name">Rah</span>
           <span class="brand-tag">university counsellor</span>
         </div>
-        <p class="header-note">Enter your marks once. See where you stand.</p>
+        <p class="header-note" id="headerNote">Everything about your applications, in one place.</p>
       </div>
       <nav class="site-nav">
         <a href="pathways.html" class="nav-link is-primary">Future Pathways form</a>
@@ -45,97 +47,48 @@
         <h2 id="uniModalTitle">All listed universities</h2>
         <button type="button" id="uniModalClose" class="uni-modal-close" aria-label="Close">&times;</button>
       </div>
-      <div class="uni-modal-body" id="uniModalBody"><!-- populated by js/app.js --></div>
+      <div class="uni-modal-body" id="uniModalBody"><!-- populated by js/dashboard.js --></div>
     </div>
   </div>
 
   <main class="wrap">
 
-    <section class="intake" id="intake-section">
-      <div class="intake-head">
-        <span class="eyebrow">01 &mdash; Your profile</span>
-        <h1>Where could your marks take you?</h1>
-        <p class="lede">Fill this in with your actual results. Everything is calculated locally in your browser &mdash; nothing leaves this page.</p>
-      </div>
-
-      <form id="intake-form" class="intake-form" novalidate>
-
-        <div class="field">
-          <label for="studentName">Full name</label>
-          <input type="text" id="studentName" name="studentName" placeholder="Full name" autocomplete="name" required>
-        </div>
-
-        <fieldset class="field-group">
-          <legend>Matriculation / O-Level result</legend>
-          <div class="field-row">
-            <div class="field">
-              <label for="matricObtained">Marks obtained</label>
-              <input type="number" id="matricObtained" name="matricObtained" min="0" step="1" placeholder="Marks obtained" required>
-            </div>
-            <div class="field">
-              <label for="matricTotal">Total marks</label>
-              <input type="number" id="matricTotal" name="matricTotal" value="1200" readonly aria-readonly="true">
-            </div>
-          </div>
-        </fieldset>
-
-        <fieldset class="field-group">
-          <legend>FSc / A-Level Part 1 result</legend>
-          <div class="field-row">
-            <div class="field">
-              <label for="fscObtained">Marks obtained</label>
-              <input type="number" id="fscObtained" name="fscObtained" min="0" step="1" placeholder="Marks obtained" required>
-            </div>
-            <div class="field">
-              <label for="fscTotal">Total marks</label>
-              <select id="fscTotal" name="fscTotal" required>
-                <option value="" disabled selected>Choose total</option>
-                <option value="555">555</option>
-                <option value="560">560</option>
-                <option value="570">570</option>
-              </select>
-            </div>
-          </div>
-          <p class="field-hint">Part 2 and entry test marks aren't out yet &mdash; results below are marked provisional until you have those.</p>
-        </fieldset>
-
-        <div class="field-row">
-          <div class="field">
-            <label for="fieldOfStudy">Field of study</label>
-            <select id="fieldOfStudy" name="fieldOfStudy" required>
-              <option value="" disabled selected>Choose a field</option>
-              <!-- populated from js/data.js -->
-            </select>
-          </div>
-          <div class="field">
-            <label for="area">Preferred area</label>
-            <select id="area" name="area" required>
-              <option value="" disabled selected>Choose a city</option>
-              <!-- populated from js/data.js -->
-            </select>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn-primary">Suggest universities</button>
-          <button type="reset" class="btn-ghost">Clear</button>
-        </div>
-      </form>
+    <section class="dash-hero">
+      <span class="eyebrow">Dashboard</span>
+      <h1 id="dashGreeting">Welcome back</h1>
+      <p class="lede">This is where your counselling journey stands right now.</p>
     </section>
 
-    <section class="results" id="results-section" hidden>
-      <div class="results-head">
-        <span class="eyebrow">02 &mdash; Suggested preferences</span>
-        <h2 id="results-heading">Preferences for <span id="resultsName">you</span></h2>
-        <div class="score-strip" id="scoreStrip"></div>
-        <p class="save-status" id="saveStatus" aria-live="polite"></p>
+    <section class="dash-status" id="dashStatus" aria-live="polite">
+      <!-- populated by js/dashboard.js: draft / submitted / not-started state -->
+    </section>
+
+    <section class="dash-tools">
+      <span class="eyebrow">Your tools</span>
+      <div class="dash-tool-grid">
+
+        <a class="dash-tool-card" href="pathways.html">
+          <span class="dash-tool-glyph">&#9670;</span>
+          <h3>Future Pathways form</h3>
+          <p>The official counselling submission &mdash; your ranked institute, faculty and program preferences, reviewed by staff.</p>
+          <span class="dash-tool-cta">Open form &rarr;</span>
+        </a>
+
+        <a class="dash-tool-card" href="rankings.html">
+          <span class="dash-tool-glyph">&#9670;</span>
+          <h3>University Explorer</h3>
+          <p>Browse how universities rank for your field and specialization &mdash; sourced, not guessed.</p>
+          <span class="dash-tool-cta">Explore &rarr;</span>
+        </a>
+
+        <a class="dash-tool-card" href="merit.html">
+          <span class="dash-tool-glyph">&#9670;</span>
+          <h3>Merit &amp; entry test guide</h3>
+          <p>How each institute actually calculates admission merit &mdash; weightages and entry tests, sourced from ~30 institutes.</p>
+          <span class="dash-tool-cta">Read guide &rarr;</span>
+        </a>
+
       </div>
-
-      <div class="results-list" id="resultsList"></div>
-
-      <p class="results-footnote">
-        University list is loaded live from the database. Closing merits are not scored yet &mdash; badges show "Merit data pending" until real per-program merit data is added. Provisional score excludes your entry test and FSc Part 2, so treat these as a starting shortlist, not a final decision.
-      </p>
     </section>
 
   </main>
@@ -156,14 +109,11 @@
       if(logoutBtn){
         logoutBtn.addEventListener("click", function(){ FP.signOut(); });
       }
+      window.Dashboard && window.Dashboard.init(result);
     });
   </script>
   <script src="js/fp-merit.js"></script>
   <script src="js/data.js"></script>
-  <script src="js/calculations.js"></script>
-  <script src="js/suggestions.js"></script>
-  <script src="js/supabase-client.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/dashboard.js"></script>
 </body>
 </html>

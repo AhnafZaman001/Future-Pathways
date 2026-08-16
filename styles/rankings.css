@@ -1,0 +1,66 @@
+/* =========================================================
+   rankings.css — University Explorer. Reuses base.css tokens
+   and the mono/data-dense language established for the
+   Manifest and admin stats strip.
+   ========================================================= */
+
+.rk-hero{ margin: 32px 0 20px; }
+.rk-hero .fp-step-desc{ margin-top:6px; }
+
+.rk-selector{ margin-bottom: 24px; }
+
+.rk-results-card{ padding: 24px 28px; }
+.rk-results-head{
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  margin-bottom: 4px;
+}
+.rk-count{
+  font-family: var(--font-mono); font-size:.72rem; letter-spacing:.08em;
+  color: var(--violet); background: var(--violet-dim);
+  padding: 4px 10px; border-radius: 99px; white-space:nowrap;
+}
+.rk-scope-note{
+  font-size:.85rem; color: var(--ink-soft); margin: 8px 0 20px;
+  padding: 10px 14px; background: var(--surface-2); border-radius: var(--radius-sm);
+  border-left: 2px solid var(--amber);
+}
+
+.rk-list{ display:flex; flex-direction:column; gap:2px; margin-top: 16px; }
+.rk-row{
+  display:flex; align-items:flex-start; gap:16px;
+  padding: 14px 4px; border-bottom: 1px solid var(--line);
+}
+.rk-row:last-child{ border-bottom:none; }
+.rk-rank{
+  flex-shrink:0; width:34px; height:34px; border-radius:8px;
+  background: var(--surface-2); color: var(--ink);
+  font-family: var(--font-mono); font-weight:700; font-size:.95rem;
+  display:flex; align-items:center; justify-content:center;
+}
+.rk-row:first-child .rk-rank{ background: var(--violet); color:#fff; }
+.rk-row-body{ flex:1; min-width:0; }
+.rk-uni-name{ font-family: var(--font-display); font-weight:600; font-size:1rem; color: var(--ink); }
+.rk-detail{ font-size:.85rem; color: var(--ink-soft); margin-top:2px; }
+.rk-source{
+  font-family: var(--font-mono); font-size:.68rem; letter-spacing:.05em;
+  color: var(--ink-faint); margin-top:6px; text-transform:uppercase;
+}
+.rk-source a{ color: var(--ink-faint); text-decoration:underline; }
+.rk-source a:hover{ color: var(--violet); }
+
+.rk-empty{
+  padding: 20px; text-align:center; color: var(--ink-soft); font-size:.9rem;
+  background: var(--surface-2); border-radius: var(--radius-sm);
+}
+
+.rk-data-note{
+  font-size:.78rem; color: var(--ink-faint); margin-top:18px;
+  padding-top:14px; border-top:1px solid var(--line);
+}
+
+.rk-also{ margin-top:18px; padding-top:14px; border-top:1px solid var(--line); }
+.rk-also h3{
+  font-family: var(--font-mono); font-size:.7rem; letter-spacing:.08em; text-transform:uppercase;
+  color: var(--ink-faint); margin:0 0 6px;
+}
+.rk-also p{ font-size:.82rem; color: var(--ink-soft); margin:0; line-height:1.6; }

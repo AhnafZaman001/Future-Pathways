@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>University Explorer &mdash; Rah</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/pathways.css">
+<link rel="stylesheet" href="styles/rankings.css">
+</head>
+<body>
+
+  <div class="bearing-line" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <span class="brand-mark">&#9670;</span>
+        <span class="brand-name">Rah</span>
+        <span class="brand-tag">university explorer</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" style="max-width:820px;">
+    <div class="fp-topbar">
+      <a href="index.html" class="header-note" style="text-decoration:underline;">&larr; Back to calculator</a>
+      <a href="pathways.html" class="header-note" style="text-decoration:underline;">Future Pathways form</a>
+      <a href="merit.html" class="header-note" style="text-decoration:underline;">Merit guide</a>
+    </div>
+
+    <div class="rk-hero">
+      <h1 class="fp-step-title">Find your program</h1>
+      <p class="fp-step-desc">Pick a field and specialization to see how universities rank for it &mdash; sourced, not guessed.</p>
+    </div>
+
+    <div class="fp-card rk-selector">
+      <div class="fp-grid-2">
+        <label>Field
+          <select id="rk-field">
+            <option value="">&mdash; Select a field &mdash;</option>
+          </select>
+        </label>
+        <label>Specialization
+          <select id="rk-subset" disabled>
+            <option value="">&mdash; Select a field first &mdash;</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div id="rk-results"></div>
+  </main>
+
+  <script src="js/rankings-data.js"></script>
+  <script src="js/rankings.js"></script>
+</body>
+</html>

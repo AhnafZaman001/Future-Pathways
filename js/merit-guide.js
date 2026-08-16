@@ -15,9 +15,6 @@
     if(!result) return; // requireAuth already redirected to login.html
     document.body.style.visibility = "visible";
 
-    var emailEl = document.getElementById("fp-user-email");
-    if(emailEl && result.session) emailEl.textContent = result.session.user.email;
-
     var logoutBtn = document.getElementById("fp-logout");
     if(logoutBtn) logoutBtn.addEventListener("click", function(){ FP.signOut(); });
 

@@ -11,7 +11,6 @@
 
   FP.requireAuth().then(function(result){
     if(!result) return; // requireAuth already redirected to login.html
-    document.getElementById("fp-user-email").textContent = result.session.user.email;
 
     var role = result.profile ? result.profile.role : "student";
     if(role !== "counsellor" && role !== "admin"){

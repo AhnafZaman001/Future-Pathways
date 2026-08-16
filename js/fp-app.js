@@ -55,7 +55,6 @@
     if(!result) return; // requireAuth already redirected to login.html
     state.session = result.session;
     state.studentId = result.session.user.id;
-    document.getElementById("fp-user-email").textContent = result.session.user.email;
 
     return Promise.all([
       loadProfile(),

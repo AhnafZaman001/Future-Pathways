@@ -180,3 +180,21 @@ formulas (edit via `supabase/merit_formulas_seed_data.sql` or the
 Supabase dashboard for now); re-verifying `2026-27`-dated rows before
 next admission cycle, since a couple of institutes' policies are
 already dated ahead.
+
+## "View all universities" modal — search + per-institute programs
+
+The modal (opened from `index.html`'s dashboard and from `pathways.html`)
+now has:
+
+- **Search by university name** — a search box + button above the
+  Engineering/Medical grouped list, filters live as you type or on
+  Search/Enter.
+- **"View programs" toggle per institute** — expands to show program/
+  scope names for that specific institute, with its own search box +
+  button to filter that list. This reuses `merit_formulas.program_scope`
+  (falling back to `.basis`) — the same sourced data behind the Merit
+  Guide — rather than a separate, unverified program catalog. If an
+  institute has no merit-formula rows, it honestly says so instead of
+  showing an empty or fabricated list. `FP.getProgramsForInstituteName`
+  / `FP.renderProgramsSectionForInstitute` / `FP.filterProgramsSection`
+  in `js/fp-merit.js` are shared by both pages' modals.

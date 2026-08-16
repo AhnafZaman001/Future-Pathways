@@ -155,20 +155,22 @@ window.Dashboard = window.Dashboard || {};
   }
 
   function initUniModal(){
-    var openBtn  = document.getElementById("viewUnisBtn");
-    var overlay  = document.getElementById("uniModalOverlay");
-    var closeBtn = document.getElementById("uniModalClose");
-    var body      = document.getElementById("uniModalBody");
+    var openBtn      = document.getElementById("viewUnisBtn");
+    var overlay      = document.getElementById("uniModalOverlay");
+    var closeBtn      = document.getElementById("uniModalClose");
+    var body          = document.getElementById("uniModalBody");
+    var searchInput  = document.getElementById("uniModalSearch");
+    var searchBtn    = document.getElementById("uniModalSearchBtn");
     if(!openBtn || !overlay || !closeBtn || !body) return;
 
     function open(){
-      body.innerHTML = renderUniGroups();
+      body.innerHTML = renderUniGroups(searchInput ? searchInput.value : "");
       overlay.hidden = false;
       document.addEventListener("keydown", onKeydown);
 
       if(institutesLoadState !== "loaded"){
         loadInstitutesWithLoadingState().then(function(){
-          if(!overlay.hidden) body.innerHTML = renderUniGroups();
+          if(!overlay.hidden) body.innerHTML = renderUniGroups(searchInput ? searchInput.value : "");
         });
       }
     }
@@ -177,29 +179,74 @@ window.Dashboard = window.Dashboard || {};
       document.removeEventListener("keydown", onKeydown);
     }
     function onKeydown(e){ if(e.key === "Escape") close(); }
+    function reRender(){ body.innerHTML = renderUniGroups(searchInput.value); }
 
     openBtn.addEventListener("click", open);
     closeBtn.addEventListener("click", close);
     overlay.addEventListener("click", function(e){
       if(e.target === overlay) close();
     });
+
+    if(searchInput){
+      searchInput.addEventListener("input", reRender);
+      searchInput.addEventListener("keydown", function(e){
+        if(e.key === "Enter"){ e.preventDefault(); reRender(); }
+      });
+    }
+    if(searchBtn) searchBtn.addEventListener("click", reRender);
+
     body.addEventListener("click", function(e){
-      if(!e.target.classList.contains("merit-toggle")) return;
-      var instName = e.target.dataset.inst;
-      var container = e.target.closest("li").querySelector(".merit-inline-container");
-      var isOpen = !container.hidden;
-      if(isOpen){
-        container.hidden = true;
-        e.target.textContent = "View merit formula";
+      if(e.target.classList.contains("merit-toggle")){
+        var instName = e.target.dataset.inst;
+        var container = e.target.closest("li").querySelector(".merit-inline-container");
+        var isOpen = !container.hidden;
+        if(isOpen){
+          container.hidden = true;
+          e.target.textContent = "View merit formula";
+          return;
+        }
+        container.innerHTML = FP.renderMeritSectionForInstitute(instName);
+        container.hidden = false;
+        e.target.textContent = "Hide merit formula";
         return;
       }
-      container.innerHTML = FP.renderMeritSectionForInstitute(instName);
-      container.hidden = false;
-      e.target.textContent = "Hide merit formula";
+
+      if(e.target.classList.contains("programs-toggle")){
+        var pInstName = e.target.dataset.inst;
+        var pContainer = e.target.closest("li").querySelector(".programs-inline-container");
+        var pIsOpen = !pContainer.hidden;
+        if(pIsOpen){
+          pContainer.hidden = true;
+          e.target.textContent = "View programs";
+          return;
+        }
+        pContainer.innerHTML = FP.renderProgramsSectionForInstitute(pInstName);
+        pContainer.hidden = false;
+        e.target.textContent = "Hide programs";
+        return;
+      }
+
+      if(e.target.classList.contains("program-search-btn")){
+        var section = e.target.closest(".programs-inline-section");
+        if(section) FP.filterProgramsSection(section);
+      }
+    });
+
+    body.addEventListener("input", function(e){
+      if(!e.target.classList.contains("program-search-input")) return;
+      var section = e.target.closest(".programs-inline-section");
+      if(section) FP.filterProgramsSection(section);
+    });
+
+    body.addEventListener("keydown", function(e){
+      if(e.key !== "Enter" || !e.target.classList.contains("program-search-input")) return;
+      e.preventDefault();
+      var section = e.target.closest(".programs-inline-section");
+      if(section) FP.filterProgramsSection(section);
     });
   }
 
-  function renderUniGroups(){
+  function renderUniGroups(searchTerm){
     if(institutesLoadState === "loading"){
       return '<p class="uni-modal-empty">Loading universities from the database\u2026</p>';
     }
@@ -210,6 +257,16 @@ window.Dashboard = window.Dashboard || {};
     var all = Counsellor.INSTITUTES || [];
     if(all.length === 0){
       return '<p class="uni-modal-empty">No universities are in the database yet. Run the seed script in Supabase, then reopen this window.</p>';
+    }
+
+    var q = (searchTerm || "").trim().toLowerCase();
+    if(q){
+      all = all.filter(function(inst){
+        return String(inst.name || "").toLowerCase().indexOf(q) !== -1;
+      });
+      if(all.length === 0){
+        return '<p class="uni-modal-empty">No universities match \u201c' + escapeHtml(searchTerm.trim()) + '\u201d.</p>';
+      }
     }
 
     var buckets = { "Engineering": [], "Medical": [], "Other": [] };
@@ -223,18 +280,20 @@ window.Dashboard = window.Dashboard || {};
 
     var order = ["Engineering", "Medical", "Other"];
     return order
-      .filter(function(name){ return name !== "Other" || buckets["Other"].length > 0; })
+      .filter(function(name){ return buckets[name].length > 0; })
       .map(function(name){
         var entries = buckets[name];
-        var listHtml = entries.length
-          ? "<ul>" + entries.map(function(inst){
+        var listHtml = "<ul>" + entries.map(function(inst){
               var meta = inst.location || (inst.campuses && inst.campuses.length ? inst.campuses.join(", ") : "");
               return "<li><div class=\"uni-modal-row\"><span>" + escapeHtml(inst.name) + "</span>" +
                      "<span class=\"uni-modal-programs\">" + escapeHtml(meta) + "</span>" +
-                     "<button type=\"button\" class=\"merit-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View merit formula</button></div>" +
-                     "<div class=\"merit-inline-container\" hidden></div></li>";
-            }).join("") + "</ul>"
-          : "<p class=\"uni-modal-empty\">No universities listed yet.</p>";
+                     "<div class=\"uni-modal-actions\">" +
+                       "<button type=\"button\" class=\"merit-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View merit formula</button>" +
+                       "<button type=\"button\" class=\"programs-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View programs</button>" +
+                     "</div></div>" +
+                     "<div class=\"merit-inline-container\" hidden></div>" +
+                     "<div class=\"programs-inline-container\" hidden></div></li>";
+            }).join("") + "</ul>";
 
         return "<div class=\"uni-modal-group\"><h3>" + name + " (" + entries.length + ")</h3>" + listHtml + "</div>";
       }).join("");

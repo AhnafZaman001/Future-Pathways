@@ -92,5 +92,9 @@
   font-family: var(--font-mono); font-size:.7rem; letter-spacing:.08em; text-transform:uppercase;
   color: var(--ink-faint); margin:0 0 6px;
 }
-.rk-also-note{ font-size:.8rem; color: var(--ink-soft); margin: 0 0 10px; line-height:1.6; }
-.rk-tag-also{ color: var(--ink-soft); font-weight:500; }
+.rk-row-also{ opacity: .85; }
+.rk-rank-also{
+  background: transparent;
+  color: var(--ink-faint);
+  border: 1px dashed var(--line-strong);
+}

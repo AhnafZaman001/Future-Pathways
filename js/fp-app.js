@@ -596,9 +596,9 @@
 
   function saveDraftShell(){
     return ensureFuturePathwayRow().then(function(id){
-      return FP.client.from("future_pathways").update({
-        pathway: state.pathway, additional_information: state.additionalInfo
-      }).eq("id", id).then(function(r){ if(r.error) throw r.error; });
+      var patch = { additional_information: state.additionalInfo };
+      if(state.pathway) patch.pathway = state.pathway;
+      return FP.client.from("future_pathways").update(patch).eq("id", id).then(function(r){ if(r.error) throw r.error; });
     });
   }
 

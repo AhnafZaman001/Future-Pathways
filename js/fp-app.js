@@ -311,9 +311,9 @@
   function renderStatusBanner(){
     var el = document.getElementById("fp-status-banner");
     if(state.status === "submitted"){
-      el.innerHTML = '<div class="fp-status-banner submitted">Your Future Pathways form has been submitted. It is locked for editing — contact your counsellor for changes.</div>';
+      el.innerHTML = '<div class="fp-status-banner submitted">This Future Pathways form has been submitted. It is locked for editing — contact the admin office for changes.</div>';
     } else if(state.status === "draft"){
-      el.innerHTML = '<div class="fp-status-banner draft">You have a saved draft. Progress is saved automatically as you move through the steps.</div>';
+      el.innerHTML = '<div class="fp-status-banner draft">A draft is saved. Progress is saved automatically as you move through the steps.</div>';
     } else {
       el.innerHTML = "";
     }
@@ -358,8 +358,8 @@
     },
 
     pathway: function(){
-      return '<h2 class="fp-step-title">Choose your pathway</h2>' +
-        '<p class="fp-step-desc">This determines which institutes, faculties, and programs you\'ll see next.</p>' +
+      return '<h2 class="fp-step-title">Choose the pathway</h2>' +
+        '<p class="fp-step-desc">This determines which institutes, faculties, and programs appear next.</p>' +
         '<div class="fp-pathway-options">' +
           pathwayCard("engineering", "Engineering / Non-Medical", "Engineering, Computer & IT, and related programs.") +
           pathwayCard("medical", "Medical / Health Sciences", "MBBS, BDS, Pharm D, DPT, and related programs.") +
@@ -379,7 +379,7 @@
         return '<label class="fp-checkbox-item"><input type="checkbox" data-career="' + c.id + '" ' + checked + '> ' + esc(c.name) + '</label>';
       }).join("");
       return '<h2 class="fp-step-title">Programs &amp; career interests</h2>' +
-        '<p class="fp-step-desc">Select every option you\'re considering, alongside your main pathway.</p>' +
+        '<p class="fp-step-desc">Select every option being considered, alongside the main pathway.</p>' +
         '<div class="fp-checkbox-grid">' + opts + '</div>' +
         '<label style="margin-top:16px;">If "BS (Hons) Leading to ___" applies, specify' +
           '<input type="text" id="fp-custom-career" value="' + esc(state.customCareer) + '"></label>';
@@ -405,7 +405,7 @@
 
     additional: function(){
       return '<h2 class="fp-step-title">Additional information</h2>' +
-        '<p class="fp-step-desc">Anything else your counsellor should know.</p>' +
+        '<p class="fp-step-desc">Anything else the admissions office should know.</p>' +
         '<textarea id="fp-additional" rows="6" style="width:100%; font-family:var(--font-body); padding:10px 12px; border:1px solid var(--line-strong); border-radius:var(--radius-sm);">' + esc(state.additionalInfo) + '</textarea>';
     },
 
@@ -426,7 +426,7 @@
 
       return '<h2 class="fp-step-title">Review</h2>' +
         stampHtml +
-        '<p class="fp-step-desc">Check everything before submitting. You cannot edit after you submit.</p>' +
+        '<p class="fp-step-desc">Check everything before submitting. This cannot be edited after submission.</p>' +
         reviewSection("Student information", [
           ["Name", p.student_name], ["Father's name", p.father_name], ["Father's profession", p.father_profession],
           ["Contact", p.contact], ["Discipline", p.discipline], ["Section", p.section],

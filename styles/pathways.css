@@ -219,6 +219,5 @@ body.is-review-step .fp-actions{ margin-top:28px; padding-top:20px; border-top:1
 .fp-badge.draft{ background: var(--amber-dim); color: var(--amber); }
 .fp-badge.submitted{ background: var(--green-dim); color: var(--green); }
 
-.fp-topbar{ display:flex; justify-content:flex-end; align-items:center; gap:12px; padding: 12px 0; font-size:.85rem; }
-.fp-topbar a, .fp-topbar button{ color: var(--ink-soft); background:none; border:none; cursor:pointer; font-family:var(--font-body); font-size:.85rem; text-decoration:underline; padding:0; }
-.fp-topbar a:hover, .fp-topbar button:hover{ color: var(--ink); }
+.fp-topbar{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding: 16px 0; }
+#fp-user-email{ font-family: var(--font-mono); font-size:.75rem; color: var(--ink-faint); margin-right:auto; }

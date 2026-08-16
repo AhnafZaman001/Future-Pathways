@@ -23,10 +23,23 @@
 
 .header-inner{
   display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header-top{
+  display: flex;
   align-items: baseline;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 6px 20px;
+}
+
+.site-nav{
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .brand{

@@ -21,10 +21,24 @@ window.Dashboard = window.Dashboard || {};
   Dashboard.init = function init(authResult){
     var session = authResult.session;
     var profile = authResult.profile || {};
+    var role = profile.role || "student";
     var studentId = session.user.id;
 
-    renderGreeting(profile);
-    loadStatus(studentId);
+    renderGreeting(profile, role);
+
+    if(role === "counsellor" || role === "admin"){
+      // Counsellors/admins don't have a personal "case" — they work
+      // many students' submissions (see the "Recently saved student
+      // forms" section further down, js/fp-saved-forms.js). The
+      // single draft/submitted status card below is a per-student
+      // concept and doesn't apply to a staff account, so skip it
+      // rather than showing a misleading "not started" for a case
+      // that was never theirs to begin with.
+      hideStatusSection();
+    } else {
+      loadStatus(studentId);
+    }
+
     initUniModal();
     loadInstitutesWithLoadingState();
 
@@ -36,13 +50,33 @@ window.Dashboard = window.Dashboard || {};
   /* ---------------------------------------------------------
      Greeting — uses the student's real name if we have one
      (app_users.full_name, falling back to the students row),
-     never asks for it again.
+     never asks for it again. Never falls back to showing the
+     account's email: full_name is sometimes left equal to the
+     email (e.g. right after account creation, before a real
+     name is set), and printing that as a large page headline
+     is a confidentiality problem, not a personalization win.
+     Counsellor/admin accounts get a role-based heading instead
+     of a personal greeting, since this page isn't about them.
      --------------------------------------------------------- */
-  function renderGreeting(profile){
+  function renderGreeting(profile, role){
     var heading = document.getElementById("dashGreeting");
     if(!heading) return;
+
+    if(role === "counsellor" || role === "admin"){
+      heading.textContent = "Dashboard";
+      var lede = document.querySelector(".dash-hero .lede");
+      if(lede) lede.textContent = "Case data and tools, in one place.";
+      return;
+    }
+
     var name = (profile.full_name || "").trim();
-    heading.textContent = name ? "Welcome back, " + name.split(" ")[0] : "Welcome back";
+    var looksLikeEmail = name.indexOf("@") !== -1;
+    heading.textContent = (name && !looksLikeEmail) ? "Welcome back, " + name.split(" ")[0] : "Welcome back";
+  }
+
+  function hideStatusSection(){
+    var el = document.getElementById("dashStatus");
+    if(el) el.hidden = true;
   }
 
   /* ---------------------------------------------------------

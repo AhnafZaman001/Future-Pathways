@@ -67,7 +67,12 @@
     }
 
     if(field.alsoOffered && field.alsoOffered.length){
-      html += '<div class="rk-also"><h3>Also offered at</h3><p>' + field.alsoOffered.map(esc).join(" &middot; ") + '</p></div>';
+      html += '<div class="rk-also"><h3>Also offered at</h3>' +
+        '<p class="rk-also-note">Offers this program, but doesn\'t have an independently verified rank in this list.</p>' +
+        '<div class="rk-tags">' + field.alsoOffered.map(function(n){
+          return '<span class="rk-tag rk-tag-also">' + esc(n) + '</span>';
+        }).join("") + '</div>' +
+      '</div>';
     }
 
     if(field.industryReputation){

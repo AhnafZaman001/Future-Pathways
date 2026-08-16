@@ -5,6 +5,7 @@
 
 (function(){
   var searchInput    = document.getElementById("meritSearch");
+  var searchBtn      = document.getElementById("meritSearchBtn");
   var pathwayFilter  = document.getElementById("meritPathwayFilter");
   var testFilter      = document.getElementById("meritTestFilter");
   var listEl          = document.getElementById("meritList");
@@ -50,6 +51,11 @@
   [searchInput, pathwayFilter, testFilter].forEach(function(el){
     el.addEventListener("input", render);
     el.addEventListener("change", render);
+  });
+
+  searchBtn.addEventListener("click", render);
+  searchInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); render(); }
   });
 
   function render(){

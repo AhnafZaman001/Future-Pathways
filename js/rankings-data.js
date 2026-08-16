@@ -12,6 +12,20 @@
    overall/subject-family rank is shown with that fact stated,
    not disguised as a subject rank.
 
+   `theBand`, where present, is that university's overall (not
+   subject-specific) Times Higher Education World University
+   Rankings 2026 band — THE's own subject tables are rendered
+   client-side JS and couldn't be fetched directly, so only the
+   overall band is used, and only for universities explicitly
+   named in Gulf News's coverage of THE's release. Left null
+   rather than guessed where a university wasn't named.
+
+   `industryReputation`, where present on a field, is an
+   explicitly non-numeric, non-ranking signal — informal
+   employer-perception consensus repeated across independent
+   sources, shown separately so it's never mistaken for a real
+   ranking.
+
    Update this file, don't hardcode ranking numbers elsewhere.
    ========================================================= */
 
@@ -29,11 +43,11 @@ window.RANKING_DATA = {
     // Applies to all subsets above unless a subset has its own
     // override block further down — see `overrides`.
     baseRanking: [
-      { rank: 1, name: "NUST", detail: "QS Engineering & Technology #127 globally — #1 in Pakistan for engineering", source: "QS Subject Rankings 2025", sourceUrl: "https://nust.edu.pk/about-us/nust-rankings/" },
-      { rank: 2, name: "PIEAS", detail: "QS overall #721 globally (2026); historically HEC's #2 Engineering & Technology institution", source: "QS World University Rankings 2026 / HEC category ranking", sourceUrl: null },
-      { rank: 3, name: "GIK Institute (GIKI)", detail: "Not currently listed in QS's global ranking; historically HEC's #3 Engineering & Technology institution", source: "HEC category ranking (dated methodology — verify current cycle)", sourceUrl: null },
-      { rank: 4, name: "UET Lahore", detail: "QS overall #801 globally (2026)", source: "QS World University Rankings 2026", sourceUrl: null },
-      { rank: 5, name: "COMSATS University Islamabad", detail: "QS overall #664 globally (2026)", source: "QS World University Rankings 2026", sourceUrl: null }
+      { rank: 1, name: "NUST", detail: "QS Engineering & Technology #127 globally — #1 in Pakistan for engineering", source: "QS Subject Rankings 2025", sourceUrl: "https://nust.edu.pk/about-us/nust-rankings/", theBand: "601–800" },
+      { rank: 2, name: "PIEAS", detail: "QS overall #721 globally (2026); historically HEC's #2 Engineering & Technology institution", source: "QS World University Rankings 2026 / HEC category ranking", sourceUrl: null, theBand: null },
+      { rank: 3, name: "GIK Institute (GIKI)", detail: "Not currently listed in QS's global ranking; historically HEC's #3 Engineering & Technology institution", source: "HEC category ranking (dated methodology — verify current cycle)", sourceUrl: null, theBand: "801–1000" },
+      { rank: 4, name: "UET Lahore", detail: "QS overall #801 globally (2026)", source: "QS World University Rankings 2026", sourceUrl: null, theBand: null },
+      { rank: 5, name: "COMSATS University Islamabad", detail: "QS overall #664 globally (2026)", source: "QS World University Rankings 2026", sourceUrl: null, theBand: "601–800" }
     ],
     overrides: {
       "Electrical Engineering": [
@@ -66,11 +80,21 @@ window.RANKING_DATA = {
       "Data Science", "Cybersecurity", "Information Technology", "Computer Engineering"
     ],
     baseRanking: [
-      { rank: 1, name: "NUST (SEECS)", detail: "QS Computer Science & Information Systems #164 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://nust.edu.pk/about-us/nust-rankings/" },
-      { rank: 2, name: "University of the Punjab (PUCIT)", detail: "QS Computer Science & Information Systems #301–350 globally", source: "QS Subject Rankings 2025", sourceUrl: null },
-      { rank: 3, name: "LUMS", detail: "QS Computer Science & Information Systems #401–450 globally", source: "QS Subject Rankings 2025", sourceUrl: null },
-      { rank: 3, name: "UET Lahore", detail: "QS Computer Science & Information Systems #401–450 globally (tied band with LUMS)", source: "QS Subject Rankings 2025", sourceUrl: null }
+      { rank: 1, name: "NUST (SEECS)", detail: "QS Computer Science & Information Systems #164 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://nust.edu.pk/about-us/nust-rankings/", theBand: "601–800" },
+      { rank: 2, name: "University of the Punjab (PUCIT)", detail: "QS Computer Science & Information Systems #301–350 globally", source: "QS Subject Rankings 2025", sourceUrl: null, theBand: "801–1000 (parent university's overall band, not PUCIT-specific)" },
+      { rank: 3, name: "LUMS", detail: "QS Computer Science & Information Systems #401–450 globally", source: "QS Subject Rankings 2025", sourceUrl: null, theBand: "801–1000" },
+      { rank: 3, name: "UET Lahore", detail: "QS Computer Science & Information Systems #401–450 globally (tied band with LUMS)", source: "QS Subject Rankings 2025", sourceUrl: null, theBand: null }
     ],
+    // Named consistently across multiple independent sources as
+    // the most employer-respected computing programs in Pakistan.
+    // This is NOT a formal ranking — no published methodology,
+    // no single primary source — so it's shown as a distinct,
+    // clearly-labeled reputation signal, never mixed into the
+    // numeric ranked list above.
+    industryReputation: {
+      note: "Named repeatedly across independent Pakistani education/career sources as the most employer-respected computing programs \u2014 this reflects informal consensus, not a published ranking with a stated methodology.",
+      names: ["FAST-NUCES", "COMSATS University Islamabad", "NUST", "Punjab University College of IT (PUCIT)"]
+    },
     overrides: {},
     // FAST-NUCES is deliberately here, not in the ranked list —
     // sources conflicted on its exact QS subject position, and

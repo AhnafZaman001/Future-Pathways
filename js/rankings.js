@@ -62,9 +62,22 @@
     if(field.dataNote){
       html += '<p class="rk-data-note">' + esc(field.dataNote) + '</p>';
     }
+    if(ranked.some(function(e){ return e.theBand; })){
+      html += '<p class="rk-data-note">"THE 2026" badges show that university\'s overall Times Higher Education World University Rankings 2026 band (not subject-specific — THE\'s subject tables aren\'t available for direct citation here), reported via Gulf News\'s coverage of THE\'s release.</p>';
+    }
 
     if(field.alsoOffered && field.alsoOffered.length){
       html += '<div class="rk-also"><h3>Also offered at</h3><p>' + field.alsoOffered.map(esc).join(" &middot; ") + '</p></div>';
+    }
+
+    if(field.industryReputation){
+      html += '<div class="rk-industry">' +
+        '<h3>Industry reputation <span class="rk-industry-badge">not a ranking</span></h3>' +
+        '<p class="rk-industry-note">' + esc(field.industryReputation.note) + '</p>' +
+        '<div class="rk-tags">' + field.industryReputation.names.map(function(n){
+          return '<span class="rk-tag">' + esc(n) + '</span>';
+        }).join("") + '</div>' +
+      '</div>';
     }
 
     html += '</div>';
@@ -73,11 +86,14 @@
 
   function rowHtml(entry){
     var link = entry.sourceUrl ? '<a href="' + esc(entry.sourceUrl) + '" target="_blank" rel="noopener">' + esc(entry.source) + '</a>' : esc(entry.source);
+    var theBandHtml = entry.theBand ?
+      '<div class="rk-the-band"><span class="rk-the-label">THE 2026</span> ' + esc(entry.theBand) + '</div>' : "";
     return '<div class="rk-row">' +
       '<div class="rk-rank">' + entry.rank + '</div>' +
       '<div class="rk-row-body">' +
         '<div class="rk-uni-name">' + esc(entry.name) + '</div>' +
         '<div class="rk-detail">' + esc(entry.detail) + '</div>' +
+        theBandHtml +
         '<div class="rk-source">SOURCE: ' + link + '</div>' +
       '</div>' +
     '</div>';

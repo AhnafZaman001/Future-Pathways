@@ -210,6 +210,11 @@ body.is-review-step .fp-actions{ margin-top:28px; padding-top:20px; border-top:1
 .fp-stat.accent-amber .fp-stat-value{ color: var(--amber); }
 
 /* --- admin table --- */
+.fp-dash{ margin-top: 48px; }
+.fp-dash-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:16px; flex-wrap:wrap; }
+.fp-dash-head h2{ margin:2px 0 0; }
+.fp-dash-empty{ color: var(--ink-soft); font-size:.9rem; padding: 8px 2px 2px; margin:0; }
+
 .fp-admin-table{ width:100%; border-collapse:collapse; font-size:.88rem; }
 .fp-admin-table th, .fp-admin-table td{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); }
 .fp-admin-table th{ color: var(--ink-soft); font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; }

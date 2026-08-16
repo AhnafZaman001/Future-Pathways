@@ -89,6 +89,63 @@ window.FP = window.FP || {};
     return '<div class="merit-inline-section">' + rows.map(FP.renderMeritCard).join("") + '</div>';
   };
 
+  /**
+   * Program/scope names we actually have data for at one institute —
+   * sourced from merit_formulas.program_scope (falling back to
+   * .basis), since that's the only real per-institute program-level
+   * data in this app. Not a full course catalog; only what's backed
+   * by a sourced merit-formula row.
+   */
+  FP.getProgramsForInstituteName = function(name){
+    var rows = FP.getMeritFormulasForInstituteName(name);
+    var seen = {};
+    var out = [];
+    rows.forEach(function(row){
+      var label = (row.program_scope || row.basis || "").trim();
+      if(!label || seen[label.toLowerCase()]) return;
+      seen[label.toLowerCase()] = true;
+      out.push(label);
+    });
+    return out;
+  };
+
+  /** Inline "View programs" block, with its own search box, for the
+   *  "View all universities" modals. */
+  FP.renderProgramsSectionForInstitute = function(instituteName){
+    var programs = FP.getProgramsForInstituteName(instituteName);
+    if(!programs.length){
+      return '<p class="merit-none">No program-level data yet for this institute \u2014 check the Merit &amp; Entry Test Guide as more is added.</p>';
+    }
+    var items = programs.map(function(p){
+      return '<li class="programs-inline-item">' + escapeHtml(p) + '</li>';
+    }).join("");
+    return (
+      '<div class="programs-inline-section">' +
+        '<div class="programs-search-row">' +
+          '<input type="search" class="program-search-input" placeholder="Search a program at this institute\u2026" autocomplete="off">' +
+          '<button type="button" class="program-search-btn btn-secondary">Search</button>' +
+        '</div>' +
+        '<ul class="programs-inline-list">' + items + '</ul>' +
+        '<p class="programs-inline-empty" hidden>No programs match that search.</p>' +
+      '</div>'
+    );
+  };
+
+  /** Filters a .programs-inline-section's list by its own search input's value. */
+  FP.filterProgramsSection = function(sectionEl){
+    var input = sectionEl.querySelector(".program-search-input");
+    var q = (input.value || "").trim().toLowerCase();
+    var items = sectionEl.querySelectorAll(".programs-inline-item");
+    var visibleCount = 0;
+    items.forEach(function(li){
+      var match = !q || li.textContent.toLowerCase().indexOf(q) !== -1;
+      li.hidden = !match;
+      if(match) visibleCount++;
+    });
+    var emptyMsg = sectionEl.querySelector(".programs-inline-empty");
+    if(emptyMsg) emptyMsg.hidden = visibleCount !== 0;
+  };
+
   function escapeHtml(str){
     return String(str).replace(/[&<>"']/g, function(c){
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c];

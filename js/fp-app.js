@@ -83,14 +83,16 @@
   // institute has a pathway value outside engineering/medical.
   // ---------------------------------------------------------
   function initUniModal(){
-    var openBtn  = document.getElementById("viewUnisBtn");
-    var overlay  = document.getElementById("uniModalOverlay");
-    var closeBtn = document.getElementById("uniModalClose");
-    var body      = document.getElementById("uniModalBody");
+    var openBtn      = document.getElementById("viewUnisBtn");
+    var overlay      = document.getElementById("uniModalOverlay");
+    var closeBtn      = document.getElementById("uniModalClose");
+    var body          = document.getElementById("uniModalBody");
+    var searchInput  = document.getElementById("uniModalSearch");
+    var searchBtn    = document.getElementById("uniModalSearchBtn");
     if(!openBtn || !overlay || !closeBtn || !body) return;
 
     function open(){
-      body.innerHTML = renderUniGroups();
+      body.innerHTML = renderUniGroups(searchInput ? searchInput.value : "");
       overlay.hidden = false;
       document.addEventListener("keydown", onKeydown);
     }
@@ -99,30 +101,86 @@
       document.removeEventListener("keydown", onKeydown);
     }
     function onKeydown(e){ if(e.key === "Escape") close(); }
+    function reRender(){ body.innerHTML = renderUniGroups(searchInput.value); }
 
     openBtn.addEventListener("click", open);
     closeBtn.addEventListener("click", close);
     overlay.addEventListener("click", function(e){
       if(e.target === overlay) close();
     });
+
+    if(searchInput){
+      searchInput.addEventListener("input", reRender);
+      searchInput.addEventListener("keydown", function(e){
+        if(e.key === "Enter"){ e.preventDefault(); reRender(); }
+      });
+    }
+    if(searchBtn) searchBtn.addEventListener("click", reRender);
+
     body.addEventListener("click", function(e){
-      if(!e.target.classList.contains("merit-toggle")) return;
-      var instName = e.target.dataset.inst;
-      var container = e.target.closest("li").querySelector(".merit-inline-container");
-      var isOpen = !container.hidden;
-      if(isOpen){
-        container.hidden = true;
-        e.target.textContent = "View merit formula";
+      if(e.target.classList.contains("merit-toggle")){
+        var instName = e.target.dataset.inst;
+        var container = e.target.closest("li").querySelector(".merit-inline-container");
+        var isOpen = !container.hidden;
+        if(isOpen){
+          container.hidden = true;
+          e.target.textContent = "View merit formula";
+          return;
+        }
+        container.innerHTML = FP.renderMeritSectionForInstitute(instName);
+        container.hidden = false;
+        e.target.textContent = "Hide merit formula";
         return;
       }
-      container.innerHTML = FP.renderMeritSectionForInstitute(instName);
-      container.hidden = false;
-      e.target.textContent = "Hide merit formula";
+
+      if(e.target.classList.contains("programs-toggle")){
+        var pInstName = e.target.dataset.inst;
+        var pContainer = e.target.closest("li").querySelector(".programs-inline-container");
+        var pIsOpen = !pContainer.hidden;
+        if(pIsOpen){
+          pContainer.hidden = true;
+          e.target.textContent = "View programs";
+          return;
+        }
+        pContainer.innerHTML = FP.renderProgramsSectionForInstitute(pInstName);
+        pContainer.hidden = false;
+        e.target.textContent = "Hide programs";
+        return;
+      }
+
+      if(e.target.classList.contains("program-search-btn")){
+        var section = e.target.closest(".programs-inline-section");
+        if(section) FP.filterProgramsSection(section);
+      }
+    });
+
+    body.addEventListener("input", function(e){
+      if(!e.target.classList.contains("program-search-input")) return;
+      var section = e.target.closest(".programs-inline-section");
+      if(section) FP.filterProgramsSection(section);
+    });
+
+    body.addEventListener("keydown", function(e){
+      if(e.key !== "Enter" || !e.target.classList.contains("program-search-input")) return;
+      e.preventDefault();
+      var section = e.target.closest(".programs-inline-section");
+      if(section) FP.filterProgramsSection(section);
     });
   }
 
-  function renderUniGroups(){
+  function renderUniGroups(searchTerm){
     var all = state.allInstitutes || [];
+
+    var q = (searchTerm || "").trim().toLowerCase();
+    if(q){
+      all = all.filter(function(inst){
+        return String(inst.name || "").toLowerCase().indexOf(q) !== -1;
+      });
+      if(all.length === 0){
+        return '<p class="uni-modal-empty">No universities match \u201c' + escapeHtml(searchTerm.trim()) + '\u201d.</p>';
+      }
+    }
+
     var buckets = { "Engineering": [], "Medical": [], "Other": [] };
 
     all.forEach(function(inst){
@@ -134,18 +192,20 @@
 
     var order = ["Engineering", "Medical", "Other"];
     return order
-      .filter(function(name){ return name !== "Other" || buckets["Other"].length > 0; })
+      .filter(function(name){ return buckets[name].length > 0; })
       .map(function(name){
         var entries = buckets[name];
-        var listHtml = entries.length
-          ? "<ul>" + entries.map(function(inst){
+        var listHtml = "<ul>" + entries.map(function(inst){
               var meta = inst.location || (inst.campuses && inst.campuses.length ? inst.campuses.join(", ") : "");
               return "<li><div class=\"uni-modal-row\"><span>" + escapeHtml(inst.name) + "</span>" +
                      "<span class=\"uni-modal-programs\">" + escapeHtml(meta) + "</span>" +
-                     "<button type=\"button\" class=\"merit-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View merit formula</button></div>" +
-                     "<div class=\"merit-inline-container\" hidden></div></li>";
-            }).join("") + "</ul>"
-          : "<p class=\"uni-modal-empty\">No universities listed yet.</p>";
+                     "<div class=\"uni-modal-actions\">" +
+                       "<button type=\"button\" class=\"merit-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View merit formula</button>" +
+                       "<button type=\"button\" class=\"programs-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View programs</button>" +
+                     "</div></div>" +
+                     "<div class=\"merit-inline-container\" hidden></div>" +
+                     "<div class=\"programs-inline-container\" hidden></div></li>";
+            }).join("") + "</ul>";
 
         return "<div class=\"uni-modal-group\"><h3>" + name + " (" + entries.length + ")</h3>" + listHtml + "</div>";
       }).join("");
@@ -310,9 +370,9 @@
   function renderStatusBanner(){
     var el = document.getElementById("fp-status-banner");
     if(state.status === "submitted"){
-      el.innerHTML = '<div class="fp-status-banner submitted">Your Future Pathways form has been submitted. It is locked for editing — contact your counsellor for changes.</div>';
+      el.innerHTML = '<div class="fp-status-banner submitted">This Future Pathways form has been submitted. It is locked for editing — contact the admin office for changes.</div>';
     } else if(state.status === "draft"){
-      el.innerHTML = '<div class="fp-status-banner draft">You have a saved draft. Progress is saved automatically as you move through the steps.</div>';
+      el.innerHTML = '<div class="fp-status-banner draft">A draft is saved. Progress is saved automatically as you move through the steps.</div>';
     } else {
       el.innerHTML = "";
     }
@@ -357,8 +417,8 @@
     },
 
     pathway: function(){
-      return '<h2 class="fp-step-title">Choose your pathway</h2>' +
-        '<p class="fp-step-desc">This determines which institutes, faculties, and programs you\'ll see next.</p>' +
+      return '<h2 class="fp-step-title">Choose the pathway</h2>' +
+        '<p class="fp-step-desc">This determines which institutes, faculties, and programs appear next.</p>' +
         '<div class="fp-pathway-options">' +
           pathwayCard("engineering", "Engineering / Non-Medical", "Engineering, Computer & IT, and related programs.") +
           pathwayCard("medical", "Medical / Health Sciences", "MBBS, BDS, Pharm D, DPT, and related programs.") +
@@ -378,7 +438,7 @@
         return '<label class="fp-checkbox-item"><input type="checkbox" data-career="' + c.id + '" ' + checked + '> ' + esc(c.name) + '</label>';
       }).join("");
       return '<h2 class="fp-step-title">Programs &amp; career interests</h2>' +
-        '<p class="fp-step-desc">Select every option you\'re considering, alongside your main pathway.</p>' +
+        '<p class="fp-step-desc">Select every option being considered, alongside the main pathway.</p>' +
         '<div class="fp-checkbox-grid">' + opts + '</div>' +
         '<label style="margin-top:16px;">If "BS (Hons) Leading to ___" applies, specify' +
           '<input type="text" id="fp-custom-career" value="' + esc(state.customCareer) + '"></label>';
@@ -404,7 +464,7 @@
 
     additional: function(){
       return '<h2 class="fp-step-title">Additional information</h2>' +
-        '<p class="fp-step-desc">Anything else your counsellor should know.</p>' +
+        '<p class="fp-step-desc">Anything else the admissions office should know.</p>' +
         '<textarea id="fp-additional" rows="6" style="width:100%; font-family:var(--font-body); padding:10px 12px; border:1px solid var(--line-strong); border-radius:var(--radius-sm);">' + esc(state.additionalInfo) + '</textarea>';
     },
 
@@ -425,7 +485,7 @@
 
       return '<h2 class="fp-step-title">Review</h2>' +
         stampHtml +
-        '<p class="fp-step-desc">Check everything before submitting. You cannot edit after you submit.</p>' +
+        '<p class="fp-step-desc">Check everything before submitting. This cannot be edited after submission.</p>' +
         reviewSection("Student information", [
           ["Name", p.student_name], ["Father's name", p.father_name], ["Father's profession", p.father_profession],
           ["Contact", p.contact], ["Discipline", p.discipline], ["Section", p.section],

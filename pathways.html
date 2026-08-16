@@ -31,10 +31,11 @@
 
   <main class="wrap" style="max-width:720px;">
     <div class="fp-topbar">
-      <span class="nav-spacer"></span>
+      <a href="index.html" class="nav-link">&larr; Back to dashboard</a>
       <a href="merit.html" class="nav-link">Merit &amp; entry test guide</a>
       <a href="rankings.html" class="nav-link">University Explorer</a>
       <button type="button" id="viewUnisBtn" class="nav-link">View all universities</button>
+      <span class="nav-spacer"></span>
       <button type="button" id="fp-logout" class="nav-link is-muted">Log out</button>
     </div>
 
@@ -43,6 +44,10 @@
         <div class="uni-modal-head">
           <h2 id="uniModalTitle">All listed universities</h2>
           <button type="button" id="uniModalClose" class="uni-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="uni-modal-search-row">
+          <input type="search" id="uniModalSearch" placeholder="Search a university by name…" autocomplete="off">
+          <button type="button" id="uniModalSearchBtn" class="btn-secondary">Search</button>
         </div>
         <div class="uni-modal-body" id="uniModalBody"><!-- populated by js/fp-app.js --></div>
       </div>

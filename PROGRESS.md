@@ -11,15 +11,27 @@ Supabase directly.**
 "Rah" — a Pakistani university/college counselling tool. Two things
 live in one repo:
 
-1. **The quick calculator** (`index.html`) — matric + FSc Part 1 marks
-   in, provisional merit score + suggested universities out. The
-   original prototype; still live, now pulls institutes from Supabase
-   instead of a hardcoded array.
+1. **The dashboard** (`index.html`) — the landing page after login.
+   Used to be a "quick calculator" (matric + FSc Part 1 marks in,
+   provisional merit score + suggested universities out) — that was
+   the original prototype, but it duplicated the marks intake already
+   in Future Pathways and the field/university browsing already in
+   University Explorer, so it was removed. `index.html` is now a real
+   dashboard: it reads the student's existing `students` row and
+   latest `future_pathways` row from Supabase (no re-asking) and shows
+   their actual application status (not started / draft / submitted)
+   plus quick links into the three tools below. Logic lives in
+   `js/dashboard.js`; the old calculator-only files (`js/app.js`,
+   `js/calculations.js`, `js/suggestions.js`, `js/supabase-client.js`,
+   `js/ui.js`) were deleted. `js/data.js` (institute loader) is kept —
+   the dashboard's "View all universities" modal still uses it.
 2. **Future Pathways** (`pathways.html` + `admin.html`) — the real
    product: digitizes an actual paper counselling form used by a
    school. Multi-step form, ranked institute/faculty preferences,
    draft autosave, one-submission-per-student, counsellor/admin
    evaluation panel.
+3. **University Explorer** (`rankings.html`) — browse field/
+   specialization rankings independent of any student's own marks.
 
 Both require login (`login.html`) — Supabase Auth, email/password only,
 **no self-signup**. Accounts are created manually in the Supabase
@@ -101,12 +113,16 @@ insert/select will silently fail with no obvious error.
 
 ## Known intentional gaps (not bugs)
 
-- `Counsellor.MERIT_FEATURE_ENABLED = false` in `js/data.js` — the
-  quick calculator's own merit-based Strong/Competitive/Unlikely
-  scoring is OFF on purpose until real per-university closing-merit
-  numbers (not formulas — actual historical cutoffs) are loaded. The
-  new Merit & Entry Test Guide (formulas, not closing merits) is a
-  separate, already-live feature — don't conflate the two.
+- `Counsellor.MERIT_FEATURE_ENABLED = false` in `js/data.js` is now
+  **dead** — it only gated the old quick calculator's Strong/
+  Competitive/Unlikely scoring, and that calculator (`js/suggestions.js`
+  etc.) was deleted when `index.html` became a dashboard. Safe to
+  remove along with the rest of `Counsellor.FIELDS` / `AREAS` /
+  `MERIT_WEIGHTS` next time someone's in `data.js` — left in place for
+  now since `Counsellor.loadInstitutes()` / `Counsellor.INSTITUTES` in
+  the same file are still used by the "View all universities" modal.
+  The Merit & Entry Test Guide (`merit.html`, formulas not closing
+  merits) is unrelated and already live — don't conflate the two.
 - Institute ranking uses one `<select>` per rank slot, not real
   drag-and-drop. Functionally equivalent, simpler to keep dependency-
   free. Swap in a DnD library later if wanted.
@@ -130,6 +146,23 @@ mono UTC timestamp stamps in on success (`state.submittedAt`).
 counts, computed client-side from the already-loaded `submissions`
 array — no new query). No IDs or data flow changed; this was a
 CSS + presentation-layer pass on top of the existing logic.
+
+## Home dashboard: "Recently saved student forms" widget
+
+`index.html` now has a small `#fp-dash-section` (new
+`js/fp-saved-forms.js`) below the tool cards, showing the 8
+most-recently-saved `future_pathways` rows with a click-to-open
+read-only preview modal (profile, careers, ranked institute/faculty
+preferences). It's `hidden` by default and only unhidden when the
+signed-in `app_users.role` is `counsellor` or `admin` — same gate
+`admin.html`/`js/fp-admin.js` already uses, checked client-side only
+(RLS on the underlying tables is what actually enforces this).
+
+This does **not** replace `admin.html` — that page still has the full
+filterable table, submission stats strip, and office-evaluation
+editing. The new widget is a lightweight glance + link out to
+`admin.html` for anyone who wants the full view, since `admin.html`
+isn't linked from the main nav.
 
 ## If something seems broken
 

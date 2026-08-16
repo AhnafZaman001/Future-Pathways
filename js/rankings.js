@@ -67,7 +67,9 @@
     }
 
     if(field.alsoOffered && field.alsoOffered.length){
-      html += '<div class="rk-also"><h3>Also offered at</h3><p>' + field.alsoOffered.map(esc).join(" &middot; ") + '</p></div>';
+      html += '<div class="rk-also"><h3>Also offered at</h3>' +
+        '<div class="rk-list">' + field.alsoOffered.map(alsoRowHtml).join("") + '</div>' +
+      '</div>';
     }
 
     if(field.industryReputation){
@@ -95,6 +97,16 @@
         '<div class="rk-detail">' + esc(entry.detail) + '</div>' +
         theBandHtml +
         '<div class="rk-source">SOURCE: ' + link + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function alsoRowHtml(name){
+    return '<div class="rk-row rk-row-also">' +
+      '<div class="rk-rank rk-rank-also">&mdash;</div>' +
+      '<div class="rk-row-body">' +
+        '<div class="rk-uni-name">' + esc(name) + '</div>' +
+        '<div class="rk-detail">Offers this program &mdash; no independently verified rank yet</div>' +
       '</div>' +
     '</div>';
   }

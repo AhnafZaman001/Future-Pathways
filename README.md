@@ -4,10 +4,15 @@ A student-facing tool that takes matric marks, FSc Part 1 marks, field of
 study, and preferred city, and suggests university/program preferences —
 with eligibility against historical closing merits once that data is added.
 
-**Status: quick vanilla HTML/CSS/JS prototype.** No build step, no backend,
-no database — everything runs client-side in `index.html`. This replaces an
-earlier Next.js + FastAPI + Supabase architecture that was scaffolded but
-not built out; that plan is no longer what this repo tracks.
+**Note: this README describes an early prototype state and is out of date
+in several places (e.g. it predates `pathways.html`, `rankings.html`, and
+`merit.html`, and Supabase is now used throughout, not "no database").
+See `PROGRESS.md` for the current, maintained picture of the project —
+trust that file over this one where they disagree.**
+
+`index.html` was originally a standalone marks-in/universities-out
+calculator; it's now the post-login dashboard and no longer collects
+marks itself (see `PROGRESS.md`).
 
 ## Run it
 
@@ -175,3 +180,21 @@ formulas (edit via `supabase/merit_formulas_seed_data.sql` or the
 Supabase dashboard for now); re-verifying `2026-27`-dated rows before
 next admission cycle, since a couple of institutes' policies are
 already dated ahead.
+
+## "View all universities" modal — search + per-institute programs
+
+The modal (opened from `index.html`'s dashboard and from `pathways.html`)
+now has:
+
+- **Search by university name** — a search box + button above the
+  Engineering/Medical grouped list, filters live as you type or on
+  Search/Enter.
+- **"View programs" toggle per institute** — expands to show program/
+  scope names for that specific institute, with its own search box +
+  button to filter that list. This reuses `merit_formulas.program_scope`
+  (falling back to `.basis`) — the same sourced data behind the Merit
+  Guide — rather than a separate, unverified program catalog. If an
+  institute has no merit-formula rows, it honestly says so instead of
+  showing an empty or fabricated list. `FP.getProgramsForInstituteName`
+  / `FP.renderProgramsSectionForInstitute` / `FP.filterProgramsSection`
+  in `js/fp-merit.js` are shared by both pages' modals.

@@ -41,13 +41,19 @@ $$;
 
 alter table public.merit_formulas enable row level security;
 
-drop policy if exists "merit_formulas read" on public.merit_formulas;
-create policy "merit_formulas read" on public.merit_formulas
-  for select to authenticated using (active = true or public.is_staff());
+drop policy if exists "Anyone can read active merit formulas" on public.merit_formulas;
+create policy "Anyone can read active merit formulas"
+  on public.merit_formulas for select
+  to anon, authenticated
+  using (active = true or public.current_role() in ('counsellor','admin'));
 
-drop policy if exists "merit_formulas write" on public.merit_formulas;
-create policy "merit_formulas write" on public.merit_formulas
-  for all to authenticated using (public.is_staff()) with check (public.is_staff());
+drop policy if exists "Staff manage merit formulas" on public.merit_formulas;
+create policy "Staff manage merit formulas"
+  on public.merit_formulas for all
+  to authenticated
+  using (public.current_role() in ('counsellor','admin'))
+  with check (public.current_role() in ('counsellor','admin'));
 
--- Data API grant — RLS alone doesn't expose a table to the Data API.
-grant select, insert, update, delete on public.merit_formulas to authenticated;
+-- Data API grants — RLS alone doesn't expose a table to the Data API.
+grant select on public.merit_formulas to anon, authenticated;
+grant insert, update, delete on public.merit_formulas to authenticated;

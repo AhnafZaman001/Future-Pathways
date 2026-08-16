@@ -82,6 +82,22 @@ insert/select will silently fail with no obvious error.
   was an earlier name during initial scaffolding and was renamed.
 - `Fazal Medical College` (not "Fazaia") is the correct name — this
   was deliberately fixed to match the source data.
+- The staff/role-check RLS helper is `public.current_role()` — it
+  returns the role as **text** (`'student'` / `'counsellor'` /
+  `'admin'`), used as `public.current_role() in ('counsellor','admin')`
+  inside policies. It is **not** called `is_staff()` and does **not**
+  return a boolean — an earlier merit-formulas schema draft used
+  `is_staff()` by mistake (copied from a different, discarded draft of
+  this project) and failed with `function public.is_staff() does not
+  exist` when run. Match the real function name and signature exactly
+  before writing new RLS policies.
+- Master-data read policies (`institutes`, `fp_faculties`,
+  `program_options`, `career_options`, `merit_formulas`) grant `select`
+  to **both** `anon` and `authenticated` — so these lists can render
+  before login — while `insert`/`update`/`delete` are granted to
+  `authenticated` only and further gated by `current_role()` in RLS.
+  Match this exact anon/authenticated split for any new master-data
+  table; don't default to `authenticated`-only for reads.
 
 ## Known intentional gaps (not bugs)
 

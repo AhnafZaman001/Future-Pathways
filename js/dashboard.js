@@ -64,8 +64,6 @@ window.Dashboard = window.Dashboard || {};
 
     if(role === "counsellor" || role === "admin"){
       heading.textContent = "Dashboard";
-      var lede = document.querySelector(".dash-hero .lede");
-      if(lede) lede.textContent = "Case data and tools, in one place.";
       return;
     }
 

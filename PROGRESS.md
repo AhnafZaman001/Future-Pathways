@@ -306,3 +306,51 @@ the attribute), and a separate component-swatch render (buttons,
 badges, links, error/success text, the toggle itself) side-by-side in
 both themes to check contrast on the recalibrated status colors
 specifically. Re-check the same way if the palette changes again.
+
+## KNOWN GAP — counsellor-entered submissions (not yet built)
+
+**Reported by the person doing this counsellor job in real life, not
+a hypothetical.** The real workflow: a counsellor sits at a desk,
+brings students up in batches, and enters each student's info +
+preferences directly, on the student's behalf, in one sitting. The
+student is not necessarily present at a computer themselves and may
+never log in individually at all.
+
+**What's broken right now:** `pathways.html` has no concept of "a
+counsellor filling this out for someone else" — it's hard-wired to
+`auth.uid()` as the one and only student it can ever represent (see
+`state.studentId = session.user.id` in `js/fp-app.js`, and the RLS
+policies in `future_pathways_schema.sql`, which all key off
+`student_id = auth.uid()`). So when a counsellor logs in and opens
+`pathways.html`, the form treats *the counsellor's own account* as
+"the student" — showing/locking based on whatever draft or submitted
+row exists for the counsellor's own `auth.users` row, which is
+nonsensical for an account whose job is managing *other* people's
+submissions. `admin.html` can view every submission but has no
+create/edit/delete — it's read + evaluate only.
+
+**Why this isn't a quick fix:** `future_pathways.student_id` is a
+hard foreign key through `students.id` → `app_users.id` →
+`auth.users.id` (see the load-test seed data work earlier in this
+file for the exact chain). There is no way to create a
+`future_pathways` row without a real `auth.users` row backing it,
+under the current schema. Building "counsellor adds a new student"
+requires a real decision about what that backing account looks like
+— whether the student ever logs in themselves later, whether the
+counsellor needs the Supabase Admin API (service role key, not
+something to hand to a client-side page) vs. the public sign-up
+flow (which may or may not even be enabled at the project level —
+this project's stated model has been "no self-signup, accounts
+created manually" throughout) — and that decision was **deliberately
+not made yet**, pending clarification from the person doing the job,
+rather than guessed at. See chat history for the exact ask if
+picking this up.
+
+**Needed, once the data-model question is answered:**
+1. A "counsellor enters a new student" flow — name/data/preferences,
+   same fields as the student form, but reachable from `admin.html`
+   and not gated by the counsellor's own `auth.uid()`.
+2. Edit any existing student's submission from `admin.html` — right
+   now `admin.html` can only view + add an office evaluation, not
+   change the student's own form data.
+3. Delete a student's submission from `admin.html`.

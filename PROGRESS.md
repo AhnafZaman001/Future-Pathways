@@ -241,3 +241,68 @@ below it actually needs role before letting it block everything else.
   table, only in the curated `rankings-data.js` content) has no known
   city and is correctly excluded when a city filter is active, rather
   than guessed.
+
+## Light theme + theme toggle
+
+Not a color inversion — a second set of tokens sharing the same bones
+(type scale, spacing, radii, the same `--violet` accent hue for
+button fills) as the dark theme, recalibrated where the underlying
+math actually differs between a near-black and a near-white canvas:
+
+- **Elevation reverses.** Dark theme cards read "raised" by being
+  *lighter* than canvas. That trick doesn't work near white (reads as
+  dirty gray, not elevated), so light-theme cards are pure white with
+  a `--shadow-card` token (`.fp-card` now has
+  `box-shadow: var(--shadow-card, none)` — `none` in dark mode where
+  the token isn't defined, an actual soft shadow in light mode).
+- **`--violet-text` exists because contrast math isn't symmetric.**
+  The brand violet (`#6E76F0`) works fine as white-on-violet button
+  fill, and fine as violet-on-black body text — but fails WCAG AA
+  (3.8:1, need 4.5:1) as violet text directly on a white canvas
+  (links, `.eyebrow` labels). Rather than retune `--violet` itself
+  and risk the button fill or dark-mode text, only that specific
+  usage gets a deepened same-hue variant (`#4B44D6`, ~6.8:1 on
+  white) via a separate token. `a{color}` and `.eyebrow{color}` in
+  `styles/base.css` use `--violet-text`, not `--violet` directly —
+  keep that distinction if adding new violet-on-canvas text anywhere.
+- Green/amber/red also got darkened light-mode variants for the same
+  contrast reason (status badges, error/success text).
+- The ambient aurora background (`body::before/::after` +
+  `html::before` noise layer in `base.css`) now reads its color stops
+  from `--aurora-a-stops` / `--aurora-b-stops` / `--aurora-noise-opacity`
+  tokens instead of hardcoded rgba values, so light mode can retune
+  intensity (lower opacity — the same values would be too strong on
+  white) without duplicating the whole layer/animation setup.
+
+**Switching mechanism:** `data-theme="light"` attribute on
+`<html>`, persisted to `localStorage` (`kips-theme`). Two parts:
+1. A tiny synchronous inline script at the very top of every page's
+   `<head>` (before any CSS loads) applies the saved choice
+   immediately, avoiding a flash of the wrong theme on load.
+2. `js/theme-toggle.js` (new, shared, loaded on every page) handles
+   the actual click-to-switch and updates the toggle button's label.
+
+**The toggle control is deliberately not a sun/moon icon-swap or a
+sliding pill switch** — the two most overused patterns for this
+exact UI element. It's a single circle split into a filled half and
+a hollow half (`.theme-toggle-glyph`, a `conic-gradient` + border,
+no SVG/icon font needed) that rotates 180° on click — one object
+turning over, not two icons cutting between each other. Lives in
+`styles/components.css` next to `.nav-link` (same family: pill
+shape, same padding/sizing) since it's a nav-adjacent control, not a
+one-off page-specific button.
+
+**Every page has one**, positioned consistently: right before "Log
+out" on the four authenticated pages (`index.html`, `pathways.html`,
+`admin.html`, `merit.html`), at the end of the topbar on
+`rankings.html` (no logout button there), and next to the brand mark
+in `login.html`'s header (no topbar at all on that page — see
+`.header-top`, the same row-layout wrapper `index.html` etc already
+use around `.brand`, applied there for the first time).
+
+**Verified visually**, not just written and trusted: rendered both
+themes via headless Chromium (actual click-through, not just setting
+the attribute), and a separate component-swatch render (buttons,
+badges, links, error/success text, the toggle itself) side-by-side in
+both themes to check contrast on the recalibrated status colors
+specifically. Re-check the same way if the palette changes again.

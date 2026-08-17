@@ -2,6 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+  // Apply the saved theme choice before first paint, so there's no
+  // flash of the wrong theme. Actual toggle logic lives in
+  // js/theme-toggle.js, loaded later; this is deliberately tiny and
+  // synchronous so it can run this early.
+  (function(){
+    try {
+      if (localStorage.getItem("kips-theme") === "light") {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    } catch (e) {}
+  })();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sign in &mdash; KIPS</title>
 
@@ -20,10 +33,13 @@
 
   <header class="site-header">
     <div class="wrap header-inner">
-      <div class="brand">
-        <span class="brand-mark">&#9670;</span>
-        <span class="brand-name">KIPS</span>
-        <span class="brand-tag">university counsellor</span>
+      <div class="header-top">
+        <div class="brand">
+          <span class="brand-mark">&#9670;</span>
+          <span class="brand-name">KIPS</span>
+          <span class="brand-tag">university counsellor</span>
+        </div>
+        <button type="button" id="themeToggle" class="theme-toggle" aria-label="Switch to light theme"><span class="theme-toggle-glyph"></span><span class="theme-toggle-label">Dark</span></button>
       </div>
     </div>
   </header>
@@ -43,6 +59,7 @@
     </div>
   </main>
 
+  <script src="js/theme-toggle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/fp-client.js"></script>
   <script>

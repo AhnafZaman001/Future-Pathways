@@ -2,6 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+  // Apply the saved theme choice before first paint, so there's no
+  // flash of the wrong theme. Actual toggle logic lives in
+  // js/theme-toggle.js, loaded later; this is deliberately tiny and
+  // synchronous so it can run this early.
+  (function(){
+    try {
+      if (localStorage.getItem("kips-theme") === "light") {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    } catch (e) {}
+  })();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Future Pathways &mdash; KIPS</title>
 
@@ -36,6 +49,7 @@
       <a href="rankings.html" class="nav-link">University Explorer</a>
       <button type="button" id="viewUnisBtn" class="nav-link">View all universities</button>
       <span class="nav-spacer"></span>
+      <button type="button" id="themeToggle" class="theme-toggle" aria-label="Switch to light theme"><span class="theme-toggle-glyph"></span><span class="theme-toggle-label">Dark</span></button>
       <button type="button" id="fp-logout" class="nav-link is-muted">Log out</button>
     </div>
 
@@ -76,6 +90,7 @@
     </div>
   </main>
 
+  <script src="js/theme-toggle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/fp-client.js"></script>
   <script src="js/fp-merit.js"></script>

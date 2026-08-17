@@ -28,6 +28,7 @@
   /* --- accent: violet, used for interactive state only --- */
   --violet:      #6E76F0;
   --violet-dim:  rgba(110,118,240,.14);
+  --violet-text: var(--violet); /* violet-on-canvas text (links, .eyebrow) — see [data-theme="light"] override below for why this needs its own value */
   --blue:        var(--violet);
   --blue-dim:    var(--violet-dim);
 
@@ -37,6 +38,13 @@
   --amber-dim:   rgba(232,163,61,.14);
   --red:         #EF6461;
   --red-dim:     rgba(239,100,97,.14);
+
+  /* --- ambient background gradient stops (see body::before/::after
+     below) — kept as tokens so [data-theme="light"] can retune
+     intensity without duplicating the whole layer/animation setup --- */
+  --aurora-a-stops: rgba(110,118,240,.14) 0%, rgba(110,118,240,.06) 40%, transparent 72%;
+  --aurora-b-stops: rgba(110,118,240,.11) 0%, rgba(110,118,240,.04) 40%, transparent 72%;
+  --aurora-noise-opacity: .09;
 
   /* --- type --- */
   --font-display: 'Inter Tight', 'Inter', -apple-system, sans-serif;
@@ -49,7 +57,69 @@
   --radius-sm: 7px;
 }
 
+/* -----------------------------------------------------------
+   Light theme — same bones as the dark theme above (identical
+   type scale, spacing, radii, and the same --violet accent hue
+   for fills/buttons so brand identity carries across both), not
+   an inverted clone of it. Two things specifically don't just
+   flip 1:1 from dark:
+
+   1. Elevation direction reverses. In the dark theme, cards read
+      as "raised" by being LIGHTER than the canvas (surface is a
+      step up from canvas). Near white, that same trick reads as
+      *dirty gray* rather than *elevated* — so here, --surface is
+      pure white (lighter, not darker, than canvas) and elevation
+      instead comes from --shadow-card, which the dark theme has
+      no equivalent for (dark surfaces already read as raised from
+      lightness alone, a shadow would barely be visible against a
+      near-black canvas anyway).
+
+   2. --violet-text exists because the *same* #6E76F0 that works
+      fine as white-on-violet button fill, or as violet-on-black
+      body text, fails WCAG AA (3.8:1, need 4.5:1) as violet text
+      directly on a white/near-white canvas — links and .eyebrow
+      labels specifically. Rather than re-tune --violet itself
+      (and risk the button fill / dark-mode text looking off), only
+      the text-on-canvas usage gets a deepened, same-hue variant
+      (#4B44D6, ~6.8:1 on white) via this separate token. --violet
+      itself is identical in both themes — the brand accent doesn't
+      change, only where contrast math requires it to.
+   ----------------------------------------------------------- */
+[data-theme="light"]{
+  --canvas:      #F6F6FA;
+  --surface:     #FFFFFF;
+  --surface-2:   #EEEEF4;
+  --border:      rgba(20,18,40,.09);
+  --border-strong: rgba(20,18,40,.16);
+
+  --ink:         #16161C;
+  --ink-soft:    #5B5E6B;
+  --ink-faint:   #9A9CA8;
+
+  --violet-text: #4B44D6;
+
+  --green:       #1F8F5F;
+  --green-dim:   rgba(31,143,95,.12);
+  --amber:       #A8670A;
+  --amber-dim:   rgba(168,103,10,.12);
+  --red:         #C93E37;
+  --red-dim:     rgba(201,62,55,.12);
+
+  --aurora-a-stops: rgba(110,118,240,.10) 0%, rgba(110,118,240,.045) 40%, transparent 72%;
+  --aurora-b-stops: rgba(110,118,240,.08) 0%, rgba(110,118,240,.03) 40%, transparent 72%;
+  --aurora-noise-opacity: .05;
+
+  --shadow-card: 0 1px 2px rgba(20,18,40,.04), 0 6px 20px rgba(20,18,40,.06);
+}
+
 *, *::before, *::after{ box-sizing: border-box; }
+
+/* Smooth, deliberate theme switch — only the properties that
+   actually change between themes, not a blanket `all` transition
+   (which would also animate hovers/layout shifts that have nothing
+   to do with theme). Respects prefers-reduced-motion via the
+   shared rule further down. */
+*{ transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease; }
 
 [hidden]{ display: none !important; }
 
@@ -112,12 +182,12 @@ body::after{
 }
 
 body::before{
-  background: radial-gradient(ellipse 42% 38% at 26% 24%, rgba(110,118,240,.14) 0%, rgba(110,118,240,.06) 40%, transparent 72%);
+  background: radial-gradient(ellipse 42% 38% at 26% 24%, var(--aurora-a-stops));
   animation: aurora-drift-a 95s ease-in-out infinite;
 }
 
 body::after{
-  background: radial-gradient(ellipse 38% 34% at 76% 74%, rgba(110,118,240,.11) 0%, rgba(110,118,240,.04) 40%, transparent 72%);
+  background: radial-gradient(ellipse 38% 34% at 76% 74%, var(--aurora-b-stops));
   animation: aurora-drift-b 125s ease-in-out infinite;
 }
 
@@ -127,7 +197,7 @@ html::before{
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: .09;
+  opacity: var(--aurora-noise-opacity);
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
@@ -162,7 +232,7 @@ p{ margin: 0 0 1em; color: var(--ink-soft); }
   font-size: .72rem;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: var(--violet);
+  color: var(--violet-text);
   margin-bottom: .6em;
 }
 
@@ -180,7 +250,7 @@ code{
   font-size: .85em;
 }
 
-a{ color: var(--violet); text-decoration: none; }
+a{ color: var(--violet-text); text-decoration: none; }
 a:hover{ text-decoration: underline; }
 
 button{ font-family: inherit; }

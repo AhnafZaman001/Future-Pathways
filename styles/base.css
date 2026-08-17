@@ -70,37 +70,76 @@ body{
 }
 
 /* -----------------------------------------------------------
-   Site-wide animated background — isometric cube grid, same
-   structure as a standard 3-tone isometric cube CSS pattern,
-   restyled to this palette: violet-tinted, low-opacity, drifting
-   slowly. Fixed + negative z-index so it sits behind every page's
-   content (cards etc. are opaque and unaffected); one ::before on
-   body means every page picks it up via base.css with no per-page
-   markup. Respects prefers-reduced-motion via the existing rule
-   below (animation-duration forced near-zero).
+   Site-wide animated background — soft ambient violet glow
+   ("aurora"), replacing an earlier isometric-cube-grid pattern
+   that read as generic/technical rather than fitting a guidance
+   product. Two contained, heavily-blurred radial gradients drift
+   independently and very slowly; kept to the existing --violet
+   token only (no new brand color introduced) and at low opacity
+   so it reads as atmosphere, not decoration — same restraint
+   principle as the rest of this token system.
+
+   The gradients are deliberately multi-stop and contained
+   (ellipse sized well under the viewport, not stretched edge to
+   edge) rather than a single huge two-stop radial-gradient —
+   tested in a real headless-Chromium render, and a wide, sparse
+   two-stop gradient under this much blur produces visible 8-bit
+   color-banding rings against this near-black canvas. A tighter,
+   three-stop falloff avoids that. html::before below adds a
+   faint noise/dither layer — the standard second fix for the
+   same class of problem — and the two together render clean at
+   1280x800 in headless Chromium with and without a GPU
+   rasterizer. Re-verify if the canvas color or opacities change
+   materially.
+
+   Fixed + negative z-index so every layer sits behind all page
+   content. body::before/::after carry the two blurred gradients;
+   html::before carries the (unblurred, so it must be a separate
+   layer) noise texture. All three are pure CSS on shared
+   elements, so every page picks this up via base.css with no
+   per-page markup. Respects prefers-reduced-motion via the
+   shared rule below.
    ----------------------------------------------------------- */
-body::before{
+body::before,
+body::after{
   content: "";
   position: fixed;
-  inset: -80px -140px;
+  inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-color: rgba(110,118,240,.03);
-  background-image:
-    linear-gradient(30deg, rgba(243,244,246,.045) 12%, transparent 12.5%, transparent 87%, rgba(243,244,246,.045) 87.5%, rgba(243,244,246,.045)),
-    linear-gradient(150deg, rgba(243,244,246,.045) 12%, transparent 12.5%, transparent 87%, rgba(243,244,246,.045) 87.5%, rgba(243,244,246,.045)),
-    linear-gradient(30deg, rgba(243,244,246,.045) 12%, transparent 12.5%, transparent 87%, rgba(243,244,246,.045) 87.5%, rgba(243,244,246,.045)),
-    linear-gradient(150deg, rgba(243,244,246,.045) 12%, transparent 12.5%, transparent 87%, rgba(243,244,246,.045) 87.5%, rgba(243,244,246,.045)),
-    linear-gradient(60deg, rgba(110,118,240,.07) 25%, transparent 25.5%, transparent 75%, rgba(110,118,240,.07) 75%, rgba(110,118,240,.07)),
-    linear-gradient(60deg, rgba(110,118,240,.07) 25%, transparent 25.5%, transparent 75%, rgba(110,118,240,.07) 75%, rgba(110,118,240,.07));
-  background-size: 64px 112px;
-  background-position: 0 0, 0 0, 32px 56px, 32px 56px, 0 0, 32px 56px;
-  animation: cube-drift 100s linear infinite;
+  filter: blur(70px);
+  will-change: transform;
 }
 
-@keyframes cube-drift{
-  from{ transform: translate(0, 0); }
-  to{ transform: translate(64px, 112px); } /* exactly one tile — loops with no visible seam */
+body::before{
+  background: radial-gradient(ellipse 42% 38% at 26% 24%, rgba(110,118,240,.14) 0%, rgba(110,118,240,.06) 40%, transparent 72%);
+  animation: aurora-drift-a 95s ease-in-out infinite;
+}
+
+body::after{
+  background: radial-gradient(ellipse 38% 34% at 76% 74%, rgba(110,118,240,.11) 0%, rgba(110,118,240,.04) 40%, transparent 72%);
+  animation: aurora-drift-b 125s ease-in-out infinite;
+}
+
+html::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .09;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+@keyframes aurora-drift-a{
+  0%, 100%{ transform: translate(0, 0) scale(1); }
+  50%{ transform: translate(5%, 7%) scale(1.1); }
+}
+
+@keyframes aurora-drift-b{
+  0%, 100%{ transform: translate(0, 0) scale(1); }
+  50%{ transform: translate(-6%, -5%) scale(1.05); }
 }
 
 h1, h2, h3{

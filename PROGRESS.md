@@ -371,12 +371,19 @@ it could ever represent.
    distinct "Editing on behalf of &lt;name&gt;" one instead of the
    normal student-facing draft/submitted banners.
 
-5. **`admin.html`** — "+ Add new student" button (calls
-   `counsellor_create_student()`, redirects into
-   `pathways.html?student=<new id>`). Detail view got "Edit this
-   form" (same redirect, existing student) and "Reset to draft"
-   (calls the reset RPC, confirms first, re-renders in place) next to
-   the student name.
+5. **`pathways.html`** — "+ Add new student" button lives in the
+   form page's own topbar (calls `counsellor_create_student()`, then
+   navigates to `pathways.html?student=<new id>`). Deliberately
+   **not** on `admin.html` — an earlier version put it there, which
+   meant clicking it just redirected straight back to
+   `pathways.html` anyway (admin → create → land on the form page)
+   for no reason; `admin.html` is view-only for the submissions list
+   now. `admin.html`'s detail view still has "Edit this form" (same
+   `?student=` redirect, for an existing student) and "Reset to
+   draft" (calls the reset RPC, confirms first, re-renders in
+   place) — those stayed, since acting on a record you're already
+   looking at isn't the same "extra hop" problem as the add button
+   was.
 
 **Not built / intentionally out of scope**, since it wasn't what was
 asked for: a real hard-delete of a student's account/identity (the

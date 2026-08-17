@@ -129,23 +129,6 @@
   document.getElementById("filter-status").addEventListener("change", renderTable);
   document.getElementById("filter-first-priority").addEventListener("change", renderTable);
 
-  var addStudentBtn = document.getElementById("fp-add-student");
-  if(addStudentBtn){
-    addStudentBtn.addEventListener("click", function(){
-      addStudentBtn.disabled = true;
-      addStudentBtn.textContent = "Creating\u2026";
-      FP.client.rpc("counsellor_create_student").then(function(r){
-        if(r.error){
-          alert("Could not create student: " + r.error.message);
-          addStudentBtn.disabled = false;
-          addStudentBtn.textContent = "+ Add new student";
-          return;
-        }
-        window.location.href = "pathways.html?student=" + encodeURIComponent(r.data);
-      });
-    });
-  }
-
   function esc(s){
     return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];

@@ -126,6 +126,31 @@
     FP.signOut();
   });
 
+  // "+ Add new student" -- lives here on the form page itself, not
+  // as a redirect-through from admin.html (that was an unnecessary
+  // extra hop: click in admin -> create -> land back here anyway).
+  // Staff-only, enforced by counsellor_create_student() itself
+  // (raises an exception for anyone else) -- not gated client-side
+  // here, since a real walk-in student never has their own login to
+  // reach this page unprompted in the first place (confirmed
+  // workflow: student never logs in, counsellor manages everything).
+  var addStudentBtn = document.getElementById("fp-add-student");
+  if(addStudentBtn){
+    addStudentBtn.addEventListener("click", function(){
+      addStudentBtn.disabled = true;
+      addStudentBtn.textContent = "Creating\u2026";
+      FP.client.rpc("counsellor_create_student").then(function(r){
+        if(r.error){
+          alert("Could not create student: " + r.error.message);
+          addStudentBtn.disabled = false;
+          addStudentBtn.textContent = "+ Add new student";
+          return;
+        }
+        window.location.href = "pathways.html?student=" + encodeURIComponent(r.data);
+      });
+    });
+  }
+
   // ---------------------------------------------------------
   // "View all universities" modal — groups state.allInstitutes
   // (all active institutes, both pathways, already loaded via

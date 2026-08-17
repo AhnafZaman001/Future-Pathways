@@ -166,16 +166,42 @@
     });
   }
 
-  function groupedRows(rows, nameLookup){
+  // Four independently-collapsible sections (institute pathway has 4
+  // groups, medical has 2) -- each shows that group's 5 ranked
+  // preferences when expanded. Not tabs: more than one group can be
+  // open at once, since a counsellor comparing groups 1 and 3 side
+  // by side shouldn't have to close one to see the other.
+  function groupedAccordion(rows, nameLookup, idPrefix){
     var byGroup = {};
     rows.forEach(function(r){
       byGroup[r.preference_group] = byGroup[r.preference_group] || [];
       byGroup[r.preference_group][r.rank-1] = r.custom_institute_name || r.custom_faculty_name ||
-        nameLookup[r.institute_id || r.faculty_id] || "\u2014";
+        nameLookup[r.institute_id || r.faculty_id] || null;
     });
-    return Object.keys(byGroup).sort().map(function(g){
-      return '<div class="fp-review-row"><span>Group ' + g + '</span><span>' + byGroup[g].filter(Boolean).map(function(n,i){ return (i+1)+". "+esc(n); }).join(", ") + '</span></div>';
-    }).join("");
+
+    var groupNums = Object.keys(byGroup).sort();
+    if(!groupNums.length){
+      return '<p class="fp-accordion-empty">No preferences submitted yet.</p>';
+    }
+
+    return '<div class="fp-accordion">' + groupNums.map(function(g){
+      var picks = byGroup[g];
+      var panelId = idPrefix + "-group-" + g;
+      var listItems = picks.map(function(name, i){
+        return name ? '<li value="' + (i+1) + '">' + esc(name) + '</li>' : "";
+      }).filter(Boolean).join("");
+      var body = listItems ? '<ol class="fp-accordion-list">' + listItems + '</ol>' : '<p class="fp-accordion-empty">No picks in this group yet.</p>';
+
+      return (
+        '<div class="fp-accordion-item">' +
+          '<button type="button" class="fp-accordion-header" aria-expanded="false" data-accordion-target="' + panelId + '">' +
+            '<span>Group ' + esc(g) + '</span>' +
+            '<span class="fp-accordion-chevron">&#9662;</span>' +
+          '</button>' +
+          '<div class="fp-accordion-panel" id="' + panelId + '" hidden>' + body + '</div>' +
+        '</div>'
+      );
+    }).join("") + '</div>';
   }
 
   function renderDetail(sub, instRows, facRows, progRows, evalRow){
@@ -204,8 +230,8 @@
         '<p class="fp-step-desc">' + esc(sub.pathway) + ' \u2014 <span class="fp-badge ' + sub.status + '">' + sub.status + '</span></p>' +
         '<div class="fp-review-section"><h4>Student information</h4>' + profileHtml + '</div>' +
         '<div class="fp-review-section"><h4>Programs &amp; careers</h4><div class="fp-review-row"><span>Selected</span><span>' + esc(careerNames.join(", ") || "\u2014") + '</span></div></div>' +
-        '<div class="fp-review-section"><h4>Institute preferences</h4>' + groupedRows(instRows, lookups.institutes) + '</div>' +
-        '<div class="fp-review-section"><h4>Faculty preferences</h4>' + groupedRows(facRows, lookups.faculties) + '</div>' +
+        '<div class="fp-review-section"><h4>Institute preferences</h4>' + groupedAccordion(instRows, lookups.institutes, "inst") + '</div>' +
+        '<div class="fp-review-section"><h4>Faculty preferences</h4>' + groupedAccordion(facRows, lookups.faculties, "fac") + '</div>' +
         '<div class="fp-review-section"><h4>Additional information</h4><p>' + esc(sub.additional_information || "\u2014") + '</p></div>' +
       '</div>' +
       '<div class="fp-card">' +
@@ -226,6 +252,15 @@
     document.getElementById("fp-back-to-list").addEventListener("click", function(){
       document.getElementById("fp-admin-detail-view").hidden = true;
       document.getElementById("fp-admin-list-view").hidden = false;
+    });
+
+    document.querySelectorAll(".fp-accordion-header").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var panel = document.getElementById(btn.dataset.accordionTarget);
+        var isOpen = btn.getAttribute("aria-expanded") === "true";
+        btn.setAttribute("aria-expanded", isOpen ? "false" : "true");
+        panel.hidden = isOpen;
+      });
     });
 
     var resetBtn = document.getElementById("fp-reset-submission");

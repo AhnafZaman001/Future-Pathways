@@ -394,3 +394,34 @@ time (the RPC creates a bare account and redirects straight into the
 existing multi-step form instead, which already collects that exact
 information — no need to duplicate it).
 
+## Preference-group accordion (admin detail view)
+
+The dean wanted, per-student, a way to see each of the 4 preference
+groups' 5 ranked picks (institute pathway: 4 groups; medical: 2) —
+initially described as "four dropdowns" in a table, which doesn't
+work (a table's job is scanning many students at once; 20 data
+points per row would break that). Once clarified this was about the
+*detail* page for one student, not the list, the actual ask was much
+simpler: this data already existed there (`groupedRows()` in
+`js/fp-admin.js`), just as always-visible flat text, not collapsible.
+
+Replaced with `groupedAccordion()`: four independently-collapsible
+sections (not tabs — more than one can be open at once, e.g.
+comparing group 1 against group 3 without losing either). Used for
+both Institute preferences and Faculty preferences in the detail
+view (`groupedAccordion(rows, nameLookup, idPrefix)` — the
+`idPrefix` param, `"inst"`/`"fac"`, keeps their panel element ids
+from colliding since both call the same function on the same page).
+
+**A real bug caught before shipping**, not just written and trusted:
+the first version manually prepended `"1. "` etc. to each list item
+*and* rendered them inside a native `<ol>`, which auto-numbers on its
+own — result was literal "1. 1. NUST" double-numbering, confirmed via
+an actual headless-Chromium render, not just reading the code. Fixed
+by using `<li value="N">` instead of manual text prefixes — lets the
+browser's native numbering do the work while still showing the
+*real* rank number (not a re-numbered sequential count) when a
+group has gaps, e.g. a partially-filled draft missing rank 3 still
+correctly shows "1, 2, 4, 5", not "1, 2, 3, 4" — verified with a
+render that deliberately included a gap.
+

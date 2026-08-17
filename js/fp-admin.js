@@ -8,6 +8,7 @@
 (function(){
   var submissions = [];
   var lookups = { institutes:{}, faculties:{}, careers:{} };
+  var firstPriorityByFpId = {}; // future_pathway_id -> institute name (or custom name)
 
   FP.requireAuth().then(function(result){
     if(!result) return; // requireAuth already redirected to login.html
@@ -20,7 +21,7 @@
       document.getElementById("fp-admin-list-view").hidden = true;
       return;
     }
-    return loadLookups().then(loadSubmissions);
+    return loadLookups().then(loadFirstPriorities).then(loadSubmissions);
   }).catch(function(e){ console.error(e); });
 
   document.getElementById("fp-logout").addEventListener("click", function(){
@@ -29,14 +30,35 @@
 
   function loadLookups(){
     return Promise.all([
-      FP.client.from("institutes").select("id,name"),
+      FP.client.from("institutes").select("id,name").order("name"),
       FP.client.from("fp_faculties").select("id,name"),
       FP.client.from("career_options").select("id,name")
     ]).then(function(r){
       (r[0].data||[]).forEach(function(x){ lookups.institutes[x.id] = x.name; });
       (r[1].data||[]).forEach(function(x){ lookups.faculties[x.id] = x.name; });
       (r[2].data||[]).forEach(function(x){ lookups.careers[x.id] = x.name; });
+
+      var select = document.getElementById("filter-first-priority");
+      var names = (r[0].data||[]).map(function(x){ return x.name; });
+      select.innerHTML = '<option value="">All</option>' +
+        names.map(function(n){ return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join("");
     });
+  }
+
+  // "First priority" = preference_group 1, rank 1 -- the one unambiguous
+  // single "top choice" given the schema has multiple preference groups
+  // per student (2 for medical, 4 for engineering).
+  function loadFirstPriorities(){
+    return FP.client.from("student_institute_preferences")
+      .select("future_pathway_id, institute_id, custom_institute_name")
+      .eq("preference_group", 1).eq("rank", 1)
+      .then(function(r){
+        if(r.error){ console.error(r.error); return; }
+        (r.data||[]).forEach(function(row){
+          var name = row.custom_institute_name || lookups.institutes[row.institute_id] || null;
+          if(name) firstPriorityByFpId[row.future_pathway_id] = name;
+        });
+      });
   }
 
   function loadSubmissions(){
@@ -71,18 +93,23 @@
   function renderTable(){
     var pathwayFilter = document.getElementById("filter-pathway").value;
     var statusFilter = document.getElementById("filter-status").value;
+    var firstPriorityFilter = document.getElementById("filter-first-priority").value;
     var rows = submissions.filter(function(s){
-      return (!pathwayFilter || s.pathway === pathwayFilter) && (!statusFilter || s.status === statusFilter);
+      return (!pathwayFilter || s.pathway === pathwayFilter)
+        && (!statusFilter || s.status === statusFilter)
+        && (!firstPriorityFilter || firstPriorityByFpId[s.id] === firstPriorityFilter);
     });
     document.getElementById("fp-admin-tbody").innerHTML = rows.map(function(s){
       var name = (s.students && s.students.student_name) || "(no profile yet)";
+      var firstPriority = firstPriorityByFpId[s.id] || "\u2014";
       return '<tr data-id="' + s.id + '">' +
         '<td>' + esc(name) + '</td>' +
         '<td>' + esc(s.pathway) + '</td>' +
+        '<td>' + esc(firstPriority) + '</td>' +
         '<td><span class="fp-badge ' + s.status + '">' + s.status + '</span></td>' +
         '<td>' + (s.submitted_at ? new Date(s.submitted_at).toLocaleDateString() : "\u2014") + '</td>' +
       '</tr>';
-    }).join("") || '<tr><td colspan="4">No submissions match these filters.</td></tr>';
+    }).join("") || '<tr><td colspan="5">No submissions match these filters.</td></tr>';
 
     document.querySelectorAll("#fp-admin-tbody tr[data-id]").forEach(function(tr){
       tr.addEventListener("click", function(){ openDetail(tr.dataset.id); });
@@ -91,6 +118,7 @@
 
   document.getElementById("filter-pathway").addEventListener("change", renderTable);
   document.getElementById("filter-status").addEventListener("change", renderTable);
+  document.getElementById("filter-first-priority").addEventListener("change", renderTable);
 
   function esc(s){
     return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){

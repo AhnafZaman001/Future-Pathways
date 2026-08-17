@@ -69,6 +69,40 @@ body{
   -webkit-font-smoothing: antialiased;
 }
 
+/* -----------------------------------------------------------
+   Site-wide animated background — isometric cube grid, same
+   structure as a standard 3-tone isometric cube CSS pattern,
+   restyled to this palette: violet-tinted, low-opacity, drifting
+   slowly. Fixed + negative z-index so it sits behind every page's
+   content (cards etc. are opaque and unaffected); one ::before on
+   body means every page picks it up via base.css with no per-page
+   markup. Respects prefers-reduced-motion via the existing rule
+   below (animation-duration forced near-zero).
+   ----------------------------------------------------------- */
+body::before{
+  content: "";
+  position: fixed;
+  inset: -80px -140px;
+  z-index: -1;
+  pointer-events: none;
+  background-color: rgba(110,118,240,.03);
+  background-image:
+    linear-gradient(30deg, rgba(243,244,246,.045) 12%, transparent 12.5%, transparent 87%, rgba(243,244,246,.045) 87.5%, rgba(243,244,246,.045)),
+    linear-gradient(150deg, rgba(243,244,246,.045) 12%, transparent 12.5%, transparent 87%, rgba(243,244,246,.045) 87.5%, rgba(243,244,246,.045)),
+    linear-gradient(30deg, rgba(243,244,246,.045) 12%, transparent 12.5%, transparent 87%, rgba(243,244,246,.045) 87.5%, rgba(243,244,246,.045)),
+    linear-gradient(150deg, rgba(243,244,246,.045) 12%, transparent 12.5%, transparent 87%, rgba(243,244,246,.045) 87.5%, rgba(243,244,246,.045)),
+    linear-gradient(60deg, rgba(110,118,240,.07) 25%, transparent 25.5%, transparent 75%, rgba(110,118,240,.07) 75%, rgba(110,118,240,.07)),
+    linear-gradient(60deg, rgba(110,118,240,.07) 25%, transparent 25.5%, transparent 75%, rgba(110,118,240,.07) 75%, rgba(110,118,240,.07));
+  background-size: 64px 112px;
+  background-position: 0 0, 0 0, 32px 56px, 32px 56px, 0 0, 32px 56px;
+  animation: cube-drift 100s linear infinite;
+}
+
+@keyframes cube-drift{
+  from{ transform: translate(0, 0); }
+  to{ transform: translate(64px, 112px); } /* exactly one tile — loops with no visible seam */
+}
+
 h1, h2, h3{
   font-family: var(--font-display);
   color: var(--ink);
@@ -122,5 +156,5 @@ button{ font-family: inherit; }
 }
 
 @media (prefers-reduced-motion: reduce){
-  *{ animation-duration: .001ms !important; transition-duration: .001ms !important; }
+  *, *::before, *::after{ animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }

@@ -11,7 +11,7 @@
   padding: 28px;
   margin-bottom: 28px;
 }
-.merit-hero .eyebrow{ color: var(--violet); }
+.merit-hero .eyebrow{ color: var(--violet-text); }
 .merit-hero h1{ margin-bottom: 8px; }
 .merit-hero p{ max-width: 62ch; }
 
@@ -149,7 +149,7 @@
 
 .merit-source{
   font-size: .78rem;
-  color: var(--violet);
+  color: var(--violet-text);
   text-decoration: none;
 }
 .merit-source:hover{ text-decoration: underline; }
@@ -164,7 +164,7 @@
 .merit-toggle{
   background: none;
   border: none;
-  color: var(--violet);
+  color: var(--violet-text);
   font-size: .76rem;
   cursor: pointer;
   padding: 0;
@@ -222,7 +222,7 @@
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: .95rem;
-  color: var(--violet);
+  color: var(--violet-text);
   white-space: nowrap;
 }
 
@@ -239,7 +239,7 @@
 }
 .cm-source{
   font-size: .74rem;
-  color: var(--violet);
+  color: var(--violet-text);
   text-decoration: none;
   margin-left: auto;
 }

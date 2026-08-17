@@ -20,7 +20,7 @@
   transition: color .15s ease, border-color .15s ease;
 }
 .fp-tab:hover{ color: var(--ink); }
-.fp-tab.is-active{ color: var(--violet); border-bottom-color: var(--violet); }
+.fp-tab.is-active{ color: var(--violet-text); border-bottom-color: var(--violet); }
 
 .fp-form{ display:flex; flex-direction:column; gap:16px; }
 .fp-form label{ display:flex; flex-direction:column; gap:6px; }
@@ -86,7 +86,7 @@
 .fp-manifest-line .fp-m-label{ color: var(--ink-faint); flex-shrink:0; min-width:76px; text-transform:uppercase; }
 .fp-manifest-line .fp-m-value{ color: var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .fp-manifest-line.is-done{ border-left-color: var(--violet); }
-.fp-manifest-line.is-done .fp-m-glyph{ color: var(--violet); }
+.fp-manifest-line.is-done .fp-m-glyph{ color: var(--violet-text); }
 .fp-manifest-line.is-done .fp-m-label{ color: var(--ink-soft); }
 .fp-manifest-line.is-done .fp-m-value{ color: var(--ink); }
 .fp-manifest-line.is-current{ background: var(--violet-dim); border-left-color: var(--amber); }
@@ -106,7 +106,7 @@
 body.is-review-step .fp-layout{ grid-template-columns: 1fr; max-width: 640px; margin: 0 auto; }
 body.is-review-step .fp-manifest-rail{ display:none; }
 body.is-review-step .fp-card{ border-color: var(--violet); box-shadow: 0 0 0 1px rgba(110,118,240,.1), 0 8px 32px rgba(110,118,240,.08); }
-body.is-review-step .fp-step-title{ font-family: var(--font-mono); text-transform:uppercase; letter-spacing:.06em; font-size:1.1rem; color: var(--violet); }
+body.is-review-step .fp-step-title{ font-family: var(--font-mono); text-transform:uppercase; letter-spacing:.06em; font-size:1.1rem; color: var(--violet-text); }
 body.is-review-step .fp-review-section h4{ font-family: var(--font-mono); letter-spacing:.08em; }
 body.is-review-step .fp-review-row{ font-family: var(--font-mono); font-size:.85rem; }
 body.is-review-step .fp-review-row span:first-child{ text-transform:uppercase; font-size:.72rem; letter-spacing:.06em; }
@@ -210,7 +210,7 @@ body.is-review-step .fp-actions{ margin-top:28px; padding-top:20px; border-top:1
   font-family: var(--font-mono); font-size:.68rem; letter-spacing:.08em; text-transform:uppercase;
   color: var(--ink-faint); margin-top:6px;
 }
-.fp-stat.accent-violet .fp-stat-value{ color: var(--violet); }
+.fp-stat.accent-violet .fp-stat-value{ color: var(--violet-text); }
 .fp-stat.accent-green .fp-stat-value{ color: var(--green); }
 .fp-stat.accent-amber .fp-stat-value{ color: var(--amber); }
 

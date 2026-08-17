@@ -366,7 +366,7 @@ select{ appearance: none; background: var(--surface-2)
   font-size: .72rem;
   letter-spacing: .06em;
   text-transform: uppercase;
-  color: var(--violet);
+  color: var(--violet-text);
   margin: 0 0 8px;
 }
 

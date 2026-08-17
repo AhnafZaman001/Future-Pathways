@@ -16,7 +16,7 @@
 }
 .rk-count{
   font-family: var(--font-mono); font-size:.72rem; letter-spacing:.08em;
-  color: var(--violet); background: var(--violet-dim);
+  color: var(--violet-text); background: var(--violet-dim);
   padding: 4px 10px; border-radius: 99px; white-space:nowrap;
 }
 .rk-scope-note{
@@ -46,7 +46,7 @@
   color: var(--ink-faint); margin-top:6px; text-transform:uppercase;
 }
 .rk-source a{ color: var(--ink-faint); text-decoration:underline; }
-.rk-source a:hover{ color: var(--violet); }
+.rk-source a:hover{ color: var(--violet-text); }
 
 .rk-the-band{
   display:inline-flex; align-items:center; gap:6px;
@@ -65,7 +65,7 @@
 }
 .rk-cm-label{
   font-family: var(--font-mono); font-size:.65rem; letter-spacing:.06em;
-  color: var(--violet); background: var(--violet-dim);
+  color: var(--violet-text); background: var(--violet-dim);
   padding: 2px 7px; border-radius: 5px;
 }
 .rk-cm-pct{ font-family: var(--font-mono); font-weight:700; color: var(--ink); }

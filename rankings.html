@@ -39,11 +39,11 @@
 
     <div class="rk-hero">
       <h1 class="fp-step-title">Find a program</h1>
-      <p class="fp-step-desc">Pick a field and specialization to see how universities rank for it &mdash; sourced, not guessed.</p>
+      <p class="fp-step-desc">Pick a field, specialization, and city to see how universities rank for it &mdash; sourced, not guessed.</p>
     </div>
 
     <div class="fp-card rk-selector">
-      <div class="fp-grid-2">
+      <div class="fp-grid-3">
         <label>Field
           <select id="rk-field">
             <option value="">&mdash; Select a field &mdash;</option>
@@ -54,24 +54,15 @@
             <option value="">&mdash; Select a field first &mdash;</option>
           </select>
         </label>
+        <label>City
+          <select id="rk-city">
+            <option value="">All cities</option>
+          </select>
+        </label>
       </div>
     </div>
 
     <div id="rk-results"></div>
-
-    <div class="rk-hero" style="margin-top:40px;">
-      <h2 class="fp-step-title" style="font-size:1.3rem;">Find by region or city</h2>
-      <p class="fp-step-desc">Search universities by where they actually are.</p>
-    </div>
-
-    <div class="fp-card rk-selector">
-      <div class="uni-modal-search-row" style="padding:0;">
-        <input type="search" id="rk-region-search" placeholder="e.g. Lahore, Islamabad, Karachi&hellip;" autocomplete="off">
-        <button type="button" id="rk-region-search-btn" class="btn-secondary">Search</button>
-      </div>
-    </div>
-
-    <div id="rk-region-results"></div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

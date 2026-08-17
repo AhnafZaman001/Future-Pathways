@@ -11,6 +11,7 @@
   var DATA = window.RANKING_DATA;
   var fieldEl = document.getElementById("rk-field");
   var subsetEl = document.getElementById("rk-subset");
+  var cityEl = document.getElementById("rk-city");
   var resultsEl = document.getElementById("rk-results");
   var lastField = null, lastSubset = null;
 
@@ -34,6 +35,46 @@
       if(lastField && lastSubset) render(lastField, lastSubset);
     }).catch(function(err){ console.error("Closing merit records failed to load:", err); });
   }
+
+  /* ---------------------------------------------------------
+     City filter -- a third filter alongside Field/Specialization
+     in the SAME selector card, refining the SAME ranked results
+     (not a separate search tool). Uses institutes.location +
+     institutes.campuses (real data) mapped by canonical name so
+     it lines up with the curated rankings-data.js entries above.
+     Fired immediately on script load (this page has no auth gate)
+     so the city list is ready by the time Field/Specialization
+     produce a result set to filter.
+     ----------------------------------------------------------- */
+  var cityByInstitute = {}; // canonical institute name -> [cities]
+  var institutesPromise = (FP && FP.client)
+    ? FP.client.from("institutes").select("name, location, campuses").eq("active", true)
+    : Promise.resolve({ data: [] });
+
+  institutesPromise.then(function(r){
+    var all = r.data || [];
+    var citySet = {};
+    all.forEach(function(inst){
+      var cities = [];
+      if(inst.location) cities.push(inst.location);
+      (inst.campuses || []).forEach(function(c){ if(c) cities.push(c); });
+      cityByInstitute[inst.name] = cities;
+      cities.forEach(function(c){ citySet[c] = true; });
+    });
+    var sortedCities = Object.keys(citySet).sort();
+    cityEl.innerHTML = '<option value="">All cities</option>' +
+      sortedCities.map(function(c){ return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join("");
+  }).catch(function(err){ console.error("Institutes (for city filter) failed to load:", err); });
+
+  function institutePresentInCity(name, city){
+    if(!city) return true; // no city filter active
+    var cities = cityByInstitute[canonicalName(name)];
+    return !!(cities && cities.indexOf(city) !== -1);
+  }
+
+  cityEl.addEventListener("change", function(){
+    if(lastField && lastSubset) render(lastField, lastSubset);
+  });
 
   Object.keys(DATA).forEach(function(key){
     var opt = document.createElement("option");
@@ -67,21 +108,30 @@
   function render(field, subsetName){
     lastField = field; lastSubset = subsetName;
     var override = field.overrides ? field.overrides[subsetName] : null;
-    var ranked = (override === "unranked") ? [] : (override || field.baseRanking);
+    var allRanked = (override === "unranked") ? [] : (override || field.baseRanking);
     var isSubjectSpecific = !!(override && override !== "unranked");
+    var city = cityEl.value;
+
+    var ranked = allRanked.filter(function(entry){ return institutePresentInCity(entry.name, city); });
+    var alsoOffered = (field.alsoOffered || []).filter(function(name){ return institutePresentInCity(name, city); });
 
     var html = '<div class="fp-card rk-results-card">';
     html += '<div class="rk-results-head">' +
-      '<h2 class="fp-step-title">' + esc(field.label) + ' &mdash; ' + esc(subsetName) + '</h2>' +
+      '<h2 class="fp-step-title">' + esc(field.label) + ' &mdash; ' + esc(subsetName) + (city ? ' &mdash; ' + esc(city) : '') + '</h2>' +
       '<span class="rk-count">' + ranked.length + ' RANKED</span>' +
       '</div>';
 
+    if(city && ranked.length < allRanked.length){
+      html += '<p class="rk-scope-note">Filtered to ' + esc(city) + ' \u2014 ' + (allRanked.length - ranked.length) + ' result' + (allRanked.length - ranked.length === 1 ? '' : 's') + ' elsewhere hidden.</p>';
+    }
     if(!isSubjectSpecific && ranked.length){
       html += '<p class="rk-scope-note">Showing ' + esc(field.label).toLowerCase() + '-wide standing &mdash; a ' + esc(subsetName).toLowerCase() + '-specific ranking isn\'t independently published.</p>';
     }
 
     if(ranked.length === 0){
-      html += '<div class="rk-empty">No independently verifiable ranking exists yet for ' + esc(subsetName) + '. We don\'t publish estimated numbers &mdash; check back as more official data is verified.</div>';
+      html += '<div class="rk-empty">' + (city
+        ? 'No independently verifiable ranking exists yet for ' + esc(subsetName) + ' in ' + esc(city) + '.'
+        : 'No independently verifiable ranking exists yet for ' + esc(subsetName) + '. We don\'t publish estimated numbers &mdash; check back as more official data is verified.') + '</div>';
     } else {
       html += '<div class="rk-list">' + ranked.map(function(entry){ return rowHtml(entry, subsetName); }).join("") + '</div>';
     }
@@ -96,9 +146,9 @@
       html += '<p class="rk-data-note">Closing-merit figures shown are the actual 2025 admission cycle cutoff for that program, separate from the QS/THE rankings above — see each figure\'s own source badge.</p>';
     }
 
-    if(field.alsoOffered && field.alsoOffered.length){
+    if(alsoOffered.length){
       html += '<div class="rk-also"><h3>Also offered at</h3>' +
-        '<div class="rk-list">' + field.alsoOffered.map(alsoRowHtml).join("") + '</div>' +
+        '<div class="rk-list">' + alsoOffered.map(alsoRowHtml).join("") + '</div>' +
       '</div>';
     }
 
@@ -169,66 +219,4 @@
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
     });
   }
-
-  /* ---------------------------------------------------------
-     Region/city search -- separate lookup direction from the
-     field/specialization ranking above: "where is this school"
-     instead of "who's best at this program". Uses institutes.
-     location + institutes.campuses (real data, not the curated
-     rankings-data.js content). Fired immediately on script load,
-     not gated behind any auth check (this page has none, and
-     institutes is public master data anyway) so the first search
-     doesn't have to wait on a fetch that could've started earlier.
-     ----------------------------------------------------------- */
-  var regionSearchInput = document.getElementById("rk-region-search");
-  var regionSearchBtn   = document.getElementById("rk-region-search-btn");
-  var regionResultsEl   = document.getElementById("rk-region-results");
-
-  var institutesPromise = (FP && FP.client)
-    ? FP.client.from("institutes").select("name, pathway, location, campuses").eq("active", true).order("name")
-    : Promise.resolve({ data: [] });
-
-  function runRegionSearch(){
-    var q = (regionSearchInput.value || "").trim().toLowerCase();
-    if(!q){
-      regionResultsEl.innerHTML = "";
-      return;
-    }
-    regionResultsEl.innerHTML = '<p class="rk-scope-note">Searching\u2026</p>';
-    institutesPromise.then(function(r){
-      var all = r.data || [];
-      var matches = all.filter(function(inst){
-        var loc = (inst.location || "").toLowerCase();
-        var campuses = (inst.campuses || []).map(function(c){ return String(c).toLowerCase(); });
-        return loc.indexOf(q) !== -1 || campuses.some(function(c){ return c.indexOf(q) !== -1; });
-      });
-
-      if(!matches.length){
-        regionResultsEl.innerHTML = '<div class="fp-card rk-results-card"><p class="rk-scope-note">No universities match \u201c' + esc(regionSearchInput.value.trim()) + '\u201d.</p></div>';
-        return;
-      }
-
-      var rowsHtml = matches.map(function(inst){
-        var where = inst.campuses && inst.campuses.length ? inst.campuses.join(", ") : (inst.location || "\u2014");
-        var pathwayLabel = inst.pathway === "medical" ? "Medical" : "Engineering / General";
-        return '<div class="rk-row">' +
-          '<div class="rk-row-body">' +
-            '<div class="rk-uni-name">' + esc(inst.name) + '</div>' +
-            '<div class="rk-detail">' + esc(where) + ' \u00b7 ' + esc(pathwayLabel) + '</div>' +
-          '</div>' +
-        '</div>';
-      }).join("");
-
-      regionResultsEl.innerHTML =
-        '<div class="fp-card rk-results-card">' +
-          '<div class="rk-results-head"><span class="rk-count">' + matches.length + ' match' + (matches.length === 1 ? "" : "es") + '</span></div>' +
-          '<div class="rk-list">' + rowsHtml + '</div>' +
-        '</div>';
-    });
-  }
-
-  regionSearchBtn.addEventListener("click", runRegionSearch);
-  regionSearchInput.addEventListener("keydown", function(e){
-    if(e.key === "Enter"){ e.preventDefault(); runRegionSearch(); }
-  });
 })();

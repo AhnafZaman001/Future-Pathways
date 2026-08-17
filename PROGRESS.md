@@ -225,9 +225,19 @@ below it actually needs role before letting it block everything else.
   `.fp-badge`) for pathway/status — same fix duplicated in both
   `js/fp-admin.js` and `js/fp-saved-forms.js` since they're separate
   IIFEs with no shared module system.
-- University Explorer (`rankings.html`) now has a second, independent
-  lookup section: search by region/city, using `institutes.location`
-  + `institutes.campuses` (real data) rather than the curated
-  `rankings-data.js` content used by the field/specialization flow
-  above it. Fetches `institutes` immediately on script load (this page
-  has no auth gate) rather than waiting for the first search.
+- University Explorer (`rankings.html`) City filter: **first version
+  of this was wrong** — built as a separate standalone search section
+  below the Field/Specialization card instead of a third filter
+  integrated into the same one, which wasn't what was asked for and
+  was correctly rejected. Corrected version: `.fp-grid-3` (new,
+  mirrors `.fp-grid-2`), City is a third `<select>` in the *same*
+  `.rk-selector` card, populated from `institutes.location` +
+  `institutes.campuses` (real data, fetched immediately on script
+  load — this page has no auth gate). It filters the *same* ranked
+  results and "Also offered at" list that Field/Specialization
+  produce (via a canonical-name → cities map, reusing the existing
+  `INSTITUTE_ALIAS` display-name mapping), not a separate result set.
+  An institute not present in `institutes` (i.e. not in the seeded
+  table, only in the curated `rankings-data.js` content) has no known
+  city and is correctly excluded when a city filter is active, rather
+  than guessed.

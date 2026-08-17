@@ -37,11 +37,6 @@
       (r[0].data||[]).forEach(function(x){ lookups.institutes[x.id] = x.name; });
       (r[1].data||[]).forEach(function(x){ lookups.faculties[x.id] = x.name; });
       (r[2].data||[]).forEach(function(x){ lookups.careers[x.id] = x.name; });
-
-      var select = document.getElementById("filter-first-priority");
-      var names = (r[0].data||[]).map(function(x){ return x.name; });
-      select.innerHTML = '<option value="">All</option>' +
-        names.map(function(n){ return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join("");
     });
   }
 
@@ -58,6 +53,15 @@
           var name = row.custom_institute_name || lookups.institutes[row.institute_id] || null;
           if(name) firstPriorityByFpId[row.future_pathway_id] = name;
         });
+
+        // Dropdown shows ONLY institutes that are actually someone's
+        // first priority right now -- not the full master list. An
+        // institute nobody has picked yet (e.g. seeded but unused)
+        // stays out of the dropdown until a real submission names it.
+        var usedNames = Array.from(new Set(Object.values(firstPriorityByFpId))).sort();
+        var select = document.getElementById("filter-first-priority");
+        select.innerHTML = '<option value="">All</option>' +
+          usedNames.map(function(n){ return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join("");
       });
   }
 

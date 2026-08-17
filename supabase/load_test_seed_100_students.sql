@@ -3,6 +3,16 @@
 -- Pre-Board), synthetic auth accounts + submitted Future Pathways
 -- forms with randomized-but-valid ranked preferences.
 --
+-- v2 FIX: the first version of this file explicitly inserted into
+-- public.app_users after creating the auth.users row -- but
+-- on_auth_user_created (future_pathways_schema.sql) already fires
+-- automatically on that insert and creates the app_users row
+-- itself. The explicit insert then hit a duplicate-key conflict on
+-- EVERY statement, rolling back the whole thing -- meaning v1
+-- silently created zero students. This version removes that
+-- redundant insert; public.students now chains directly off
+-- new_user, and app_users is left entirely to the trigger.
+--
 -- PURPOSE: stress-test the app with realistic data volume, not to
 -- represent real submissions. Every account uses a clearly-fake
 -- @loadtest.rah.internal email so it can never be confused with a
@@ -42,19 +52,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-mahnoor-fatima-f03-302@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MAHNOOR FATIMA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MAHNOOR FATIMA', 'Pre-Medical', 'F3', 'F03-302', 1066.0, 336.0 from new_app_user
+  select id, 'MAHNOOR FATIMA', 'Pre-Medical', 'F3', 'F03-302', 1066.0, 336.0 from new_user
   returning id
 ),
 new_fp as (
@@ -118,19 +123,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-syeda-fatima-gillani-f11-1102@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"SYEDA FATIMA GILLANI"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'SYEDA FATIMA GILLANI', 'Pre-Medical', 'F11', 'F11-1102', 1170.0, 827.0 from new_app_user
+  select id, 'SYEDA FATIMA GILLANI', 'Pre-Medical', 'F11', 'F11-1102', 1170.0, 827.0 from new_user
   returning id
 ),
 new_fp as (
@@ -194,19 +194,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-zimal-kamran-f12-1202@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ZIMAL KAMRAN"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ZIMAL KAMRAN', 'Pre-Medical', 'F12', 'F12-1202', 1018.0, 598.0 from new_app_user
+  select id, 'ZIMAL KAMRAN', 'Pre-Medical', 'F12', 'F12-1202', 1018.0, 598.0 from new_user
   returning id
 ),
 new_fp as (
@@ -270,19 +265,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-areesha-fatima-f04-401@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"AREESHA FATIMA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'AREESHA FATIMA', 'Pre-Medical', 'F4', 'F04-401', 1184.0, 688.0 from new_app_user
+  select id, 'AREESHA FATIMA', 'Pre-Medical', 'F4', 'F04-401', 1184.0, 688.0 from new_user
   returning id
 ),
 new_fp as (
@@ -346,19 +336,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-faryal-rai-f16-16001@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"FARYAL RAI"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'FARYAL RAI', 'Pre-Medical', 'F16 PM', 'F16-16001', 882.0, 475.0 from new_app_user
+  select id, 'FARYAL RAI', 'Pre-Medical', 'F16 PM', 'F16-16001', 882.0, 475.0 from new_user
   returning id
 ),
 new_fp as (
@@ -422,19 +407,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-inshal-jamil-f02-201@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"INSHAL JAMIL"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'INSHAL JAMIL', 'Pre-Medical', 'F2', 'F02-201', 1128.0, 558.0 from new_app_user
+  select id, 'INSHAL JAMIL', 'Pre-Medical', 'F2', 'F02-201', 1128.0, 558.0 from new_user
   returning id
 ),
 new_fp as (
@@ -498,19 +478,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-aima-ali-f10-1001@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"AIMA ALI"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'AIMA ALI', 'Pre-Medical', 'F10 PM', 'F10-1001', 1118.0, 552.0 from new_app_user
+  select id, 'AIMA ALI', 'Pre-Medical', 'F10 PM', 'F10-1001', 1118.0, 552.0 from new_user
   returning id
 ),
 new_fp as (
@@ -574,19 +549,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-maryam-rehan-f01-a-01@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MARYAM REHAN"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MARYAM REHAN', 'Pre-Medical', 'F1A', 'F01-A-01', 1180.0, 867.0 from new_app_user
+  select id, 'MARYAM REHAN', 'Pre-Medical', 'F1A', 'F01-A-01', 1180.0, 867.0 from new_user
   returning id
 ),
 new_fp as (
@@ -650,19 +620,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-zainab-rana-f01-b-101@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ZAINAB RANA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ZAINAB RANA', 'Pre-Medical', 'F1B', 'F01-B-101', 1154.0, 421.0 from new_app_user
+  select id, 'ZAINAB RANA', 'Pre-Medical', 'F1B', 'F01-B-101', 1154.0, 421.0 from new_user
   returning id
 ),
 new_fp as (
@@ -726,19 +691,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-tooba-kashif-f03-308@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"TOOBA KASHIF"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'TOOBA KASHIF', 'Pre-Medical', 'F3', 'F03-308', 1041.0, 385.0 from new_app_user
+  select id, 'TOOBA KASHIF', 'Pre-Medical', 'F3', 'F03-308', 1041.0, 385.0 from new_user
   returning id
 ),
 new_fp as (
@@ -802,19 +762,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-mubashra-f11-1106@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MUBASHRA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MUBASHRA', 'Pre-Medical', 'F11', 'F11-1106', 1158.0, 593.0 from new_app_user
+  select id, 'MUBASHRA', 'Pre-Medical', 'F11', 'F11-1106', 1158.0, 593.0 from new_user
   returning id
 ),
 new_fp as (
@@ -878,19 +833,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-malaha-mazhar-f12-1205@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MALAHA MAZHAR"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MALAHA MAZHAR', 'Pre-Medical', 'F12', 'F12-1205', 1004.0, 457.0 from new_app_user
+  select id, 'MALAHA MAZHAR', 'Pre-Medical', 'F12', 'F12-1205', 1004.0, 457.0 from new_user
   returning id
 ),
 new_fp as (
@@ -954,19 +904,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-ania-ali-f04-404@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ANIA ALI"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ANIA ALI', 'Pre-Medical', 'F4', 'F04-404', 1158.0, 577.0 from new_app_user
+  select id, 'ANIA ALI', 'Pre-Medical', 'F4', 'F04-404', 1158.0, 577.0 from new_user
   returning id
 ),
 new_fp as (
@@ -1030,19 +975,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-aden-fatima-f02-206@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ADEN FATIMA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ADEN FATIMA', 'Pre-Medical', 'F2', 'F02-206', 1118.0, 704.0 from new_app_user
+  select id, 'ADEN FATIMA', 'Pre-Medical', 'F2', 'F02-206', 1118.0, 704.0 from new_user
   returning id
 ),
 new_fp as (
@@ -1106,19 +1046,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-noor-ul-huda-f10-1004@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"NOOR-UL-HUDA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'NOOR-UL-HUDA', 'Pre-Medical', 'F10 PM', 'F10-1004', 1088.0, 493.0 from new_app_user
+  select id, 'NOOR-UL-HUDA', 'Pre-Medical', 'F10 PM', 'F10-1004', 1088.0, 493.0 from new_user
   returning id
 ),
 new_fp as (
@@ -1182,19 +1117,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-hira-asim-f01-a-04@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"HIRA ASIM"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'HIRA ASIM', 'Pre-Medical', 'F1A', 'F01-A-04', 1173.0, 691.0 from new_app_user
+  select id, 'HIRA ASIM', 'Pre-Medical', 'F1A', 'F01-A-04', 1173.0, 691.0 from new_user
   returning id
 ),
 new_fp as (
@@ -1258,19 +1188,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-maria-qibtia-f01-b-104@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MARIA QIBTIA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MARIA QIBTIA', 'Pre-Medical', 'F1B', 'F01-B-104', 1145.0, 491.0 from new_app_user
+  select id, 'MARIA QIBTIA', 'Pre-Medical', 'F1B', 'F01-B-104', 1145.0, 491.0 from new_user
   returning id
 ),
 new_fp as (
@@ -1334,19 +1259,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-ezza-zaheer-f03-311@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"EZZA ZAHEER"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'EZZA ZAHEER', 'Pre-Medical', 'F3', 'F03-311', 1034.0, 404.0 from new_app_user
+  select id, 'EZZA ZAHEER', 'Pre-Medical', 'F3', 'F03-311', 1034.0, 404.0 from new_user
   returning id
 ),
 new_fp as (
@@ -1410,19 +1330,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-eman-fatima-f11-1109@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"EMAN FATIMA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'EMAN FATIMA', 'Pre-Medical', 'F11', 'F11-1109', 1145.0, 500.0 from new_app_user
+  select id, 'EMAN FATIMA', 'Pre-Medical', 'F11', 'F11-1109', 1145.0, 500.0 from new_user
   returning id
 ),
 new_fp as (
@@ -1486,19 +1401,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-quratulain-f12-1209@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"QURATULAIN"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'QURATULAIN', 'Pre-Medical', 'F12', 'F12-1209', 984.0, 532.0 from new_app_user
+  select id, 'QURATULAIN', 'Pre-Medical', 'F12', 'F12-1209', 984.0, 532.0 from new_user
   returning id
 ),
 new_fp as (
@@ -1562,19 +1472,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-zainab-shahzad-f04-407@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ZAINAB SHAHZAD"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ZAINAB SHAHZAD', 'Pre-Medical', 'F4', 'F04-407', 1040.0, 626.0 from new_app_user
+  select id, 'ZAINAB SHAHZAD', 'Pre-Medical', 'F4', 'F04-407', 1040.0, 626.0 from new_user
   returning id
 ),
 new_fp as (
@@ -1638,19 +1543,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-amina-shahid-f16-16007@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"AMINA SHAHID"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'AMINA SHAHID', 'Pre-Medical', 'F16 PM', 'F16-16007', 1032.0, 645.0 from new_app_user
+  select id, 'AMINA SHAHID', 'Pre-Medical', 'F16 PM', 'F16-16007', 1032.0, 645.0 from new_user
   returning id
 ),
 new_fp as (
@@ -1714,19 +1614,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-maham-irfan-f02-210@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MAHAM IRFAN"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MAHAM IRFAN', 'Pre-Medical', 'F2', 'F02-210', 1103.0, 549.0 from new_app_user
+  select id, 'MAHAM IRFAN', 'Pre-Medical', 'F2', 'F02-210', 1103.0, 549.0 from new_user
   returning id
 ),
 new_fp as (
@@ -1790,19 +1685,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-meerab-nazir-f10-1009@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MEERAB NAZIR"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MEERAB NAZIR', 'Pre-Medical', 'F10 PM', 'F10-1009', 970.0, 539.0 from new_app_user
+  select id, 'MEERAB NAZIR', 'Pre-Medical', 'F10 PM', 'F10-1009', 970.0, 539.0 from new_user
   returning id
 ),
 new_fp as (
@@ -1866,19 +1756,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-javeria-azam-f01-a-07@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"JAVERIA AZAM"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'JAVERIA AZAM', 'Pre-Medical', 'F1A', 'F01-A-07', 1171.0, 668.0 from new_app_user
+  select id, 'JAVERIA AZAM', 'Pre-Medical', 'F1A', 'F01-A-07', 1171.0, 668.0 from new_user
   returning id
 ),
 new_fp as (
@@ -1942,19 +1827,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-meerab-fatima-f01-b-107@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MEERAB FATIMA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MEERAB FATIMA', 'Pre-Medical', 'F1B', 'F01-B-107', 1144.0, 593.5 from new_app_user
+  select id, 'MEERAB FATIMA', 'Pre-Medical', 'F1B', 'F01-B-107', 1144.0, 593.5 from new_user
   returning id
 ),
 new_fp as (
@@ -2018,19 +1898,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-zoha-f03-315@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ZOHA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ZOHA', 'Pre-Medical', 'F3', 'F03-315', 1031.0, 359.0 from new_app_user
+  select id, 'ZOHA', 'Pre-Medical', 'F3', 'F03-315', 1031.0, 359.0 from new_user
   returning id
 ),
 new_fp as (
@@ -2094,19 +1969,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-hiba-furqan-f11-1112@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"HIBA FURQAN"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'HIBA FURQAN', 'Pre-Medical', 'F11', 'F11-1112', 1131.0, 781.0 from new_app_user
+  select id, 'HIBA FURQAN', 'Pre-Medical', 'F11', 'F11-1112', 1131.0, 781.0 from new_user
   returning id
 ),
 new_fp as (
@@ -2170,19 +2040,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-emaan-amiir-f12-1212@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"EMAAN AMIIR"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'EMAAN AMIIR', 'Pre-Medical', 'F12', 'F12-1212', 969.0, 356.0 from new_app_user
+  select id, 'EMAAN AMIIR', 'Pre-Medical', 'F12', 'F12-1212', 969.0, 356.0 from new_user
   returning id
 ),
 new_fp as (
@@ -2246,19 +2111,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-ramisha-amir-f04-410@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"RAMISHA AMIR"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'RAMISHA AMIR', 'Pre-Medical', 'F4', 'F04-410', 1111.0, 485.0 from new_app_user
+  select id, 'RAMISHA AMIR', 'Pre-Medical', 'F4', 'F04-410', 1111.0, 485.0 from new_user
   returning id
 ),
 new_fp as (
@@ -2322,19 +2182,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-noor-ul-ain-f02-215@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"NOOR UL AIN"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'NOOR UL AIN', 'Pre-Medical', 'F2', 'F02-215', 1095.0, 616.0 from new_app_user
+  select id, 'NOOR UL AIN', 'Pre-Medical', 'F2', 'F02-215', 1095.0, 616.0 from new_user
   returning id
 ),
 new_fp as (
@@ -2398,19 +2253,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-zainab-imran-f10-1012@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ZAINAB IMRAN"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ZAINAB IMRAN', 'Pre-Medical', 'F10 PM', 'F10-1012', 784.0, 470.0 from new_app_user
+  select id, 'ZAINAB IMRAN', 'Pre-Medical', 'F10 PM', 'F10-1012', 784.0, 470.0 from new_user
   returning id
 ),
 new_fp as (
@@ -2474,19 +2324,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-hamna-noor-f01-a-10@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"HAMNA NOOR"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'HAMNA NOOR', 'Pre-Medical', 'F1A', 'F01-A-10', 1167.0, 780.0 from new_app_user
+  select id, 'HAMNA NOOR', 'Pre-Medical', 'F1A', 'F01-A-10', 1167.0, 780.0 from new_user
   returning id
 ),
 new_fp as (
@@ -2550,19 +2395,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-izza-shahzad-f01-b-110@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"IZZA SHAHZAD"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'IZZA SHAHZAD', 'Pre-Medical', 'F1B', 'F01-B-110', 1138.0, 561.0 from new_app_user
+  select id, 'IZZA SHAHZAD', 'Pre-Medical', 'F1B', 'F01-B-110', 1138.0, 561.0 from new_user
   returning id
 ),
 new_fp as (
@@ -2626,19 +2466,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-tahreem-riaz-f13-pe-1301@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"TAHREEM RIAZ"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'TAHREEM RIAZ', 'Pre-Engineering', 'F13 PE', 'F13-PE-1301', 1172.0, 507.0 from new_app_user
+  select id, 'TAHREEM RIAZ', 'Pre-Engineering', 'F13 PE', 'F13-PE-1301', 1172.0, 507.0 from new_user
   returning id
 ),
 new_fp as (
@@ -2726,19 +2561,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-areeba-zahid-f09-pe-972@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"AREEBA ZAHID"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'AREEBA ZAHID', 'Pre-Engineering', 'F9 PE', 'F09-PE-972', 1110.0, 686.5 from new_app_user
+  select id, 'AREEBA ZAHID', 'Pre-Engineering', 'F9 PE', 'F09-PE-972', 1110.0, 686.5 from new_user
   returning id
 ),
 new_fp as (
@@ -2826,19 +2656,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-hajra-eman-saeed-f10-pe-1041@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"HAJRA EMAN SAEED"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'HAJRA EMAN SAEED', 'Pre-Engineering', 'F10 PE', 'F10-PE-1041', 1136.0, 744.0 from new_app_user
+  select id, 'HAJRA EMAN SAEED', 'Pre-Engineering', 'F10 PE', 'F10-PE-1041', 1136.0, 744.0 from new_user
   returning id
 ),
 new_fp as (
@@ -2926,19 +2751,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-anaya-mudassar-f06-pe-601@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ANAYA MUDASSAR"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ANAYA MUDASSAR', 'Pre-Engineering', 'F6 PE', 'F06-PE-601', 1154.0, 812.0 from new_app_user
+  select id, 'ANAYA MUDASSAR', 'Pre-Engineering', 'F6 PE', 'F06-PE-601', 1154.0, 812.0 from new_user
   returning id
 ),
 new_fp as (
@@ -3026,19 +2846,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-khadija-ijaz-f13-pe-1304@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"KHADIJA IJAZ"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'KHADIJA IJAZ', 'Pre-Engineering', 'F13 PE', 'F13-PE-1304', 1155.0, 787.0 from new_app_user
+  select id, 'KHADIJA IJAZ', 'Pre-Engineering', 'F13 PE', 'F13-PE-1304', 1155.0, 787.0 from new_user
   returning id
 ),
 new_fp as (
@@ -3126,19 +2941,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-maleeha-noor-f10-pe-1044@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MALEEHA NOOR"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MALEEHA NOOR', 'Pre-Engineering', 'F10 PE', 'F10-PE-1044', 1160.0, 772.0 from new_app_user
+  select id, 'MALEEHA NOOR', 'Pre-Engineering', 'F10 PE', 'F10-PE-1044', 1160.0, 772.0 from new_user
   returning id
 ),
 new_fp as (
@@ -3226,19 +3036,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-ayesha-waseem-f06-pe-604@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"AYESHA WASEEM"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'AYESHA WASEEM', 'Pre-Engineering', 'F6 PE', 'F06-PE-604', 1137.0, 685.0 from new_app_user
+  select id, 'AYESHA WASEEM', 'Pre-Engineering', 'F6 PE', 'F06-PE-604', 1137.0, 685.0 from new_user
   returning id
 ),
 new_fp as (
@@ -3326,19 +3131,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-faiqa-kashif-f13-pe-1307@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"FAIQA KASHIF"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'FAIQA KASHIF', 'Pre-Engineering', 'F13 PE', 'F13-PE-1307', 1090.0, 0.0 from new_app_user
+  select id, 'FAIQA KASHIF', 'Pre-Engineering', 'F13 PE', 'F13-PE-1307', 1090.0, 0.0 from new_user
   returning id
 ),
 new_fp as (
@@ -3426,19 +3226,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-fatima-shoaib-f06-pe-608@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"FATIMA SHOAIB"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'FATIMA SHOAIB', 'Pre-Engineering', 'F6 PE', 'F06-PE-608', 1128.0, 794.0 from new_app_user
+  select id, 'FATIMA SHOAIB', 'Pre-Engineering', 'F6 PE', 'F06-PE-608', 1128.0, 794.0 from new_user
   returning id
 ),
 new_fp as (
@@ -3526,19 +3321,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-faiqa-waqar-f13-pe-1310@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"FAIQA WAQAR"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'FAIQA WAQAR', 'Pre-Engineering', 'F13 PE', 'F13-PE-1310', 1045.0, 444.0 from new_app_user
+  select id, 'FAIQA WAQAR', 'Pre-Engineering', 'F13 PE', 'F13-PE-1310', 1045.0, 444.0 from new_user
   returning id
 ),
 new_fp as (
@@ -3626,19 +3416,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-hania-mushtaq-f06-pe-611@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"HANIA MUSHTAQ"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'HANIA MUSHTAQ', 'Pre-Engineering', 'F6 PE', 'F06-PE-611', 1115.0, 646.0 from new_app_user
+  select id, 'HANIA MUSHTAQ', 'Pre-Engineering', 'F6 PE', 'F06-PE-611', 1115.0, 646.0 from new_user
   returning id
 ),
 new_fp as (
@@ -3726,19 +3511,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-nimra-wardag-f13-pe-1313@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"NIMRA WARDAG"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'NIMRA WARDAG', 'Pre-Engineering', 'F13 PE', 'F13-PE-1313', 1024.0, 397.0 from new_app_user
+  select id, 'NIMRA WARDAG', 'Pre-Engineering', 'F13 PE', 'F13-PE-1313', 1024.0, 397.0 from new_user
   returning id
 ),
 new_fp as (
@@ -3826,19 +3606,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-mirral-wahla-f06-pe-615@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MIRRAL WAHLA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MIRRAL WAHLA', 'Pre-Engineering', 'F6 PE', 'F06-PE-615', 1105.0, 658.0 from new_app_user
+  select id, 'MIRRAL WAHLA', 'Pre-Engineering', 'F6 PE', 'F06-PE-615', 1105.0, 658.0 from new_user
   returning id
 ),
 new_fp as (
@@ -3926,19 +3701,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-suhaimah-yousaf-f13-pe-1316@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"SUHAIMAH YOUSAF"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'SUHAIMAH YOUSAF', 'Pre-Engineering', 'F13 PE', 'F13-PE-1316', 994.0, 488.0 from new_app_user
+  select id, 'SUHAIMAH YOUSAF', 'Pre-Engineering', 'F13 PE', 'F13-PE-1316', 994.0, 488.0 from new_user
   returning id
 ),
 new_fp as (
@@ -4026,19 +3796,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-minahal-fatima-f06-pe-618@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MINAHAL FATIMA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MINAHAL FATIMA', 'Pre-Engineering', 'F6 PE', 'F06-PE-618', 1093.0, 510.0 from new_app_user
+  select id, 'MINAHAL FATIMA', 'Pre-Engineering', 'F6 PE', 'F06-PE-618', 1093.0, 510.0 from new_user
   returning id
 ),
 new_fp as (
@@ -4126,19 +3891,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-dur-e-sameen-f13-pe-1320@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"DUR E SAMEEN"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'DUR E SAMEEN', 'Pre-Engineering', 'F13 PE', 'F13-PE-1320', 935.0, 415.0 from new_app_user
+  select id, 'DUR E SAMEEN', 'Pre-Engineering', 'F13 PE', 'F13-PE-1320', 935.0, 415.0 from new_user
   returning id
 ),
 new_fp as (
@@ -4226,19 +3986,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-mahrukh-saeed-f06-pe-621@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MAHRUKH SAEED"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MAHRUKH SAEED', 'Pre-Engineering', 'F6 PE', 'F06-PE-621', 1082.0, 662.0 from new_app_user
+  select id, 'MAHRUKH SAEED', 'Pre-Engineering', 'F6 PE', 'F06-PE-621', 1082.0, 662.0 from new_user
   returning id
 ),
 new_fp as (
@@ -4326,19 +4081,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-hamna-ikram-f13-pe-1323@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"HAMNA IKRAM"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'HAMNA IKRAM', 'Pre-Engineering', 'F13 PE', 'F13-PE-1323', 780.0, 325.0 from new_app_user
+  select id, 'HAMNA IKRAM', 'Pre-Engineering', 'F13 PE', 'F13-PE-1323', 780.0, 325.0 from new_user
   returning id
 ),
 new_fp as (
@@ -4426,19 +4176,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-farah-fatima-f06-pe-624@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"FARAH FATIMA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'FARAH FATIMA', 'Pre-Engineering', 'F6 PE', 'F06-PE-624', 1072.0, 500.0 from new_app_user
+  select id, 'FARAH FATIMA', 'Pre-Engineering', 'F6 PE', 'F06-PE-624', 1072.0, 500.0 from new_user
   returning id
 ),
 new_fp as (
@@ -4526,19 +4271,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-alveena-afzal-f13-pe-1326@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ALVEENA AFZAL"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ALVEENA AFZAL', 'Pre-Engineering', 'F13 PE', 'F13-PE-1326', 1122.0, 640.0 from new_app_user
+  select id, 'ALVEENA AFZAL', 'Pre-Engineering', 'F13 PE', 'F13-PE-1326', 1122.0, 640.0 from new_user
   returning id
 ),
 new_fp as (
@@ -4626,19 +4366,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-soha-sardar-f06-pe-627@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"SOHA SARDAR"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'SOHA SARDAR', 'Pre-Engineering', 'F6 PE', 'F06-PE-627', 1010.0, 764.0 from new_app_user
+  select id, 'SOHA SARDAR', 'Pre-Engineering', 'F6 PE', 'F06-PE-627', 1010.0, 764.0 from new_user
   returning id
 ),
 new_fp as (
@@ -4726,19 +4461,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-hareem-shehzad-f06-pe-630@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"HAREEM SHEHZAD"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'HAREEM SHEHZAD', 'Pre-Engineering', 'F6 PE', 'F06-PE-630', 989.0, 444.0 from new_app_user
+  select id, 'HAREEM SHEHZAD', 'Pre-Engineering', 'F6 PE', 'F06-PE-630', 989.0, 444.0 from new_user
   returning id
 ),
 new_fp as (
@@ -4826,19 +4556,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-alina-yasmeen-f06-pe-633@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ALINA YASMEEN"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ALINA YASMEEN', 'Pre-Engineering', 'F6 PE', 'F06-PE-633', 894.0, 336.0 from new_app_user
+  select id, 'ALINA YASMEEN', 'Pre-Engineering', 'F6 PE', 'F06-PE-633', 894.0, 336.0 from new_user
   returning id
 ),
 new_fp as (
@@ -4926,19 +4651,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-hafsa-azam-f06-pe-636@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"HAFSA AZAM"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'HAFSA AZAM', 'Pre-Engineering', 'F6 PE', 'F06-PE-636', 856.0, 469.0 from new_app_user
+  select id, 'HAFSA AZAM', 'Pre-Engineering', 'F6 PE', 'F06-PE-636', 856.0, 469.0 from new_user
   returning id
 ),
 new_fp as (
@@ -5026,19 +4746,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-fiza-chishti-f06-pe-640@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"FIZA CHISHTI"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'FIZA CHISHTI', 'Pre-Engineering', 'F6 PE', 'F06-PE-640', 1127.0, 581.0 from new_app_user
+  select id, 'FIZA CHISHTI', 'Pre-Engineering', 'F6 PE', 'F06-PE-640', 1127.0, 581.0 from new_user
   returning id
 ),
 new_fp as (
@@ -5126,19 +4841,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-fatima-abid-f06-pe-643@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"FATIMA ABID"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'FATIMA ABID', 'Pre-Engineering', 'F6 PE', 'F06-PE-643', 1068.0, 607.0 from new_app_user
+  select id, 'FATIMA ABID', 'Pre-Engineering', 'F6 PE', 'F06-PE-643', 1068.0, 607.0 from new_user
   returning id
 ),
 new_fp as (
@@ -5226,19 +4936,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-hafsa-shahid-f10-ics-1051@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"HAFSA SHAHID"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'HAFSA SHAHID', 'ICS', 'F10 ICS', 'F10-ICS-1051', 1156.0, 799.0 from new_app_user
+  select id, 'HAFSA SHAHID', 'ICS', 'F10 ICS', 'F10-ICS-1051', 1156.0, 799.0 from new_user
   returning id
 ),
 new_fp as (
@@ -5326,19 +5031,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-bareera-shafiq-f14-ics-1401@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"BAREERA SHAFIQ"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'BAREERA SHAFIQ', 'ICS', 'F14 ICS', 'F14-ICS-1401', 1022.0, 532.0 from new_app_user
+  select id, 'BAREERA SHAFIQ', 'ICS', 'F14 ICS', 'F14-ICS-1401', 1022.0, 532.0 from new_user
   returning id
 ),
 new_fp as (
@@ -5426,19 +5126,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-fizza-ahmad-f09-ics-901@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"FIZZA AHMAD"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'FIZZA AHMAD', 'ICS', 'F9 ICS', 'F09-ICS-901', 1163.0, 683.0 from new_app_user
+  select id, 'FIZZA AHMAD', 'ICS', 'F9 ICS', 'F09-ICS-901', 1163.0, 683.0 from new_user
   returning id
 ),
 new_fp as (
@@ -5526,19 +5221,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-anam-sajid-f13-ics-1351@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ANAM SAJID"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ANAM SAJID', 'ICS', 'F13 ICS', 'F13-ICS-1351', 1146.0, 537.0 from new_app_user
+  select id, 'ANAM SAJID', 'ICS', 'F13 ICS', 'F13-ICS-1351', 1146.0, 537.0 from new_user
   returning id
 ),
 new_fp as (
@@ -5626,19 +5316,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-darakhshan-shahid-f08-ics-801@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"DARAKHSHAN SHAHID"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'DARAKHSHAN SHAHID', 'ICS', 'F8 ICS', 'F08-ICS-801', 1050.0, 596.0 from new_app_user
+  select id, 'DARAKHSHAN SHAHID', 'ICS', 'F8 ICS', 'F08-ICS-801', 1050.0, 596.0 from new_user
   returning id
 ),
 new_fp as (
@@ -5726,19 +5411,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-umeroman-rana-f15-ics-1501@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"UMEROMAN RANA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'UMEROMAN RANA', 'ICS', 'F15 ICS', 'F15-ICS-1501', 972.0, 416.0 from new_app_user
+  select id, 'UMEROMAN RANA', 'ICS', 'F15 ICS', 'F15-ICS-1501', 972.0, 416.0 from new_user
   returning id
 ),
 new_fp as (
@@ -5826,19 +5506,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-hafiza-sara-murtaza-f16-ics-1651@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"HAFIZA SARA MURTAZA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'HAFIZA SARA MURTAZA', 'ICS', 'F16 ICS', 'F16-ICS-1651', 928.0, 489.0 from new_app_user
+  select id, 'HAFIZA SARA MURTAZA', 'ICS', 'F16 ICS', 'F16-ICS-1651', 928.0, 489.0 from new_user
   returning id
 ),
 new_fp as (
@@ -5926,19 +5601,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-sara-rehan-f07-ics-701@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"SARA REHAN"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'SARA REHAN', 'ICS', 'F7 ICS', 'F07-ICS-701', 1182.0, 790.0 from new_app_user
+  select id, 'SARA REHAN', 'ICS', 'F7 ICS', 'F07-ICS-701', 1182.0, 790.0 from new_user
   returning id
 ),
 new_fp as (
@@ -6026,19 +5696,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-maham-arshad-f10-ics-1054@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MAHAM ARSHAD"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MAHAM ARSHAD', 'ICS', 'F10 ICS', 'F10-ICS-1054', 1085.0, 657.0 from new_app_user
+  select id, 'MAHAM ARSHAD', 'ICS', 'F10 ICS', 'F10-ICS-1054', 1085.0, 657.0 from new_user
   returning id
 ),
 new_fp as (
@@ -6126,19 +5791,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-eeman-fatima-f14-ics-1407@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"EEMAN FATIMA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'EEMAN FATIMA', 'ICS', 'F14 ICS', 'F14-ICS-1407', 1013.0, 471.0 from new_app_user
+  select id, 'EEMAN FATIMA', 'ICS', 'F14 ICS', 'F14-ICS-1407', 1013.0, 471.0 from new_user
   returning id
 ),
 new_fp as (
@@ -6226,19 +5886,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-amna-ahmad-f09-ics-905@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"AMNA AHMAD"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'AMNA AHMAD', 'ICS', 'F9 ICS', 'F09-ICS-905', 1127.0, 584.5 from new_app_user
+  select id, 'AMNA AHMAD', 'ICS', 'F9 ICS', 'F09-ICS-905', 1127.0, 584.5 from new_user
   returning id
 ),
 new_fp as (
@@ -6326,19 +5981,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-amna-faryad-f13-ics-1355@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"AMNA FARYAD"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'AMNA FARYAD', 'ICS', 'F13 ICS', 'F13-ICS-1355', 1115.0, 546.0 from new_app_user
+  select id, 'AMNA FARYAD', 'ICS', 'F13 ICS', 'F13-ICS-1355', 1115.0, 546.0 from new_user
   returning id
 ),
 new_fp as (
@@ -6426,19 +6076,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-sarah-rashid-f08-ics-804@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"SARAH RASHID"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'SARAH RASHID', 'ICS', 'F8 ICS', 'F08-ICS-804', 1014.0, 519.0 from new_app_user
+  select id, 'SARAH RASHID', 'ICS', 'F8 ICS', 'F08-ICS-804', 1014.0, 519.0 from new_user
   returning id
 ),
 new_fp as (
@@ -6526,19 +6171,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-asiya-f15-ics-1511@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ASIYA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ASIYA', 'ICS', 'F15 ICS', 'F15-ICS-1511', 848.0, 343.0 from new_app_user
+  select id, 'ASIYA', 'ICS', 'F15 ICS', 'F15-ICS-1511', 848.0, 343.0 from new_user
   returning id
 ),
 new_fp as (
@@ -6626,19 +6266,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-fatima-ijaz-f16-ics-1655@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"FATIMA IJAZ"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'FATIMA IJAZ', 'ICS', 'F16 ICS', 'F16-ICS-1655', 871.0, 382.0 from new_app_user
+  select id, 'FATIMA IJAZ', 'ICS', 'F16 ICS', 'F16-ICS-1655', 871.0, 382.0 from new_user
   returning id
 ),
 new_fp as (
@@ -6726,19 +6361,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-khadija-mansoor-f07-ics-704@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"KHADIJA MANSOOR"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'KHADIJA MANSOOR', 'ICS', 'F7 ICS', 'F07-ICS-704', 1159.0, 526.0 from new_app_user
+  select id, 'KHADIJA MANSOOR', 'ICS', 'F7 ICS', 'F07-ICS-704', 1159.0, 526.0 from new_user
   returning id
 ),
 new_fp as (
@@ -6826,19 +6456,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-muntaha-ishtiaq-f10-ics-1058@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MUNTAHA ISHTIAQ"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MUNTAHA ISHTIAQ', 'ICS', 'F10 ICS', 'F10-ICS-1058', 1012.0, 536.5 from new_app_user
+  select id, 'MUNTAHA ISHTIAQ', 'ICS', 'F10 ICS', 'F10-ICS-1058', 1012.0, 536.5 from new_user
   returning id
 ),
 new_fp as (
@@ -6926,19 +6551,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-mahrosh-aziz-f14-ics-1413@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MAHROSH AZIZ"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MAHROSH AZIZ', 'ICS', 'F14 ICS', 'F14-ICS-1413', 976.0, 366.0 from new_app_user
+  select id, 'MAHROSH AZIZ', 'ICS', 'F14 ICS', 'F14-ICS-1413', 976.0, 366.0 from new_user
   returning id
 ),
 new_fp as (
@@ -7026,19 +6646,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-nabeera-jawad-f09-ics-908@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"NABEERA JAWAD"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'NABEERA JAWAD', 'ICS', 'F9 ICS', 'F09-ICS-908', 1114.0, 659.5 from new_app_user
+  select id, 'NABEERA JAWAD', 'ICS', 'F9 ICS', 'F09-ICS-908', 1114.0, 659.5 from new_user
   returning id
 ),
 new_fp as (
@@ -7126,19 +6741,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-rafia-qayyum-f13-ics-1358@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"RAFIA QAYYUM"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'RAFIA QAYYUM', 'ICS', 'F13 ICS', 'F13-ICS-1358', 1094.0, 568.0 from new_app_user
+  select id, 'RAFIA QAYYUM', 'ICS', 'F13 ICS', 'F13-ICS-1358', 1094.0, 568.0 from new_user
   returning id
 ),
 new_fp as (
@@ -7226,19 +6836,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-areeba-kayani-f08-ics-807@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"AREEBA KAYANI"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'AREEBA KAYANI', 'ICS', 'F8 ICS', 'F08-ICS-807', 1001.0, 483.0 from new_app_user
+  select id, 'AREEBA KAYANI', 'ICS', 'F8 ICS', 'F08-ICS-807', 1001.0, 483.0 from new_user
   returning id
 ),
 new_fp as (
@@ -7326,19 +6931,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-aliza-naeem-rana-f15-ics-1516@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ALIZA NAEEM RANA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ALIZA NAEEM RANA', 'ICS', 'F15 ICS', 'F15-ICS-1516', 832.0, 110.0 from new_app_user
+  select id, 'ALIZA NAEEM RANA', 'ICS', 'F15 ICS', 'F15-ICS-1516', 832.0, 110.0 from new_user
   returning id
 ),
 new_fp as (
@@ -7426,19 +7026,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-khadija-arif-f16-ics-1658@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"KHADIJA ARIF"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'KHADIJA ARIF', 'ICS', 'F16 ICS', 'F16-ICS-1658', 960.0, 365.0 from new_app_user
+  select id, 'KHADIJA ARIF', 'ICS', 'F16 ICS', 'F16-ICS-1658', 960.0, 365.0 from new_user
   returning id
 ),
 new_fp as (
@@ -7526,19 +7121,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-esha-faisal-f07-ics-707@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ESHA FAISAL"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ESHA FAISAL', 'ICS', 'F7 ICS', 'F07-ICS-707', 1153.0, 870.0 from new_app_user
+  select id, 'ESHA FAISAL', 'ICS', 'F7 ICS', 'F07-ICS-707', 1153.0, 870.0 from new_user
   returning id
 ),
 new_fp as (
@@ -7626,19 +7216,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-manal-farooq-f10-ics-1061@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MANAL FAROOQ"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MANAL FAROOQ', 'ICS', 'F10 ICS', 'F10-ICS-1061', 972.0, 534.5 from new_app_user
+  select id, 'MANAL FAROOQ', 'ICS', 'F10 ICS', 'F10-ICS-1061', 972.0, 534.5 from new_user
   returning id
 ),
 new_fp as (
@@ -7726,19 +7311,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-saira-zeeshan-f14-ics-1417@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"SAIRA ZEESHAN"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'SAIRA ZEESHAN', 'ICS', 'F14 ICS', 'F14-ICS-1417', 962.0, 454.0 from new_app_user
+  select id, 'SAIRA ZEESHAN', 'ICS', 'F14 ICS', 'F14-ICS-1417', 962.0, 454.0 from new_user
   returning id
 ),
 new_fp as (
@@ -7826,19 +7406,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-syeda-wajiha-fatima-f09-ics-911@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"SYEDA WAJIHA FATIMA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'SYEDA WAJIHA FATIMA', 'ICS', 'F9 ICS', 'F09-ICS-911', 991.0, 615.5 from new_app_user
+  select id, 'SYEDA WAJIHA FATIMA', 'ICS', 'F9 ICS', 'F09-ICS-911', 991.0, 615.5 from new_user
   returning id
 ),
 new_fp as (
@@ -7926,19 +7501,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-amina-khan-f13-ics-1361@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"AMINA KHAN"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'AMINA KHAN', 'ICS', 'F13 ICS', 'F13-ICS-1361', 1085.0, 627.0 from new_app_user
+  select id, 'AMINA KHAN', 'ICS', 'F13 ICS', 'F13-ICS-1361', 1085.0, 627.0 from new_user
   returning id
 ),
 new_fp as (
@@ -8026,19 +7596,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-umama-anwaar-f08-ics-811@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"UMAMA ANWAAR"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'UMAMA ANWAAR', 'ICS', 'F8 ICS', 'F08-ICS-811', 984.0, 450.0 from new_app_user
+  select id, 'UMAMA ANWAAR', 'ICS', 'F8 ICS', 'F08-ICS-811', 984.0, 450.0 from new_user
   returning id
 ),
 new_fp as (
@@ -8126,19 +7691,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-maheen-babar-f15-ics-1519@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"MAHEEN BABAR"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'MAHEEN BABAR', 'ICS', 'F15 ICS', 'F15-ICS-1519', 824.0, 194.0 from new_app_user
+  select id, 'MAHEEN BABAR', 'ICS', 'F15 ICS', 'F15-ICS-1519', 824.0, 194.0 from new_user
   returning id
 ),
 new_fp as (
@@ -8226,19 +7786,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-fatima-qadeer-f07-ics-710@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"FATIMA QADEER"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'FATIMA QADEER', 'ICS', 'F7 ICS', 'F07-ICS-710', 1150.0, 395.0 from new_app_user
+  select id, 'FATIMA QADEER', 'ICS', 'F7 ICS', 'F07-ICS-710', 1150.0, 395.0 from new_user
   returning id
 ),
 new_fp as (
@@ -8326,19 +7881,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-areeba-f10-ics-1064@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"AREEBA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'AREEBA', 'ICS', 'F10 ICS', 'F10-ICS-1064', 941.0, 449.0 from new_app_user
+  select id, 'AREEBA', 'ICS', 'F10 ICS', 'F10-ICS-1064', 941.0, 449.0 from new_user
   returning id
 ),
 new_fp as (
@@ -8426,19 +7976,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-hoorain-tufail-f14-ics-1421@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"HOORAIN TUFAIL"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'HOORAIN TUFAIL', 'ICS', 'F14 ICS', 'F14-ICS-1421', 953.0, 672.0 from new_app_user
+  select id, 'HOORAIN TUFAIL', 'ICS', 'F14 ICS', 'F14-ICS-1421', 953.0, 672.0 from new_user
   returning id
 ),
 new_fp as (
@@ -8526,19 +8071,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-shireen-zahra-f06-pe-619@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"SHIREEN ZAHRA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'SHIREEN ZAHRA', 'Pre-Engineering', 'F6 PE', 'F06-PE-619', 1089.0, 501.0 from new_app_user
+  select id, 'SHIREEN ZAHRA', 'Pre-Engineering', 'F6 PE', 'F06-PE-619', 1089.0, 501.0 from new_user
   returning id
 ),
 new_fp as (
@@ -8626,19 +8166,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-khizra-tariq-f13-pe-1302@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"KHIZRA TARIQ"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'KHIZRA TARIQ', 'Pre-Engineering', 'F13 PE', 'F13-PE-1302', 1161.0, 626.0 from new_app_user
+  select id, 'KHIZRA TARIQ', 'Pre-Engineering', 'F13 PE', 'F13-PE-1302', 1161.0, 626.0 from new_user
   returning id
 ),
 new_fp as (
@@ -8726,19 +8261,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-umm-e-farwa-f06-pe-602@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"UMM E FARWA"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'UMM E FARWA', 'Pre-Engineering', 'F6 PE', 'F06-PE-602', 1153.0, 678.0 from new_app_user
+  select id, 'UMM E FARWA', 'Pre-Engineering', 'F6 PE', 'F06-PE-602', 1153.0, 678.0 from new_user
   returning id
 ),
 new_fp as (
@@ -8826,19 +8356,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-laiba-nayyer-f13-pe-1325@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"LAIBA NAYYER"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'LAIBA NAYYER', 'Pre-Engineering', 'F13 PE', 'F13-PE-1325', 605.0, 412.0 from new_app_user
+  select id, 'LAIBA NAYYER', 'Pre-Engineering', 'F13 PE', 'F13-PE-1325', 605.0, 412.0 from new_user
   returning id
 ),
 new_fp as (
@@ -8926,19 +8451,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-ayesha-zahid-f06-pe-626@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"AYESHA ZAHID"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'AYESHA ZAHID', 'Pre-Engineering', 'F6 PE', 'F06-PE-626', 1051.0, 664.0 from new_app_user
+  select id, 'AYESHA ZAHID', 'Pre-Engineering', 'F6 PE', 'F06-PE-626', 1051.0, 664.0 from new_user
   returning id
 ),
 new_fp as (
@@ -9026,19 +8546,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-zainab-zubair-f06-pe-639@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"ZAINAB ZUBAIR"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'ZAINAB ZUBAIR', 'Pre-Engineering', 'F6 PE', 'F06-PE-639', 769.0, 330.0 from new_app_user
+  select id, 'ZAINAB ZUBAIR', 'Pre-Engineering', 'F6 PE', 'F06-PE-639', 769.0, 330.0 from new_user
   returning id
 ),
 new_fp as (
@@ -9126,19 +8641,14 @@ with new_user as (
   ) values (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
     'loadtest-inshal-bano-abbasi-f13-pe-1311@loadtest.rah.internal', 'not-a-real-password-hash-loadtest-only', now(),
-    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '{"provider":"loadtest","providers":["loadtest"]}'::jsonb, '{"full_name":"INSHAL BANO ABBASI"}'::jsonb, now(), now(),
     '', '', '', '', '', ''
   )
   returning id
 ),
-new_app_user as (
-  insert into public.app_users (id, role)
-  select id, 'student' from new_user
-  returning id
-),
 new_student as (
   insert into public.students (id, student_name, discipline, section, roll_number, matric_marks, first_year_marks)
-  select id, 'INSHAL BANO ABBASI', 'Pre-Engineering', 'F13 PE', 'F13-PE-1311', 1038.0, 433.0 from new_app_user
+  select id, 'INSHAL BANO ABBASI', 'Pre-Engineering', 'F13 PE', 'F13-PE-1311', 1038.0, 433.0 from new_user
   returning id
 ),
 new_fp as (

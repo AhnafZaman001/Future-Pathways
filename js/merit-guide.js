@@ -11,8 +11,19 @@
   var listEl          = document.getElementById("meritList");
   var countEl        = document.getElementById("meritResultsCount");
 
-  FP.requireAuth().then(function(result){
-    if(!result) return; // requireAuth already redirected to login.html
+  // Deliberately NOT using FP.requireAuth() -- this page never reads
+  // role, so the app_users round-trip that requireAuth() also does
+  // is unnecessary latency. getSession() resolves from local storage
+  // in the common case. See js/fp-app.js for the same reasoning.
+  // loadMeritFormulas() also doesn't need the session at all (public
+  // master data, RLS-gated server-side regardless) so it fires
+  // immediately rather than waiting on the auth check.
+  var sessionPromise = FP.client.auth.getSession();
+  var meritPromise = FP.loadMeritFormulas();
+
+  sessionPromise.then(function(r){
+    var session = r.data.session;
+    if(!session){ window.location.href = "login.html"; return; }
     document.body.style.visibility = "visible";
 
     var logoutBtn = document.getElementById("fp-logout");
@@ -20,7 +31,7 @@
 
     listEl.innerHTML = '<p class="merit-empty-state">Loading merit formulas\u2026</p>';
 
-    FP.loadMeritFormulas().then(function(){
+    meritPromise.then(function(){
       populateTestFilter();
       render();
     }).catch(function(err){

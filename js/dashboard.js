@@ -18,6 +18,19 @@ window.Dashboard = window.Dashboard || {};
 
   var institutesLoadState = "loading"; // "loading" | "loaded" | "error"
 
+  // These don't need the session or role at all (public master data,
+  // RLS-gated server-side regardless of when the client-side auth
+  // check resolves) -- fire them the moment this script runs, instead
+  // of waiting behind Dashboard.init()'s auth+role round-trip below.
+  initUniModal();
+  loadInstitutesWithLoadingState();
+  if(typeof FP !== "undefined" && FP.loadMeritFormulas){
+    FP.loadMeritFormulas().catch(function(err){ console.error("Merit formulas failed to load:", err); });
+  }
+  if(typeof FP !== "undefined" && FP.loadClosingMerit){
+    FP.loadClosingMerit().catch(function(err){ console.error("Closing merit records failed to load:", err); });
+  }
+
   Dashboard.init = function init(authResult){
     var session = authResult.session;
     var profile = authResult.profile || {};
@@ -37,16 +50,6 @@ window.Dashboard = window.Dashboard || {};
       hideStatusSection();
     } else {
       loadStatus(studentId);
-    }
-
-    initUniModal();
-    loadInstitutesWithLoadingState();
-
-    if(typeof FP !== "undefined" && FP.loadMeritFormulas){
-      FP.loadMeritFormulas().catch(function(err){ console.error("Merit formulas failed to load:", err); });
-    }
-    if(typeof FP !== "undefined" && FP.loadClosingMerit){
-      FP.loadClosingMerit().catch(function(err){ console.error("Closing merit records failed to load:", err); });
     }
   };
 

@@ -73,10 +73,10 @@ window.FP = window.FP || {};
     }
     empty.hidden = true;
     tbody.innerHTML = submissions.map(function(s){
-      var name = (s.students && s.students.student_name) || "(no profile yet)";
+      var name = titleCase((s.students && s.students.student_name) || "") || "(no profile yet)";
       return '<tr data-id="' + s.id + '">' +
         '<td>' + esc(name) + '</td>' +
-        '<td>' + esc(s.pathway) + '</td>' +
+        '<td class="fp-cap">' + esc(s.pathway) + '</td>' +
         '<td><span class="fp-badge ' + s.status + '">' + s.status + '</span></td>' +
         '<td>' + (s.created_at ? new Date(s.created_at).toLocaleDateString() : "\u2014") + '</td>' +
       '</tr>';
@@ -94,7 +94,7 @@ window.FP = window.FP || {};
     var overlay = document.getElementById("fp-dash-modal-overlay");
     var body = document.getElementById("fpDashModalBody");
     var title = document.getElementById("fpDashModalTitle");
-    title.textContent = (sub.students && sub.students.student_name) || "Student form preview";
+    title.textContent = titleCase((sub.students && sub.students.student_name) || "") || "Student form preview";
     body.innerHTML = "<p>Loading\u2026</p>";
     overlay.hidden = false;
 
@@ -136,7 +136,7 @@ window.FP = window.FP || {};
       .map(function(k){ return '<div class="fp-review-row"><span>' + k.replace(/_/g," ") + '</span><span>' + esc(p[k]) + '</span></div>'; }).join("");
 
     document.getElementById("fpDashModalBody").innerHTML =
-      '<p class="fp-step-desc">' + esc(sub.pathway) + ' \u2014 <span class="fp-badge ' + sub.status + '">' + sub.status + '</span></p>' +
+      '<p class="fp-step-desc"><span class="fp-cap">' + esc(sub.pathway) + '</span> \u2014 <span class="fp-badge ' + sub.status + '">' + sub.status + '</span></p>' +
       '<div class="fp-review-section"><h4>Student information</h4>' + profileHtml + '</div>' +
       '<div class="fp-review-section"><h4>Programs &amp; careers</h4><div class="fp-review-row"><span>Selected</span><span>' + esc(careerNames.join(", ") || "\u2014") + '</span></div></div>' +
       '<div class="fp-review-section"><h4>Institute preferences</h4>' + groupedRows(instRows, lookups.institutes) + '</div>' +
@@ -149,5 +149,11 @@ window.FP = window.FP || {};
     return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
     });
+  }
+
+  // See js/fp-admin.js for the same helper + rationale (source data has
+  // names in ALL CAPS; this is display-only, doesn't mutate stored data).
+  function titleCase(s){
+    return String(s || "").toLowerCase().replace(/\b\w/g, function(c){ return c.toUpperCase(); });
   }
 })();

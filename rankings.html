@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>University Explorer &mdash; Rah</title>
+<title>University Explorer &mdash; KIPS</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,7 +24,7 @@
     <div class="wrap header-inner">
       <div class="brand">
         <span class="brand-mark">&#9670;</span>
-        <span class="brand-name">Rah</span>
+        <span class="brand-name">KIPS</span>
         <span class="brand-tag">university explorer</span>
       </div>
     </div>
@@ -58,6 +58,20 @@
     </div>
 
     <div id="rk-results"></div>
+
+    <div class="rk-hero" style="margin-top:40px;">
+      <h2 class="fp-step-title" style="font-size:1.3rem;">Find by region or city</h2>
+      <p class="fp-step-desc">Search universities by where they actually are.</p>
+    </div>
+
+    <div class="fp-card rk-selector">
+      <div class="uni-modal-search-row" style="padding:0;">
+        <input type="search" id="rk-region-search" placeholder="e.g. Lahore, Islamabad, Karachi&hellip;" autocomplete="off">
+        <button type="button" id="rk-region-search-btn" class="btn-secondary">Search</button>
+      </div>
+    </div>
+
+    <div id="rk-region-results"></div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

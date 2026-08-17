@@ -169,4 +169,66 @@
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
     });
   }
+
+  /* ---------------------------------------------------------
+     Region/city search -- separate lookup direction from the
+     field/specialization ranking above: "where is this school"
+     instead of "who's best at this program". Uses institutes.
+     location + institutes.campuses (real data, not the curated
+     rankings-data.js content). Fired immediately on script load,
+     not gated behind any auth check (this page has none, and
+     institutes is public master data anyway) so the first search
+     doesn't have to wait on a fetch that could've started earlier.
+     ----------------------------------------------------------- */
+  var regionSearchInput = document.getElementById("rk-region-search");
+  var regionSearchBtn   = document.getElementById("rk-region-search-btn");
+  var regionResultsEl   = document.getElementById("rk-region-results");
+
+  var institutesPromise = (FP && FP.client)
+    ? FP.client.from("institutes").select("name, pathway, location, campuses").eq("active", true).order("name")
+    : Promise.resolve({ data: [] });
+
+  function runRegionSearch(){
+    var q = (regionSearchInput.value || "").trim().toLowerCase();
+    if(!q){
+      regionResultsEl.innerHTML = "";
+      return;
+    }
+    regionResultsEl.innerHTML = '<p class="rk-scope-note">Searching\u2026</p>';
+    institutesPromise.then(function(r){
+      var all = r.data || [];
+      var matches = all.filter(function(inst){
+        var loc = (inst.location || "").toLowerCase();
+        var campuses = (inst.campuses || []).map(function(c){ return String(c).toLowerCase(); });
+        return loc.indexOf(q) !== -1 || campuses.some(function(c){ return c.indexOf(q) !== -1; });
+      });
+
+      if(!matches.length){
+        regionResultsEl.innerHTML = '<div class="fp-card rk-results-card"><p class="rk-scope-note">No universities match \u201c' + esc(regionSearchInput.value.trim()) + '\u201d.</p></div>';
+        return;
+      }
+
+      var rowsHtml = matches.map(function(inst){
+        var where = inst.campuses && inst.campuses.length ? inst.campuses.join(", ") : (inst.location || "\u2014");
+        var pathwayLabel = inst.pathway === "medical" ? "Medical" : "Engineering / General";
+        return '<div class="rk-row">' +
+          '<div class="rk-row-body">' +
+            '<div class="rk-uni-name">' + esc(inst.name) + '</div>' +
+            '<div class="rk-detail">' + esc(where) + ' \u00b7 ' + esc(pathwayLabel) + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join("");
+
+      regionResultsEl.innerHTML =
+        '<div class="fp-card rk-results-card">' +
+          '<div class="rk-results-head"><span class="rk-count">' + matches.length + ' match' + (matches.length === 1 ? "" : "es") + '</span></div>' +
+          '<div class="rk-list">' + rowsHtml + '</div>' +
+        '</div>';
+    });
+  }
+
+  regionSearchBtn.addEventListener("click", runRegionSearch);
+  regionSearchInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); runRegionSearch(); }
+  });
 })();

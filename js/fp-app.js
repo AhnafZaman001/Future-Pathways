@@ -50,25 +50,44 @@
 
   // ---------------------------------------------------------
   // Boot: auth check, load profile + existing draft/submission
+  //
+  // Deliberately NOT using FP.requireAuth() here -- that also
+  // fetches the app_users role via a second round-trip, which
+  // this page never reads (no role-gated behavior on the student
+  // form). client.auth.getSession() resolves from local storage
+  // in the common case (no network round-trip), so this page's
+  // own data queries can start immediately instead of waiting on
+  // a role lookup this page doesn't use. If this page ever needs
+  // role-gated behavior, switch back to FP.getSessionAndProfile()
+  // and see js/fp-admin.js for the pattern that parallelizes the
+  // role fetch with data queries instead of blocking on it.
+  //
+  // Further: loadMasterData()/loadMeritFormulas()/loadClosingMerit()
+  // don't need studentId either (public master data, RLS-gated
+  // server-side regardless) -- only loadProfile()/loadFuturePathway()
+  // do. So those three fire immediately, before the session is even
+  // known, rather than waiting behind it.
   // ---------------------------------------------------------
-  FP.requireAuth().then(function(result){
-    if(!result) return; // requireAuth already redirected to login.html
-    state.session = result.session;
-    state.studentId = result.session.user.id;
+  var sessionPromise = FP.client.auth.getSession();
+  var masterDataPromise = loadMasterData();
+  var meritPromise = (typeof FP !== "undefined" && FP.loadMeritFormulas) ? FP.loadMeritFormulas() : Promise.resolve();
+  var closingMeritPromise = (typeof FP !== "undefined" && FP.loadClosingMerit) ? FP.loadClosingMerit() : Promise.resolve();
+
+  sessionPromise.then(function(r){
+    var session = r.data.session;
+    if(!session){ window.location.href = "login.html"; return; }
+    state.session = session;
+    state.studentId = session.user.id;
 
     return Promise.all([
       loadProfile(),
       loadFuturePathway(),
-      loadMasterData()
+      masterDataPromise
     ]).then(function(){
       render();
       initUniModal();
-      if(typeof FP !== "undefined" && FP.loadMeritFormulas){
-        FP.loadMeritFormulas().catch(function(err){ console.error("Merit formulas failed to load:", err); });
-      }
-      if(typeof FP !== "undefined" && FP.loadClosingMerit){
-        FP.loadClosingMerit().catch(function(err){ console.error("Closing merit records failed to load:", err); });
-      }
+      meritPromise.catch(function(err){ console.error("Merit formulas failed to load:", err); });
+      closingMeritPromise.catch(function(err){ console.error("Closing merit records failed to load:", err); });
     });
   }).catch(function(err){
     console.error(err);

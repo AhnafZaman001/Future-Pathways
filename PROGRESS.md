@@ -171,3 +171,63 @@ fresh and read the actual files and `git log`. Check the live Supabase
 tables directly (Table Editor) rather than assuming a schema file was
 actually run. Check the live Vercel deployment's commit hash against
 `git log` before assuming a fix is live.
+
+## Page-load performance fix (auth-blocking-content pattern)
+
+Every page had the same bug: `FP.requireAuth()` does two sequential
+round-trips internally (session, then a separate `app_users` role
+lookup), and every page's own content queries waited behind the
+**full** result of that before even firing. Four sequential round-
+trips stacked up on `admin.html` alone (auth → institutes/faculties/
+careers → first-priorities → submissions).
+
+Fixed by firing content queries immediately, in parallel with the
+auth check, since RLS enforces access server-side regardless of when
+the client-side profile fetch resolves — there's no correctness
+reason for the queries to wait on each other:
+
+- **`pathways.html` / `merit.html`** — neither page ever reads role at
+  all. Dropped `FP.requireAuth()` entirely; use
+  `FP.client.auth.getSession()` directly (resolves from local storage
+  in the common case, no network round-trip) for the redirect-if-not-
+  logged-in check + `studentId`. Content queries that don't need
+  `studentId` either (`loadMasterData()`, `FP.loadMeritFormulas()`,
+  `FP.loadClosingMerit()`) fire before the session is even known.
+- **`index.html` / `admin.html`** — these do need role (branches UI
+  on counsellor/admin vs student), so `FP.getSessionAndProfile()`
+  stays, but content queries now fire in parallel with it instead of
+  waiting behind it.
+- **`admin.html`**'s own internal chain (`loadLookups().then(loadFirstPriorities).then(loadSubmissions)`)
+  was *also* three sequential round-trips with no real dependency
+  forcing that order — now all fire together, with only the
+  *processing* of results sequenced (institute names need to be
+  loaded before first-priority display names can be resolved, but the
+  fetches themselves don't need to wait).
+
+If a future page needs role-gated behavior and reaches for
+`FP.requireAuth()` again out of habit, check whether the content
+below it actually needs role before letting it block everything else.
+
+## Recent fixes (branding, nav, casing, region search)
+
+- Brand renamed `Rah` → `KIPS` across all 6 HTML files (verified zero
+  leftover references, including JS/CSS).
+- `index.html` had the same 3 links (Future Pathways form / University
+  Explorer / Merit guide) as both top-nav pills *and* body tool cards
+  — removed the duplicate pills, kept the better-designed cards
+  (icon + description + CTA).
+- Text casing was inconsistent across `admin.html`'s table and the
+  dashboard's "Recently saved forms" widget: student names in ALL CAPS
+  (real source data from the school's own export), pathway/status in
+  lowercase, no shared convention. Added a `titleCase()` helper
+  (display-only, doesn't mutate stored data) for names, and
+  `text-transform: capitalize` CSS (`.fp-cap`, and added directly to
+  `.fp-badge`) for pathway/status — same fix duplicated in both
+  `js/fp-admin.js` and `js/fp-saved-forms.js` since they're separate
+  IIFEs with no shared module system.
+- University Explorer (`rankings.html`) now has a second, independent
+  lookup section: search by region/city, using `institutes.location`
+  + `institutes.campuses` (real data) rather than the curated
+  `rankings-data.js` content used by the field/specialization flow
+  above it. Fetches `institutes` immediately on script load (this page
+  has no auth gate) rather than waiting for the first search.

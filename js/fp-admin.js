@@ -10,8 +10,23 @@
   var lookups = { institutes:{}, faculties:{}, careers:{} };
   var firstPriorityByFpId = {}; // future_pathway_id -> institute name (or custom name)
 
-  FP.requireAuth().then(function(result){
-    if(!result) return; // requireAuth already redirected to login.html
+  // Fire every network request immediately, in parallel with the auth
+  // check -- RLS enforces access server-side regardless of when the
+  // client-side profile fetch resolves, so there's no correctness reason
+  // to make these wait on each other. Previously this was four fully
+  // sequential round-trips (auth -> lookups -> first-priorities ->
+  // submissions); now it's one round-trip's worth of latency, not four.
+  var authPromise = FP.getSessionAndProfile();
+  var institutesPromise = FP.client.from("institutes").select("id,name").order("name");
+  var facultiesPromise  = FP.client.from("fp_faculties").select("id,name");
+  var careersPromise    = FP.client.from("career_options").select("id,name");
+  var firstPrioPromise  = FP.client.from("student_institute_preferences")
+    .select("future_pathway_id, institute_id, custom_institute_name")
+    .eq("preference_group", 1).eq("rank", 1);
+  var submissionsPromise = FP.client.from("future_pathways").select("*, students(*)").order("created_at", { ascending:false });
+
+  authPromise.then(function(result){
+    if(!result){ window.location.href = "login.html"; return; } // requireAuth's redirect, inlined
 
     var role = result.profile ? result.profile.role : "student";
     if(role !== "counsellor" && role !== "admin"){
@@ -21,58 +36,48 @@
       document.getElementById("fp-admin-list-view").hidden = true;
       return;
     }
-    return loadLookups().then(loadFirstPriorities).then(loadSubmissions);
+
+    return institutesPromise.then(function(r){
+      (r.data||[]).forEach(function(x){ lookups.institutes[x.id] = x.name; });
+      return Promise.all([facultiesPromise, careersPromise, firstPrioPromise, submissionsPromise]);
+    }).then(function(rest){
+      (rest[0].data||[]).forEach(function(x){ lookups.faculties[x.id] = x.name; });
+      (rest[1].data||[]).forEach(function(x){ lookups.careers[x.id] = x.name; });
+      applyFirstPriorities(rest[2]);
+      applySubmissions(rest[3]);
+    });
   }).catch(function(e){ console.error(e); });
 
   document.getElementById("fp-logout").addEventListener("click", function(){
     FP.signOut();
   });
 
-  function loadLookups(){
-    return Promise.all([
-      FP.client.from("institutes").select("id,name").order("name"),
-      FP.client.from("fp_faculties").select("id,name"),
-      FP.client.from("career_options").select("id,name")
-    ]).then(function(r){
-      (r[0].data||[]).forEach(function(x){ lookups.institutes[x.id] = x.name; });
-      (r[1].data||[]).forEach(function(x){ lookups.faculties[x.id] = x.name; });
-      (r[2].data||[]).forEach(function(x){ lookups.careers[x.id] = x.name; });
-    });
-  }
-
   // "First priority" = preference_group 1, rank 1 -- the one unambiguous
   // single "top choice" given the schema has multiple preference groups
   // per student (2 for medical, 4 for engineering).
-  function loadFirstPriorities(){
-    return FP.client.from("student_institute_preferences")
-      .select("future_pathway_id, institute_id, custom_institute_name")
-      .eq("preference_group", 1).eq("rank", 1)
-      .then(function(r){
-        if(r.error){ console.error(r.error); return; }
-        (r.data||[]).forEach(function(row){
-          var name = row.custom_institute_name || lookups.institutes[row.institute_id] || null;
-          if(name) firstPriorityByFpId[row.future_pathway_id] = name;
-        });
+  function applyFirstPriorities(r){
+    if(r.error){ console.error(r.error); return; }
+    (r.data||[]).forEach(function(row){
+      var name = row.custom_institute_name || lookups.institutes[row.institute_id] || null;
+      if(name) firstPriorityByFpId[row.future_pathway_id] = name;
+    });
 
-        // Dropdown shows ONLY institutes that are actually someone's
-        // first priority right now -- not the full master list. An
-        // institute nobody has picked yet (e.g. seeded but unused)
-        // stays out of the dropdown until a real submission names it.
-        var usedNames = Array.from(new Set(Object.values(firstPriorityByFpId))).sort();
-        var select = document.getElementById("filter-first-priority");
-        select.innerHTML = '<option value="">All</option>' +
-          usedNames.map(function(n){ return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join("");
-      });
+    // Dropdown shows ONLY institutes that are actually someone's
+    // first priority right now -- not the full master list. An
+    // institute nobody has picked yet (e.g. seeded but unused)
+    // stays out of the dropdown until a real submission names it.
+    var usedNames = Array.from(new Set(Object.values(firstPriorityByFpId))).sort();
+    var select = document.getElementById("filter-first-priority");
+    select.innerHTML = '<option value="">All</option>' +
+      usedNames.map(function(n){ return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join("");
+    renderTable(); // in case submissions already rendered before this resolved
   }
 
-  function loadSubmissions(){
-    return FP.client.from("future_pathways").select("*, students(*)").order("created_at", { ascending:false })
-      .then(function(r){
-        if(r.error){ console.error(r.error); return; }
-        submissions = r.data || [];
-        renderStatsStrip();
-        renderTable();
-      });
+  function applySubmissions(r){
+    if(r.error){ console.error(r.error); return; }
+    submissions = r.data || [];
+    renderStatsStrip();
+    renderTable();
   }
 
   function renderStatsStrip(){
@@ -104,11 +109,11 @@
         && (!firstPriorityFilter || firstPriorityByFpId[s.id] === firstPriorityFilter);
     });
     document.getElementById("fp-admin-tbody").innerHTML = rows.map(function(s){
-      var name = (s.students && s.students.student_name) || "(no profile yet)";
+      var name = titleCase((s.students && s.students.student_name) || "") || "(no profile yet)";
       var firstPriority = firstPriorityByFpId[s.id] || "\u2014";
       return '<tr data-id="' + s.id + '">' +
         '<td>' + esc(name) + '</td>' +
-        '<td>' + esc(s.pathway) + '</td>' +
+        '<td class="fp-cap">' + esc(s.pathway) + '</td>' +
         '<td>' + esc(firstPriority) + '</td>' +
         '<td><span class="fp-badge ' + s.status + '">' + s.status + '</span></td>' +
         '<td>' + (s.submitted_at ? new Date(s.submitted_at).toLocaleDateString() : "\u2014") + '</td>' +
@@ -128,6 +133,15 @@
     return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
     });
+  }
+
+  // Source data (real school records) has names in ALL CAPS; display
+  // formatting shouldn't mutate the underlying stored value, just how
+  // it's shown here. Straightforward per-word capitalization -- not
+  // attempting name-particle exceptions (bin/binte/ul- etc), which
+  // would need per-name judgment calls this shouldn't be guessing at.
+  function titleCase(s){
+    return String(s || "").toLowerCase().replace(/\b\w/g, function(c){ return c.toUpperCase(); });
   }
 
   // ---------------------------------------------------------

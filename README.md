@@ -198,3 +198,42 @@ now has:
   showing an empty or fabricated list. `FP.getProgramsForInstituteName`
   / `FP.renderProgramsSectionForInstitute` / `FP.filterProgramsSection`
   in `js/fp-merit.js` are shared by both pages' modals.
+
+## Load-test seed data
+
+```
+supabase/load_test_seed_100_students.sql   — 100 real students, synthetic
+                                              accounts, submitted forms
+supabase/load_test_cleanup.sql             — deletes it all, one statement
+```
+
+100 real students (from an actual "1st Year Result — Pre-Board" school
+export), split 34 Pre-Medical / 33 Pre-Engineering / 33 ICS, each with a
+minimal synthetic `auth.users` row (required — `future_pathways.student_id`
+chains through `students` → `app_users` → `auth.users`, so there's no way
+to seed a submission without a real auth row backing it) and a fully
+submitted Future Pathways form with randomized-but-schema-valid ranked
+institute/faculty/program preferences.
+
+**What's real vs synthetic, explicitly:** student name, section, roll
+number, matric marks, and first-year (Pre-Board internal) marks are the
+real values from the source file. `father_name`, `father_profession`,
+and `contact` are left `NULL` — that data isn't in the source file and
+wasn't invented. The ranked preferences are randomly generated (that's
+the point — simulating submission volume, not real intent). Every
+account uses an `@loadtest.rah.internal` email specifically so it can
+never be mistaken for a real user and is trivial to bulk-delete.
+
+**This touches Supabase's internal `auth.users` schema directly** via
+plain SQL (no service-role script, no Admin API) — this is the only
+way to satisfy the FK chain from pure SQL. It hasn't been verified
+against this project's exact live `auth` schema version. Run the first
+3–5 student blocks first, confirm a clean result in the Table Editor,
+then run the rest. The accounts are deliberately not login-capable (no
+`auth.identities` row, no real password hash) since this is a data-
+volume/query-performance test, not an auth-flow test.
+
+Run `load_test_cleanup.sql` when done — it's a single `DELETE FROM
+auth.users WHERE email LIKE '%@loadtest.rah.internal'`, which cascades
+through every table above it via the existing `ON DELETE CASCADE`
+chain.

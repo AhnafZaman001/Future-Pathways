@@ -32,7 +32,8 @@
     additionalInfo: "",
     futurePathwayId: null,
     status: null,                 // 'draft' | 'submitted' | null (no row yet)
-    saving: false
+    saving: false,
+    actingAsStaff: false          // true when a counsellor/admin is editing someone else's form
   };
 
   function groupCount(){ return state.pathway === "medical" ? 2 : 4; }
@@ -51,33 +52,61 @@
   // ---------------------------------------------------------
   // Boot: auth check, load profile + existing draft/submission
   //
-  // Deliberately NOT using FP.requireAuth() here -- that also
-  // fetches the app_users role via a second round-trip, which
-  // this page never reads (no role-gated behavior on the student
-  // form). client.auth.getSession() resolves from local storage
-  // in the common case (no network round-trip), so this page's
-  // own data queries can start immediately instead of waiting on
-  // a role lookup this page doesn't use. If this page ever needs
-  // role-gated behavior, switch back to FP.getSessionAndProfile()
-  // and see js/fp-admin.js for the pattern that parallelizes the
-  // role fetch with data queries instead of blocking on it.
+  // Two paths:
   //
-  // Further: loadMasterData()/loadMeritFormulas()/loadClosingMerit()
-  // don't need studentId either (public master data, RLS-gated
-  // server-side regardless) -- only loadProfile()/loadFuturePathway()
-  // do. So those three fire immediately, before the session is even
-  // known, rather than waiting behind it.
+  // - Normal (no ?student= param): a student filling their own
+  //   form. Deliberately NOT using FP.requireAuth() -- that also
+  //   fetches the app_users role via a second round-trip, which
+  //   this path never needs (no role-gated behavior when you're
+  //   just filling your own form). client.auth.getSession()
+  //   resolves from local storage in the common case (no network
+  //   round-trip), so this page's own data queries can start
+  //   immediately instead of waiting on a role lookup this path
+  //   doesn't use.
+  //
+  // - Counsellor/admin editing someone else's form
+  //   (?student=<id>): DOES need the role fetch, to verify the
+  //   logged-in user is actually staff before treating the URL
+  //   param as authoritative. RLS enforces this server-side
+  //   regardless (see supabase/counsellor_managed_students.sql --
+  //   a non-staff user hitting this URL would have every query
+  //   rejected), this client-side check is just so a non-staff
+  //   user gets a clear message instead of a page full of failed
+  //   requests.
+  //
+  // Either way: loadMasterData()/loadMeritFormulas()/loadClosingMerit()
+  // don't need studentId or role (public master data, RLS-gated
+  // server-side regardless) -- those three fire immediately,
+  // before the session is even known.
   // ---------------------------------------------------------
-  var sessionPromise = FP.client.auth.getSession();
+  var editingStudentId = new URLSearchParams(window.location.search).get("student");
   var masterDataPromise = loadMasterData();
   var meritPromise = (typeof FP !== "undefined" && FP.loadMeritFormulas) ? FP.loadMeritFormulas() : Promise.resolve();
   var closingMeritPromise = (typeof FP !== "undefined" && FP.loadClosingMerit) ? FP.loadClosingMerit() : Promise.resolve();
 
-  sessionPromise.then(function(r){
-    var session = r.data.session;
-    if(!session){ window.location.href = "login.html"; return; }
-    state.session = session;
-    state.studentId = session.user.id;
+  var authPromise = editingStudentId
+    ? FP.getSessionAndProfile()
+    : FP.client.auth.getSession().then(function(r){ return r.data.session ? { session: r.data.session, profile: null } : null; });
+
+  authPromise.then(function(result){
+    if(!result || !result.session){ window.location.href = "login.html"; return; }
+    state.session = result.session;
+
+    if(editingStudentId){
+      var role = result.profile ? result.profile.role : "student";
+      if(role !== "counsellor" && role !== "admin"){
+        document.body.innerHTML = '<div class="wrap" style="max-width:520px; padding-top:60px;">' +
+          '<div class="fp-card"><p>This link is for counsellors/admins editing a student\u2019s form on their behalf. ' +
+          'Your account doesn\u2019t have that role.</p>' +
+          '<a href="pathways.html" class="btn-secondary" style="display:inline-block; text-decoration:none;">Go to my own form</a></div></div>';
+        document.body.style.visibility = "visible";
+        return;
+      }
+      state.studentId = editingStudentId;
+      state.actingAsStaff = true;
+    } else {
+      state.studentId = result.session.user.id;
+    }
 
     return Promise.all([
       loadProfile(),
@@ -326,8 +355,11 @@
 
     document.getElementById("fp-back").style.visibility = state.stepIndex === 0 ? "hidden" : "visible";
     var nextBtn = document.getElementById("fp-next");
-    nextBtn.textContent = step === "review" ? (state.status === "submitted" ? "Already submitted" : "Transmit application") : "Save & Continue";
-    nextBtn.disabled = state.status === "submitted";
+    var reviewLabel = state.status === "submitted"
+      ? (state.actingAsStaff ? "Update submission" : "Already submitted")
+      : "Transmit application";
+    nextBtn.textContent = step === "review" ? reviewLabel : "Save & Continue";
+    nextBtn.disabled = state.status === "submitted" && !state.actingAsStaff;
     nextBtn.classList.toggle("btn-transmit", step === "review");
     nextBtn.classList.toggle("btn-primary", step !== "review");
   }
@@ -391,6 +423,20 @@
 
   function renderStatusBanner(){
     var el = document.getElementById("fp-status-banner");
+
+    if(state.actingAsStaff){
+      var name = state.profile.student_name || "this student";
+      var statusNote = state.status === "submitted"
+        ? "Already submitted — changes here update the existing submission."
+        : state.status === "draft"
+          ? "Draft in progress."
+          : "New record — nothing saved yet.";
+      el.innerHTML = '<div class="fp-status-banner staff-editing">' +
+        '<strong>Editing on behalf of ' + esc(name) + '.</strong> ' + esc(statusNote) +
+        '</div>';
+      return;
+    }
+
     if(state.status === "submitted"){
       el.innerHTML = '<div class="fp-status-banner submitted">This Future Pathways form has been submitted. It is locked for editing — contact the admin office for changes.</div>';
     } else if(state.status === "draft"){
@@ -756,7 +802,7 @@
   });
 
   document.getElementById("fp-next").addEventListener("click", function(){
-    if(state.status === "submitted" || state.saving) return;
+    if((state.status === "submitted" && !state.actingAsStaff) || state.saving) return;
     var step = STEPS[state.stepIndex];
     var err = validateStep(step);
     if(err){ alert(err); return; }

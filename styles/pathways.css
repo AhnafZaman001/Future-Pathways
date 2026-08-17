@@ -191,6 +191,7 @@ body.is-review-step .fp-actions{ margin-top:28px; padding-top:20px; border-top:1
 }
 .fp-status-banner.submitted{ background: var(--green-dim); color: var(--green); border-color: rgba(79,195,138,.25); }
 .fp-status-banner.draft{ background: var(--amber-dim); color: var(--amber); border-color: rgba(232,163,61,.25); }
+.fp-status-banner.staff-editing{ background: var(--violet-dim); color: var(--violet-text); border-color: var(--violet); }
 
 /* --- admin: command-center stats strip --- */
 .fp-stats-strip{

@@ -307,50 +307,83 @@ badges, links, error/success text, the toggle itself) side-by-side in
 both themes to check contrast on the recalibrated status colors
 specifically. Re-check the same way if the palette changes again.
 
-## KNOWN GAP — counsellor-entered submissions (not yet built)
+## Counsellor-managed students (built)
 
-**Reported by the person doing this counsellor job in real life, not
-a hypothetical.** The real workflow: a counsellor sits at a desk,
-brings students up in batches, and enters each student's info +
-preferences directly, on the student's behalf, in one sitting. The
-student is not necessarily present at a computer themselves and may
-never log in individually at all.
+**The real workflow:** a counsellor sits at a desk, brings students
+up in batches, and enters each student's info + preferences directly
+on their behalf, in one sitting. Confirmed directly with the person
+doing this job: the student never logs in themselves at all — the
+counsellor manages everything.
 
-**What's broken right now:** `pathways.html` has no concept of "a
-counsellor filling this out for someone else" — it's hard-wired to
-`auth.uid()` as the one and only student it can ever represent (see
-`state.studentId = session.user.id` in `js/fp-app.js`, and the RLS
-policies in `future_pathways_schema.sql`, which all key off
-`student_id = auth.uid()`). So when a counsellor logs in and opens
-`pathways.html`, the form treats *the counsellor's own account* as
-"the student" — showing/locking based on whatever draft or submitted
-row exists for the counsellor's own `auth.users` row, which is
-nonsensical for an account whose job is managing *other* people's
-submissions. `admin.html` can view every submission but has no
-create/edit/delete — it's read + evaluate only.
+**Root cause of the original bug report** ("it treats me like I'm a
+student and won't let me edit, but the admin panel shows everyone"):
+RLS write policies were read-permissive but write-blind for staff.
+`using (id = auth.uid() or is staff)` already let a counsellor see
+every student — that's why `admin.html` could already list everyone.
+But `with check (id = auth.uid())` on those same policies meant a
+counsellor could never actually *write* on behalf of anyone but
+themselves. Separately, `pathways.html` had zero concept of "editing
+someone else's form" — hard-wired to `auth.uid()` as the one student
+it could ever represent.
 
-**Why this isn't a quick fix:** `future_pathways.student_id` is a
-hard foreign key through `students.id` → `app_users.id` →
-`auth.users.id` (see the load-test seed data work earlier in this
-file for the exact chain). There is no way to create a
-`future_pathways` row without a real `auth.users` row backing it,
-under the current schema. Building "counsellor adds a new student"
-requires a real decision about what that backing account looks like
-— whether the student ever logs in themselves later, whether the
-counsellor needs the Supabase Admin API (service role key, not
-something to hand to a client-side page) vs. the public sign-up
-flow (which may or may not even be enabled at the project level —
-this project's stated model has been "no self-signup, accounts
-created manually" throughout) — and that decision was **deliberately
-not made yet**, pending clarification from the person doing the job,
-rather than guessed at. See chat history for the exact ask if
-picking this up.
+**What was built**, `supabase/counsellor_managed_students.sql` +
+`js/fp-app.js` + `admin.html`/`js/fp-admin.js`:
 
-**Needed, once the data-model question is answered:**
-1. A "counsellor enters a new student" flow — name/data/preferences,
-   same fields as the student form, but reachable from `admin.html`
-   and not gated by the counsellor's own `auth.uid()`.
-2. Edit any existing student's submission from `admin.html` — right
-   now `admin.html` can only view + add an office evaluation, not
-   change the student's own form data.
-3. Delete a student's submission from `admin.html`.
+1. **Fixed the RLS write policies** on `students`, `future_pathways`
+   (insert/update), and all three preference tables — added a staff
+   bypass to the `with check` clause of each (previously only the
+   `using` clause had one), and let staff write regardless of the
+   submission's current status (needed to edit an already-submitted
+   form).
+
+2. **`counsellor_create_student()`** — a `security definer` RPC,
+   staff-only (checked internally via `current_role()`, not just by
+   grant). Creates a new, non-login-capable `auth.users` row (same
+   shape as `load_test_seed_100_students.sql` — no `auth.identities`
+   row, no real password hash, since this student is confirmed to
+   never need to log in) and returns its id. Does **not** pre-create
+   the `students`/`future_pathways` rows — those still come from the
+   existing lazy-create logic already in `js/fp-app.js`
+   (`ensureFuturePathwayRow()` / `saveProfile()`), unchanged, the same
+   way they already work for a real self-service student. This RPC
+   only creates the backing account those inserts require.
+
+3. **`counsellor_reset_submission(p_future_pathway_id)`** — another
+   `security definer` RPC. Implements "delete a student's form" per
+   the confirmed meaning: **keep the account** (the `students` row —
+   name, roll number, marks — untouched) and **clear the answers**
+   (deletes all three preference tables' rows for that submission,
+   clears `additional_information`, resets `status` to `'draft'` and
+   `submitted_at` to `null`). Not a hard delete of anything
+   identity-related.
+
+4. **`pathways.html?student=<id>`** — `js/fp-app.js` now branches on
+   this query param. Absent (the normal case): unchanged, same fast
+   session-only boot path as before, no role fetch. Present: does the
+   full `FP.getSessionAndProfile()` role check (only staff can
+   proceed; anyone else sees a plain "this link is for
+   counsellors/admins" message, backed by RLS regardless), then sets
+   `state.studentId` to the URL param instead of the caller's own id
+   and `state.actingAsStaff = true`. That flag: unlocks the
+   Save/Transmit button and the step-advance guard even when
+   `status === 'submitted'` (both previously hard-blocked past
+   submission for everyone), and swaps the status banner for a
+   distinct "Editing on behalf of &lt;name&gt;" one instead of the
+   normal student-facing draft/submitted banners.
+
+5. **`admin.html`** — "+ Add new student" button (calls
+   `counsellor_create_student()`, redirects into
+   `pathways.html?student=<new id>`). Detail view got "Edit this
+   form" (same redirect, existing student) and "Reset to draft"
+   (calls the reset RPC, confirms first, re-renders in place) next to
+   the student name.
+
+**Not built / intentionally out of scope**, since it wasn't what was
+asked for: a real hard-delete of a student's account/identity (the
+confirmed meaning of "delete" was reset-to-draft, not erase); any
+UI for a student to log in and see their own status (confirmed they
+never will); a separate "quick add" form for student info at creation
+time (the RPC creates a bare account and redirects straight into the
+existing multi-step form instead, which already collects that exact
+information — no need to duplicate it).
+

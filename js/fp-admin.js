@@ -129,6 +129,23 @@
   document.getElementById("filter-status").addEventListener("change", renderTable);
   document.getElementById("filter-first-priority").addEventListener("change", renderTable);
 
+  var addStudentBtn = document.getElementById("fp-add-student");
+  if(addStudentBtn){
+    addStudentBtn.addEventListener("click", function(){
+      addStudentBtn.disabled = true;
+      addStudentBtn.textContent = "Creating\u2026";
+      FP.client.rpc("counsellor_create_student").then(function(r){
+        if(r.error){
+          alert("Could not create student: " + r.error.message);
+          addStudentBtn.disabled = false;
+          addStudentBtn.textContent = "+ Add new student";
+          return;
+        }
+        window.location.href = "pathways.html?student=" + encodeURIComponent(r.data);
+      });
+    });
+  }
+
   function esc(s){
     return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
@@ -194,7 +211,13 @@
     document.getElementById("fp-admin-detail-view").innerHTML =
       '<button type="button" class="btn-secondary" id="fp-back-to-list" style="margin-bottom:16px;">&larr; Back to list</button>' +
       '<div class="fp-card">' +
-        '<h2 class="fp-step-title">' + esc(p.student_name || "Student") + '</h2>' +
+        '<div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px;">' +
+          '<h2 class="fp-step-title" style="margin-bottom:0;">' + esc(p.student_name || "Student") + '</h2>' +
+          '<div style="display:flex; gap:8px;">' +
+            '<a href="pathways.html?student=' + esc(sub.student_id) + '" class="nav-link">Edit this form</a>' +
+            '<button type="button" class="nav-link" id="fp-reset-submission" style="color:var(--red);">Reset to draft</button>' +
+          '</div>' +
+        '</div>' +
         '<p class="fp-step-desc">' + esc(sub.pathway) + ' \u2014 <span class="fp-badge ' + sub.status + '">' + sub.status + '</span></p>' +
         '<div class="fp-review-section"><h4>Student information</h4>' + profileHtml + '</div>' +
         '<div class="fp-review-section"><h4>Programs &amp; careers</h4><div class="fp-review-row"><span>Selected</span><span>' + esc(careerNames.join(", ") || "\u2014") + '</span></div></div>' +
@@ -221,6 +244,25 @@
       document.getElementById("fp-admin-detail-view").hidden = true;
       document.getElementById("fp-admin-list-view").hidden = false;
     });
+
+    var resetBtn = document.getElementById("fp-reset-submission");
+    if(resetBtn){
+      resetBtn.addEventListener("click", function(){
+        var confirmMsg = "Reset " + (p.student_name || "this student") + "'s form back to an editable draft?\n\n" +
+          "This clears their submitted answers (institute/faculty/program preferences and additional information) " +
+          "but keeps their account and profile info (name, roll number, marks) intact.";
+        if(!window.confirm(confirmMsg)) return;
+
+        resetBtn.disabled = true;
+        FP.client.rpc("counsellor_reset_submission", { p_future_pathway_id: sub.id }).then(function(r){
+          if(r.error){ alert("Could not reset: " + r.error.message); resetBtn.disabled = false; return; }
+          sub.status = "draft";
+          sub.submitted_at = null;
+          sub.additional_information = null;
+          openDetail(sub.id); // re-fetch and re-render with the cleared preferences
+        });
+      });
+    }
 
     document.getElementById("eval-save").addEventListener("click", function(){
       var record = { future_pathway_id: sub.id };

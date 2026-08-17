@@ -45,6 +45,9 @@ window.Dashboard = window.Dashboard || {};
     if(typeof FP !== "undefined" && FP.loadMeritFormulas){
       FP.loadMeritFormulas().catch(function(err){ console.error("Merit formulas failed to load:", err); });
     }
+    if(typeof FP !== "undefined" && FP.loadClosingMerit){
+      FP.loadClosingMerit().catch(function(err){ console.error("Closing merit records failed to load:", err); });
+    }
   };
 
   /* ---------------------------------------------------------
@@ -226,6 +229,21 @@ window.Dashboard = window.Dashboard || {};
         return;
       }
 
+      if(e.target.classList.contains("closing-merit-toggle")){
+        var cInstName = e.target.dataset.inst;
+        var cContainer = e.target.closest("li").querySelector(".closing-merit-inline-container");
+        var cIsOpen = !cContainer.hidden;
+        if(cIsOpen){
+          cContainer.hidden = true;
+          e.target.textContent = "View 2025 closing merit";
+          return;
+        }
+        cContainer.innerHTML = FP.renderClosingMeritSectionForInstitute(cInstName);
+        cContainer.hidden = false;
+        e.target.textContent = "Hide 2025 closing merit";
+        return;
+      }
+
       if(e.target.classList.contains("program-search-btn")){
         var section = e.target.closest(".programs-inline-section");
         if(section) FP.filterProgramsSection(section);
@@ -290,9 +308,11 @@ window.Dashboard = window.Dashboard || {};
                      "<div class=\"uni-modal-actions\">" +
                        "<button type=\"button\" class=\"merit-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View merit formula</button>" +
                        "<button type=\"button\" class=\"programs-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View programs</button>" +
+                       "<button type=\"button\" class=\"merit-toggle closing-merit-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View 2025 closing merit</button>" +
                      "</div></div>" +
                      "<div class=\"merit-inline-container\" hidden></div>" +
-                     "<div class=\"programs-inline-container\" hidden></div></li>";
+                     "<div class=\"programs-inline-container\" hidden></div>" +
+                     "<div class=\"closing-merit-inline-container\" hidden></div></li>";
             }).join("") + "</ul>";
 
         return "<div class=\"uni-modal-group\"><h3>" + name + " (" + entries.length + ")</h3>" + listHtml + "</div>";

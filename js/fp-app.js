@@ -66,6 +66,9 @@
       if(typeof FP !== "undefined" && FP.loadMeritFormulas){
         FP.loadMeritFormulas().catch(function(err){ console.error("Merit formulas failed to load:", err); });
       }
+      if(typeof FP !== "undefined" && FP.loadClosingMerit){
+        FP.loadClosingMerit().catch(function(err){ console.error("Closing merit records failed to load:", err); });
+      }
     });
   }).catch(function(err){
     console.error(err);

@@ -178,3 +178,88 @@
   color: var(--ink-soft);
   padding: 40px 20px;
 }
+
+/* =========================================================
+   closing merit — actual 2025 cutoff numbers (distinct from
+   the weightage-formula cards above). Used in the "View all
+   universities" modal and rankings.html.
+   ========================================================= */
+.cm-inline-section{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.cm-row{
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.cm-row-empty{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  opacity: .75;
+}
+
+.cm-row-main{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cm-program{
+  font-size: .86rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.cm-campus{ font-weight: 400; color: var(--ink-soft); }
+.cm-pct{
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--violet);
+  white-space: nowrap;
+}
+
+.cm-row-meta{
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+.cm-status{
+  font-size: .74rem;
+  color: var(--ink-soft);
+}
+.cm-source{
+  font-size: .74rem;
+  color: var(--violet);
+  text-decoration: none;
+  margin-left: auto;
+}
+.cm-source:hover{ text-decoration: underline; }
+
+.cm-notes{
+  font-size: .76rem;
+  color: var(--ink-faint);
+  margin: 6px 0 0;
+}
+
+.cm-badge{
+  font-family: var(--font-mono);
+  font-size: .64rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.cm-badge-official{ background: var(--green-dim); color: var(--green); }
+.cm-badge-third-party{ background: var(--amber-dim); color: var(--amber); }
+.cm-badge-not-found{ background: var(--surface-2); color: var(--ink-faint); }

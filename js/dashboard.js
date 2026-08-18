@@ -23,12 +23,45 @@ window.Dashboard = window.Dashboard || {};
   // check resolves) -- fire them the moment this script runs, instead
   // of waiting behind Dashboard.init()'s auth+role round-trip below.
   initUniModal();
-  loadInstitutesWithLoadingState();
-  if(typeof FP !== "undefined" && FP.loadMeritFormulas){
-    FP.loadMeritFormulas().catch(function(err){ console.error("Merit formulas failed to load:", err); });
-  }
-  if(typeof FP !== "undefined" && FP.loadClosingMerit){
-    FP.loadClosingMerit().catch(function(err){ console.error("Closing merit records failed to load:", err); });
+  var institutesPromise = loadInstitutesWithLoadingState();
+  var meritPromise = (typeof FP !== "undefined" && FP.loadMeritFormulas) ? FP.loadMeritFormulas() : Promise.resolve();
+  var closingMeritPromise = (typeof FP !== "undefined" && FP.loadClosingMerit) ? FP.loadClosingMerit() : Promise.resolve();
+
+  meritPromise.catch(function(err){ console.error("Merit formulas failed to load:", err); });
+  closingMeritPromise.catch(function(err){ console.error("Closing merit records failed to load:", err); });
+
+  // Stats strip -- reuses these same three loads (no extra network
+  // round-trips) rather than firing dedicated count queries. Renders
+  // once after all three settle; a 4th, staff-only stat (students
+  // helped) is added separately in Dashboard.init once role is known
+  // -- that one genuinely needs its own query, and it's gated to
+  // staff specifically because a plain student's RLS-scoped view of
+  // future_pathways only covers their own row, so counting it as a
+  // non-staff user would show a misleadingly small number instead of
+  // the real total.
+  Promise.all([institutesPromise, meritPromise, closingMeritPromise]).then(function(){
+    renderStatsStrip({
+      institutes: (Counsellor.INSTITUTES || []).length,
+      meritFormulas: (FP.MERIT_FORMULAS || []).length,
+      closingMerits: (FP.CLOSING_MERIT || []).length
+    });
+  });
+
+  function renderStatsStrip(counts){
+    var el = document.getElementById("dashStats");
+    if(!el) return;
+    var stats = [
+      ["INSTITUTES TRACKED", counts.institutes],
+      ["MERIT FORMULAS SOURCED", counts.meritFormulas],
+      ["CLOSING MERIT RECORDS", counts.closingMerits]
+    ];
+    if(typeof counts.studentsHelped === "number"){
+      stats.push(["STUDENTS HELPED", counts.studentsHelped]);
+    }
+    el.innerHTML = stats.map(function(s){
+      return '<div class="fp-stat"><div class="fp-stat-value">' + s[1] + '</div><div class="fp-stat-label">' + s[0] + '</div></div>';
+    }).join("");
+    el.dataset.counts = JSON.stringify(counts); // so the staff-only re-render below can preserve what's already shown
   }
 
   Dashboard.init = function init(authResult){
@@ -40,6 +73,14 @@ window.Dashboard = window.Dashboard || {};
     renderGreeting(profile, role);
 
     if(role === "counsellor" || role === "admin"){
+      FP.client.from("future_pathways").select("*", { count: "exact", head: true }).eq("status", "submitted")
+        .then(function(r){
+          if(r.error){ console.error("Students-helped count failed:", r.error); return; }
+          var el = document.getElementById("dashStats");
+          var prior = el && el.dataset.counts ? JSON.parse(el.dataset.counts) : {};
+          prior.studentsHelped = r.count || 0;
+          renderStatsStrip(prior);
+        });
       // Counsellors/admins don't have a personal "case" — they work
       // many students' submissions (see the "Recently saved student
       // forms" section further down, js/fp-saved-forms.js). The

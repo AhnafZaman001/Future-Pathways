@@ -37,6 +37,25 @@
 /* --- tool cards --- */
 .dash-tools{ margin-bottom: 48px; }
 
+.dash-stats{
+  display: flex;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 40px;
+}
+.dash-stats .fp-stat{
+  flex: 1;
+  padding: 16px 18px;
+  text-align: left;
+}
+@media (max-width: 560px){
+  .dash-stats{ flex-wrap: wrap; }
+  .dash-stats .fp-stat{ flex: 1 1 45%; }
+}
+
 .dash-tool-grid{
   display: grid;
   grid-template-columns: repeat(4, 1fr);

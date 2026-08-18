@@ -639,3 +639,39 @@ screenshot-only check on this specific feature had already been
 fooled twice by rules that looked right but weren't winning the
 cascade.
 
+## Dashboard stats strip — "fill the gap"
+
+Came out of looking at lawnline.marketing (an actual client's site,
+fetched directly, not worked from description) for design inspiration.
+Most of that page's patterns (pricing tiers, case studies, testimonial
+carousels, conference-logo credibility) don't transfer — it's a public
+ad-funnel landing page for a B2B agency converting cold traffic, and
+this product has no such funnel; it's an internal tool for one
+college's counsellors. But one thing does transfer directly: the hard-
+numbers KPI strip right under their hero ($25M+ deployed, 425+
+businesses scaled, etc). The lesson isn't "add a stats strip" as
+decoration — it's that this product already has real substance (84
+sourced merit formulas, ~30 institutes, 99 closing-merit records) and
+none of it was visible anywhere in the product itself. The gap wasn't
+a missing feature, it was invisible existing substance.
+
+Added a stats strip to `index.html`'s dashboard, between the status
+card and the tool grid: institutes tracked, merit formulas sourced,
+closing merit records — all real counts, all read from data already
+being fetched for other purposes on this page
+(`Counsellor.INSTITUTES`, `FP.MERIT_FORMULAS`, `FP.CLOSING_MERIT` —
+`.length` on each, zero extra network round-trips). A fourth stat,
+students helped (submitted `future_pathways` count), is added
+separately once role is known and **only shown to staff** — a plain
+student's RLS-scoped view of `future_pathways` only covers their own
+row, so counting it as a non-staff user would render a misleadingly
+small number instead of the real total, which would be worse than
+not showing it. Reuses the existing `.fp-stat`/`.fp-stat-value`/
+`.fp-stat-label` component (already used by `admin.html`'s own stats
+strip) rather than inventing a new pattern — new CSS is just the
+`.dash-stats` wrapper (hairline dividers via a 1px background-color
+gap trick, wraps to 2×2 on mobile).
+
+Verified via render: real counts at desktop width, light theme, and
+the mobile 2×2 wrap — all clean, dividers intact.
+

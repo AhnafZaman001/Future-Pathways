@@ -60,13 +60,17 @@
   padding: 16px;
   text-decoration: none;
   color: inherit;
-  transition: border-color .15s ease, background .15s ease;
+  transition: border-color var(--dur-micro) var(--ease-out), background var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out);
 }
 
 .dash-tool-card:hover{
   border-color: var(--border-strong);
   background: var(--surface-2);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,.18);
+  text-decoration: none;
 }
+.dash-tool-card:active{ transform: translateY(-1px); transition-duration: 60ms; }
 
 .dash-tool-glyph{
   color: var(--violet-text);

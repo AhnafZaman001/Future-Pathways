@@ -172,6 +172,8 @@ window.Dashboard = window.Dashboard || {};
     function open(){
       body.innerHTML = renderUniGroups(searchInput ? searchInput.value : "");
       overlay.hidden = false;
+      void overlay.offsetWidth; // force reflow so the opacity/transform transition actually plays
+      overlay.classList.add("is-open");
       document.addEventListener("keydown", onKeydown);
 
       if(institutesLoadState !== "loaded"){
@@ -181,8 +183,11 @@ window.Dashboard = window.Dashboard || {};
       }
     }
     function close(){
-      overlay.hidden = true;
+      overlay.classList.remove("is-open");
       document.removeEventListener("keydown", onKeydown);
+      setTimeout(function(){
+        if(!overlay.classList.contains("is-open")) overlay.hidden = true;
+      }, 320);
     }
     function onKeydown(e){ if(e.key === "Escape") close(); }
     function reRender(){ body.innerHTML = renderUniGroups(searchInput.value); }

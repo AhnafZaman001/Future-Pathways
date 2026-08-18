@@ -31,18 +31,22 @@
 .btn-primary{
   font-family: var(--font-body); font-weight:600; font-size:.95rem;
   background: var(--violet); color:#fff; border:none; border-radius: var(--radius-sm);
-  padding: 12px 20px; cursor:pointer; transition: opacity .15s ease, background .15s ease;
+  padding: 12px 20px; cursor:pointer;
+  transition: opacity var(--dur-micro) var(--ease-out), background var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out);
   box-shadow: 0 1px 0 rgba(255,255,255,.12) inset, 0 4px 14px rgba(110,118,240,.25);
 }
-.btn-primary:hover{ background:#7B82F3; }
+.btn-primary:hover:not(:disabled){ background:#7B82F3; transform: translateY(-1px); box-shadow: 0 1px 0 rgba(255,255,255,.12) inset, 0 6px 18px rgba(110,118,240,.32); }
+.btn-primary:active:not(:disabled){ transform: translateY(0) scale(.98); transition-duration: 60ms; }
 .btn-primary:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
 
 .btn-secondary{
   font-family: var(--font-body); font-weight:600; font-size:.95rem;
   background: var(--surface); color: var(--ink); border:1px solid var(--line-strong); border-radius: var(--radius-sm);
-  padding: 12px 20px; cursor:pointer; transition: background .15s ease, border-color .15s ease;
+  padding: 12px 20px; cursor:pointer;
+  transition: background var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out);
 }
 .btn-secondary:hover{ background: var(--surface-2); border-color: var(--ink-soft); }
+.btn-secondary:active{ transform: scale(.98); transition-duration: 60ms; }
 
 /* --- layout: form + manifest rail --- */
 .fp-layout{
@@ -214,20 +218,40 @@ body.is-review-step .fp-actions{ margin-top:28px; padding-top:20px; border-top:1
   font-weight: 600;
   font-size: .88rem;
   color: var(--ink);
-  transition: background .15s ease;
+  transition: background var(--dur-micro) var(--ease-out);
 }
 .fp-accordion-header:hover{ background: var(--violet-dim); }
 
 .fp-accordion-chevron{
   font-size: .7rem;
   color: var(--ink-soft);
-  transition: transform .2s ease;
+  transition: transform var(--dur-small) var(--ease-out);
 }
 .fp-accordion-header[aria-expanded="true"] .fp-accordion-chevron{ transform: rotate(180deg); }
 
+/* Grid-rows 0fr->1fr trick: the only clean way to animate truly
+   auto-height content without JS measuring it first. The wrapper is
+   the grid; its single child (fp-accordion-panel) collapses to zero
+   visible height at 0fr regardless of its actual content height,
+   and expands to full content height at 1fr. min-height:0 on the
+   inner element is required for the overflow:hidden clip to work
+   inside a grid track. */
+.fp-accordion-panel-wrapper{
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--dur-small) var(--ease-in-out);
+}
+.fp-accordion-panel-wrapper.is-open{ grid-template-rows: 1fr; }
+
 .fp-accordion-panel{
-  padding: 12px 16px;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 16px;
   background: var(--surface);
+  transition: padding var(--dur-small) var(--ease-in-out);
+}
+.fp-accordion-panel-wrapper.is-open .fp-accordion-panel{
+  padding: 12px 16px;
   border-top: 1px solid var(--border);
 }
 

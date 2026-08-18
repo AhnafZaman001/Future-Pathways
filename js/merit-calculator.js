@@ -142,7 +142,7 @@
     });
 
     resultCardEl.innerHTML =
-      '<div class="fp-card">' +
+      '<div class="fp-card reveal-in">' +
         '<p class="fp-step-desc" style="margin-bottom:4px;">Your ' + esc(cfg.university) + ' aggregate</p>' +
         '<p style="font-family:var(--font-mono); font-weight:700; font-size:2.4rem; color:var(--violet-text); margin:0 0 4px;">' + aggregate.toFixed(2) + '%</p>' +
         '<p class="merit-notes">Compare this against last year\u2019s closing merit for your specific program on the <a href="rankings.html">University Explorer</a> page.</p>' +

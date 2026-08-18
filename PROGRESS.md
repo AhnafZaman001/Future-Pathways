@@ -520,3 +520,68 @@ Applies to future pages too, not just this one — check which kind of
 page something is before deciding whether a source line belongs on
 it.
 
+## Interaction design pass
+
+Applied the `interaction-design` skill's principles (purposeful
+motion, transform/opacity-only for perf, consistent timing scale,
+`prefers-reduced-motion` respected) — translated into vanilla CSS/JS
+since this app has no React/Framer Motion and the skill's own
+examples assume both.
+
+1. **Timing/easing tokens** in `base.css` —
+   `--dur-micro/small/medium` (120/220/320ms) and
+   `--ease-out/in-out/spring`. Every transition added below pulls
+   from these instead of ad-hoc per-rule values; use them for
+   anything added later too, don't reintroduce hardcoded durations.
+2. **Buttons** — real press feedback (`scale(.98)` on `:active`) and
+   hover lift. Applied to both `.btn-primary` definitions — yes,
+   there are two (`components.css` and `pathways.css`, pre-existing
+   duplication, not consolidated here, out of scope) — kept
+   identical so the feel doesn't differ between pages.
+3. **Dashboard tool cards** — hover now lifts (`translateY(-3px)` +
+   shadow) instead of just swapping colors. **Caught a real bug
+   while testing this**: hovering a card underlined its text,
+   inherited from a global `a:hover{text-decoration:underline}` rule
+   the card never overrode for its own hover state. Fixed
+   (`.dash-tool-card:hover{ text-decoration:none; }`) and confirmed
+   gone via render — worth knowing this pattern can bite any other
+   `<a>`-as-card component added later.
+4. **Accordion** (admin detail view preference groups) — was an
+   instant `hidden`-attribute toggle, zero transition possible
+   (`display` can't be animated). Replaced with the CSS Grid
+   `grid-template-rows: 0fr → 1fr` technique — animates truly
+   auto-height content without JS measuring it first. Required a
+   markup change (`fp-accordion-panel` is now wrapped in
+   `fp-accordion-panel-wrapper`, which is the grid; toggling adds/
+   removes an `.is-open` class instead of the `hidden` attribute) in
+   both `js/fp-admin.js` (markup generation) and the click handler.
+5. **Modal entrance/exit** (the "View all universities" modal, two
+   separate implementations in `js/dashboard.js` and `js/fp-app.js`)
+   — was an instant `hidden` toggle. Now fades + scales in/out.
+   Needed real JS choreography, not just CSS: on open, clear
+   `hidden` → force a reflow (`void overlay.offsetWidth`) → add
+   `.is-open` (skipping the reflow means the browser coalesces the
+   attribute change and the class addition into one paint and the
+   transition never plays). On close, remove `.is-open` first, then
+   `setTimeout` the `hidden = true` re-application to match
+   `--dur-medium` — otherwise `hidden` would cut the exit animation
+   off instantly. The `setTimeout` callback checks
+   `!classList.contains("is-open")` before hiding, guarding against
+   a rapid close-then-reopen leaving the modal incorrectly hidden.
+6. **Merit calculator result reveal** — new shared `.reveal-in`
+   keyframe (`base.css`: fade + `translateY(8px)→0`), applied to the
+   result card when it appears after clicking Calculate. Reusable
+   for any future "this just happened" moment (a save confirmation,
+   etc), not calculator-specific.
+
+**Verified every one of these by actually rendering it in headless
+Chromium**, not by reading the CSS and assuming it's right — same
+discipline as the rest of this project. Specifically: card hover
+screenshotted before/after the underline fix; accordion screenshotted
+with both groups open independently; modal screenshotted at rest,
+mid-open, fully open, mid-close, and fully closed (confirming
+`overlay.hidden` actually re-applies after the close animation, not
+just that the CSS looks plausible); calculator result screenshotted
+early-in-animation and settled, with the underlying math re-verified
+correct (GIKI: 990/1100 Matric + 170/200 test → 85.75%).
+

@@ -198,7 +198,9 @@
             '<span>Group ' + esc(g) + '</span>' +
             '<span class="fp-accordion-chevron">&#9662;</span>' +
           '</button>' +
-          '<div class="fp-accordion-panel" id="' + panelId + '" hidden>' + body + '</div>' +
+          '<div class="fp-accordion-panel-wrapper" id="' + panelId + '">' +
+            '<div class="fp-accordion-panel">' + body + '</div>' +
+          '</div>' +
         '</div>'
       );
     }).join("") + '</div>';
@@ -259,7 +261,7 @@
         var panel = document.getElementById(btn.dataset.accordionTarget);
         var isOpen = btn.getAttribute("aria-expanded") === "true";
         btn.setAttribute("aria-expanded", isOpen ? "false" : "true");
-        panel.hidden = isOpen;
+        panel.classList.toggle("is-open", !isOpen);
       });
     });
 

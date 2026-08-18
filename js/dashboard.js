@@ -27,8 +27,26 @@ window.Dashboard = window.Dashboard || {};
   var meritPromise = (typeof FP !== "undefined" && FP.loadMeritFormulas) ? FP.loadMeritFormulas() : Promise.resolve();
   var closingMeritPromise = (typeof FP !== "undefined" && FP.loadClosingMerit) ? FP.loadClosingMerit() : Promise.resolve();
 
-  meritPromise.catch(function(err){ console.error("Merit formulas failed to load:", err); });
-  closingMeritPromise.catch(function(err){ console.error("Closing merit records failed to load:", err); });
+  // .catch() attached here creates a SEPARATE derived promise for
+  // logging -- it does NOT stop the original institutesPromise/
+  // meritPromise/closingMeritPromise references below from staying
+  // rejected. Promise.all([...]) rejects as a whole if ANY of its
+  // inputs reject, silently skipping its .then() entirely -- which
+  // is exactly what caused the stats strip to render "undefined"
+  // for institutes/merit/closing-merit while the independent
+  // students-helped count (its own separate query, unaffected)
+  // rendered fine: this render callback never ran at all, so
+  // el.dataset.counts was never set, and the students-helped
+  // renderer later read an empty {} for the other three.
+  //
+  // Fix: convert each promise to always-resolve (with a null
+  // marker on failure) before Promise.all ever sees it, so one
+  // failed load can't silently take down the whole render -- the
+  // other two (or three) real counts still show correctly, and a
+  // failed one shows 0 rather than blanking the entire strip.
+  var institutesSafe    = institutesPromise.catch(function(){ return null; });
+  var meritSafe          = meritPromise.catch(function(err){ console.error("Merit formulas failed to load:", err); return null; });
+  var closingMeritSafe  = closingMeritPromise.catch(function(err){ console.error("Closing merit records failed to load:", err); return null; });
 
   // Stats strip -- reuses these same three loads (no extra network
   // round-trips) rather than firing dedicated count queries. Renders
@@ -39,7 +57,7 @@ window.Dashboard = window.Dashboard || {};
   // future_pathways only covers their own row, so counting it as a
   // non-staff user would show a misleadingly small number instead of
   // the real total.
-  Promise.all([institutesPromise, meritPromise, closingMeritPromise]).then(function(){
+  Promise.all([institutesSafe, meritSafe, closingMeritSafe]).then(function(){
     renderStatsStrip({
       institutes: (Counsellor.INSTITUTES || []).length,
       meritFormulas: (FP.MERIT_FORMULAS || []).length,
@@ -50,14 +68,19 @@ window.Dashboard = window.Dashboard || {};
   function renderStatsStrip(counts){
     var el = document.getElementById("dashStats");
     if(!el) return;
-    var stats = [
+    var candidates = [
       ["INSTITUTES TRACKED", counts.institutes],
       ["MERIT FORMULAS SOURCED", counts.meritFormulas],
-      ["CLOSING MERIT RECORDS", counts.closingMerits]
+      ["CLOSING MERIT RECORDS", counts.closingMerits],
+      ["STUDENTS HELPED", counts.studentsHelped]
     ];
-    if(typeof counts.studentsHelped === "number"){
-      stats.push(["STUDENTS HELPED", counts.studentsHelped]);
-    }
+    // Only ever render a stat backed by a real number. This strip's
+    // whole point is being a hard-numbers confidence signal -- a
+    // placeholder like "undefined" or even "—" undermines that
+    // worse than just showing one fewer stat until the real count
+    // is actually available.
+    var stats = candidates.filter(function(s){ return typeof s[1] === "number" && isFinite(s[1]); });
+    if(!stats.length){ el.innerHTML = ""; return; }
     el.innerHTML = stats.map(function(s){
       return '<div class="fp-stat"><div class="fp-stat-value">' + s[1] + '</div><div class="fp-stat-label">' + s[0] + '</div></div>';
     }).join("");

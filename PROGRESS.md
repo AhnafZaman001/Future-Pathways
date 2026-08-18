@@ -675,3 +675,28 @@ gap trick, wraps to 2×2 on mobile).
 Verified via render: real counts at desktop width, light theme, and
 the mobile 2×2 wrap — all clean, dividers intact.
 
+**Bug found live, fixed same day:** the strip shipped showing literal
+"undefined" for institutes/merit-formulas/closing-merit (students
+helped rendered fine, since it's an independent query). Root cause:
+`meritPromise.catch(...)` / `closingMeritPromise.catch(...)` were
+attached right after creation for error logging — but `.catch()`
+creates a *new*, separate derived promise; it does not change
+whether the *original* `meritPromise`/`closingMeritPromise`
+references (the ones actually passed into `Promise.all([...])`
+further down) end up rejected. If either genuinely rejected for any
+reason, `Promise.all` rejected as a whole and its `.then()` — the
+entire render — silently never ran. `el.dataset.counts` was then
+never set, so the later staff-only "students helped" render read an
+empty `{}` and merged in just that one stat, producing exactly the
+observed pattern.
+
+Fixed by converting each promise to always-resolve (`.catch(() =>
+null)`) *before* handing it to `Promise.all`, so one failed load can
+no longer take the whole strip down — and the render function itself
+now filters to only ever show a stat backed by a real finite number,
+so even a genuine failure renders as "one fewer stat," never
+"undefined" text. Verified by actually simulating the failure (one
+promise rejecting, mirroring exactly what must have happened live)
+in both a standalone Node script and a real browser render — not
+just reasoned about after the fact.
+

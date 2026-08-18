@@ -58,21 +58,37 @@ window.Dashboard = window.Dashboard || {};
   // non-staff user would show a misleadingly small number instead of
   // the real total.
   Promise.all([institutesSafe, meritSafe, closingMeritSafe]).then(function(){
+    var closingRecords = FP.CLOSING_MERIT || [];
+    // A 'not_found' row is an internal placeholder marking "we looked
+    // for this and couldn't confirm it" -- not a real data point.
+    // Counting it in the headline number overstates what's actually
+    // been verified, so it's excluded here specifically.
+    var realClosingRecords = closingRecords.filter(function(r){ return r.source_type !== "not_found"; });
+    var years = closingRecords.map(function(r){ return r.admission_year; }).filter(function(y){ return typeof y === "number"; });
+
     renderStatsStrip({
       institutes: (Counsellor.INSTITUTES || []).length,
       meritFormulas: (FP.MERIT_FORMULAS || []).length,
-      closingMerits: (FP.CLOSING_MERIT || []).length
+      closingMerits: realClosingRecords.length,
+      freshestYear: years.length ? Math.max.apply(null, years) : null
     });
   });
+
+  function renderFreshnessLine(year){
+    var el = document.getElementById("dashStatsFreshness");
+    if(!el) return;
+    el.textContent = (typeof year === "number") ? ("Closing merit data current as of the " + year + " admission cycle.") : "";
+  }
 
   function renderStatsStrip(counts){
     var el = document.getElementById("dashStats");
     if(!el) return;
+    renderFreshnessLine(counts.freshestYear);
+
     var candidates = [
       ["INSTITUTES TRACKED", counts.institutes],
       ["MERIT FORMULAS SOURCED", counts.meritFormulas],
-      ["CLOSING MERIT RECORDS", counts.closingMerits],
-      ["STUDENTS HELPED", counts.studentsHelped]
+      ["CLOSING MERIT RECORDS", counts.closingMerits]
     ];
     // Only ever render a stat backed by a real number. This strip's
     // whole point is being a hard-numbers confidence signal -- a
@@ -80,10 +96,25 @@ window.Dashboard = window.Dashboard || {};
     // worse than just showing one fewer stat until the real count
     // is actually available.
     var stats = candidates.filter(function(s){ return typeof s[1] === "number" && isFinite(s[1]); });
-    if(!stats.length){ el.innerHTML = ""; return; }
+
+    var studentsCardHtml = "";
+    if(typeof counts.studentsHelped === "number"){
+      studentsCardHtml = counts.studentsHelped === 0
+        // Empty state: a brand-new counsellor account with nothing
+        // added yet shouldn't just see a bare "0" -- that reads as
+        // broken, not as an invitation. Same slot, same visual
+        // weight, but it's a call to action instead of a number.
+        ? '<a class="fp-stat fp-stat-cta" href="pathways.html">' +
+            '<div class="fp-stat-value">+ Add</div>' +
+            '<div class="fp-stat-label">First student &rarr;</div>' +
+          '</a>'
+        : '<div class="fp-stat"><div class="fp-stat-value">' + counts.studentsHelped + '</div><div class="fp-stat-label">STUDENTS HELPED</div></div>';
+    }
+
+    if(!stats.length && !studentsCardHtml){ el.innerHTML = ""; return; }
     el.innerHTML = stats.map(function(s){
       return '<div class="fp-stat"><div class="fp-stat-value">' + s[1] + '</div><div class="fp-stat-label">' + s[0] + '</div></div>';
-    }).join("");
+    }).join("") + studentsCardHtml;
     el.dataset.counts = JSON.stringify(counts); // so the staff-only re-render below can preserve what's already shown
   }
 

@@ -44,16 +44,30 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
-  margin-bottom: 40px;
+  margin-bottom: 10px;
 }
 .dash-stats .fp-stat{
   flex: 1;
   padding: 16px 18px;
   text-align: left;
 }
+.dash-stats .fp-stat-cta{
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--dur-micro, .15s) var(--ease-out, ease);
+}
+.dash-stats .fp-stat-cta:hover{ background: var(--violet-dim); text-decoration: none; }
+.dash-stats .fp-stat-cta .fp-stat-value{ color: var(--violet-text); }
 @media (max-width: 560px){
   .dash-stats{ flex-wrap: wrap; }
   .dash-stats .fp-stat{ flex: 1 1 45%; }
+}
+
+.dash-stats-freshness{
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  color: var(--ink-faint);
+  margin: 0 0 40px;
 }
 
 .dash-tool-grid{

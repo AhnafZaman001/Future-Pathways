@@ -700,3 +700,43 @@ promise rejecting, mirroring exactly what must have happened live)
 in both a standalone Node script and a real browser render — not
 just reasoned about after the fact.
 
+## Stats strip refinements — three ideas picked from a brainstorm
+
+Came out of asking "suggest more ideas like the stats strip" —
+researched real, current dashboard-design sources first (not just
+brainstormed from memory) before proposing anything, then checked
+what the app's own data actually supports before promising any of
+it. Three were picked and built:
+
+1. **"Closing merit records" now excludes `source_type = 'not_found'`
+   rows.** This was a real, already-live inaccuracy, not a
+   hypothetical: of the 99 rows in `closing_merit_records`, 17 are
+   internal placeholders marking "looked for this, couldn't confirm
+   it" — not real data points. The stats strip was counting all 99,
+   overstating actual verified coverage by 17. Now counts only
+   `official`/`third_party` rows (82, as of this data). Same honesty
+   principle as everywhere else in this project (the GIKI formula
+   correction, "don't cite sources that aren't load-bearing") — a
+   confidence number that quietly counts its own gaps as wins isn't
+   trustworthy.
+2. **Freshness line** under the stats strip: "Closing merit data
+   current as of the [year] admission cycle." Computed from
+   `MAX(closing_merit_records.admission_year)` — a clean `int`
+   column, used deliberately instead of `merit_formulas.effective_year`
+   (free text — `'2025-26'`, `'2025-26/current'`, `'Current'` — not
+   reliably sortable, would have needed fragile string parsing to get
+   a real "most recent" out of it).
+3. **Empty state for the students-helped card.** A brand-new
+   counsellor account with zero students added previously just saw a
+   bare "0" in that slot — reads as broken, not as an invitation.
+   Now, specifically when the count is exactly `0`, that card becomes
+   a violet "+ Add / First student →" link straight into
+   `pathways.html`'s "Add new student" flow, same visual slot and
+   weight as the other three cards.
+
+Verified all three via render: real numbers with the freshness line,
+the empty-state CTA at rest and on hover, and light theme — plus a
+direct assertion (via `page.evaluate`) that the not_found exclusion
+actually produces 82 from a simulated 99-row set with 17 not_found
+rows mixed in, not just "the screenshot looks right."
+

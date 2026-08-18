@@ -32,7 +32,7 @@ window.MERIT_CALCULATORS = [
   {
     id: "nust_net",
     university: "NUST",
-    variantLabel: "NET-basis (most common route)",
+    variantLabel: "",
     formulaText: "75% NET + 15% HSSC + 10% SSC",
     sourceUrl: "https://parhlai.com/merit-calculator/nust",
     sourceLabel: "Parhlai \u2014 NUST Merit Calculator",
@@ -73,7 +73,7 @@ window.MERIT_CALCULATORS = [
   {
     id: "giki",
     university: "GIKI",
-    variantLabel: "Undergraduate",
+    variantLabel: "",
     formulaText: "15% Matric / last completed qualification + 85% Admission Test",
     sourceUrl: "https://parhlai.com/merit-calculator/giki",
     sourceLabel: "Parhlai \u2014 GIKI Merit Calculator",
@@ -86,7 +86,7 @@ window.MERIT_CALCULATORS = [
   {
     id: "pieas",
     university: "PIEAS",
-    variantLabel: "Undergraduate",
+    variantLabel: "",
     formulaText: "15% SSC + 25% HSSC Part-I + 60% Official Test Percentile",
     sourceUrl: "https://parhlai.com/merit-calculator/pieas",
     sourceLabel: "Parhlai \u2014 PIEAS Merit Calculator",
@@ -100,7 +100,7 @@ window.MERIT_CALCULATORS = [
   {
     id: "uet",
     university: "UET",
-    variantLabel: "ECAT-based engineering",
+    variantLabel: "",
     formulaText: "10% Matric + 40% Intermediate + 50% Entry Test",
     sourceUrl: "https://unicalc.csconnect.pk/uet/",
     sourceLabel: "UniCalc \u2014 UET Aggregate Calculator",

@@ -146,8 +146,12 @@ body.is-review-step .fp-actions{ margin-top:28px; padding-top:20px; border-top:1
 
 .fp-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 @media (max-width:640px){ .fp-grid-2{ grid-template-columns:1fr; } }
+.fp-grid-2 > label, .fp-grid-3 > label{ display:flex; flex-direction:column; gap:6px; }
 
+.calc-marks-group{ display:flex; flex-direction:column; }
+.calc-marks-group-label{ font-size:.82rem; font-weight:600; color:var(--ink); margin:0 0 6px; }
 .calc-marks-pair{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.calc-marks-pair label{ display:flex; flex-direction:column; gap:6px; font-weight:500; color:var(--ink-soft); }
 
 .fp-grid-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
 @media (max-width:760px){ .fp-grid-3{ grid-template-columns:1fr 1fr; } }

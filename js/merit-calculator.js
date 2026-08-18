@@ -26,11 +26,15 @@
     init();
   });
 
+  function displayName(cfg){
+    return cfg.variantLabel ? (cfg.university + " \u2014 " + cfg.variantLabel) : cfg.university;
+  }
+
   function init(){
     DATA.forEach(function(cfg, i){
       var opt = document.createElement("option");
       opt.value = String(i);
-      opt.textContent = cfg.university + " \u2014 " + cfg.variantLabel;
+      opt.textContent = displayName(cfg);
       selectEl.appendChild(opt);
     });
 
@@ -52,13 +56,16 @@
     }
     if(f.type === "marks_variable"){
       return (
-        '<div class="calc-marks-pair">' +
-          '<label>' + esc(f.label) + ' obtained' +
-            '<input type="number" min="0" step="0.01" data-field="' + esc(f.key) + '" data-kind="obtained" placeholder="e.g. 980">' +
-          '</label>' +
-          '<label>Total marks' +
-            '<input type="number" min="1" step="0.01" data-field="' + esc(f.key) + '" data-kind="total" placeholder="e.g. 1100">' +
-          '</label>' +
+        '<div class="calc-marks-group">' +
+          '<p class="calc-marks-group-label">' + esc(f.label) + '</p>' +
+          '<div class="calc-marks-pair">' +
+            '<label>Obtained' +
+              '<input type="number" min="0" step="0.01" data-field="' + esc(f.key) + '" data-kind="obtained" placeholder="e.g. 980">' +
+            '</label>' +
+            '<label>Total' +
+              '<input type="number" min="1" step="0.01" data-field="' + esc(f.key) + '" data-kind="total" placeholder="e.g. 1100">' +
+            '</label>' +
+          '</div>' +
         '</div>'
       );
     }
@@ -75,7 +82,7 @@
 
     formulaCardEl.innerHTML =
       '<div class="fp-card">' +
-        '<h3 class="fp-step-title" style="font-size:1.05rem;">' + esc(cfg.university) + ' \u2014 ' + esc(cfg.variantLabel) + '</h3>' +
+        '<h3 class="fp-step-title" style="font-size:1.05rem;">' + esc(displayName(cfg)) + '</h3>' +
         '<p class="fp-step-desc">Formula: ' + esc(cfg.formulaText) + '</p>' +
         (cfg.notes ? '<p class="merit-notes" style="margin-bottom:16px;">' + esc(cfg.notes) + '</p>' : '') +
         '<div class="fp-grid-2">' + fieldsHtml + '</div>' +

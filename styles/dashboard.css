@@ -39,11 +39,14 @@
 
 .dash-tool-grid{
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
 }
 
 @media (max-width: 780px){
+  .dash-tool-grid{ grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px){
   .dash-tool-grid{ grid-template-columns: 1fr; }
 }
 
@@ -54,7 +57,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
-  padding: 20px;
+  padding: 16px;
   text-decoration: none;
   color: inherit;
   transition: border-color .15s ease, background .15s ease;
@@ -67,15 +70,15 @@
 
 .dash-tool-glyph{
   color: var(--violet-text);
-  font-size: 1rem;
-  margin-bottom: 10px;
+  font-size: .95rem;
+  margin-bottom: 8px;
 }
 
-.dash-tool-card h3{ margin-bottom: 6px; }
-.dash-tool-card p{ font-size: .9rem; margin-bottom: 14px; flex: 1; }
+.dash-tool-card h3{ margin-bottom: 5px; font-size: .96rem; line-height: 1.25; }
+.dash-tool-card p{ font-size: .82rem; margin-bottom: 12px; flex: 1; line-height: 1.4; }
 
 .dash-tool-cta{
   font-family: var(--font-mono);
-  font-size: .78rem;
+  font-size: .74rem;
   color: var(--violet-text);
 }

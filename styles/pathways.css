@@ -147,6 +147,8 @@ body.is-review-step .fp-actions{ margin-top:28px; padding-top:20px; border-top:1
 .fp-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 @media (max-width:640px){ .fp-grid-2{ grid-template-columns:1fr; } }
 
+.calc-marks-pair{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
 .fp-grid-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
 @media (max-width:760px){ .fp-grid-3{ grid-template-columns:1fr 1fr; } }
 @media (max-width:480px){ .fp-grid-3{ grid-template-columns:1fr; } }

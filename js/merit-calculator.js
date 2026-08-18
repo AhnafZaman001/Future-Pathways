@@ -42,21 +42,36 @@
     });
   }
 
-  function renderFormula(cfg){
-    var fieldsHtml = cfg.fields.map(function(f){
-      if(f.type === "marks"){
-        return (
-          '<label>' + esc(f.label) + ' (out of ' + f.maxMarks + ')' +
-            '<input type="number" min="0" max="' + f.maxMarks + '" step="0.01" data-field="' + esc(f.key) + '" placeholder="e.g. 150">' +
-          '</label>'
-        );
-      }
+  function fieldInputsHtml(f){
+    if(f.type === "marks_fixed"){
       return (
-        '<label>' + esc(f.label) +
-          '<input type="number" min="0" max="100" step="0.01" data-field="' + esc(f.key) + '" placeholder="e.g. 85">' +
+        '<label>' + esc(f.label) + ' (out of ' + f.maxMarks + ')' +
+          '<input type="number" min="0" max="' + f.maxMarks + '" step="0.01" data-field="' + esc(f.key) + '" data-kind="obtained" placeholder="e.g. 150">' +
         '</label>'
       );
-    }).join("");
+    }
+    if(f.type === "marks_variable"){
+      return (
+        '<div class="calc-marks-pair">' +
+          '<label>' + esc(f.label) + ' obtained' +
+            '<input type="number" min="0" step="0.01" data-field="' + esc(f.key) + '" data-kind="obtained" placeholder="e.g. 980">' +
+          '</label>' +
+          '<label>Total marks' +
+            '<input type="number" min="1" step="0.01" data-field="' + esc(f.key) + '" data-kind="total" placeholder="e.g. 1100">' +
+          '</label>' +
+        '</div>'
+      );
+    }
+    // "percent"
+    return (
+      '<label>' + esc(f.label) +
+        '<input type="number" min="0" max="100" step="0.01" data-field="' + esc(f.key) + '" data-kind="obtained" placeholder="e.g. 85">' +
+      '</label>'
+    );
+  }
+
+  function renderFormula(cfg){
+    var fieldsHtml = cfg.fields.map(fieldInputsHtml).join("");
 
     formulaCardEl.innerHTML =
       '<div class="fp-card">' +
@@ -65,7 +80,6 @@
         (cfg.notes ? '<p class="merit-notes" style="margin-bottom:16px;">' + esc(cfg.notes) + '</p>' : '') +
         '<div class="fp-grid-2">' + fieldsHtml + '</div>' +
         '<button type="button" class="btn-primary" id="calcComputeBtn" style="margin-top:16px;">Calculate my merit</button>' +
-        '<p class="cm-source" style="margin-top:12px;">SOURCE: <a href="' + esc(cfg.sourceUrl) + '" target="_blank" rel="noopener">' + esc(cfg.sourceLabel) + '</a></p>' +
       '</div>';
 
     document.getElementById("calcComputeBtn").addEventListener("click", function(){
@@ -74,54 +88,57 @@
   }
 
   function compute(cfg){
-    var inputs = formulaCardEl.querySelectorAll("[data-field]");
+    var allInputs = formulaCardEl.querySelectorAll("[data-field]");
+    allInputs.forEach(function(input){ input.classList.remove("field-error"); });
+
     var values = {};
     var hasError = false;
 
-    inputs.forEach(function(input){ input.classList.remove("field-error"); });
+    function markError(input){ input.classList.add("field-error"); hasError = true; }
 
     cfg.fields.forEach(function(f){
+      if(f.type === "marks_variable"){
+        var obtInput  = formulaCardEl.querySelector('[data-field="' + f.key + '"][data-kind="obtained"]');
+        var totInput  = formulaCardEl.querySelector('[data-field="' + f.key + '"][data-kind="total"]');
+        var obtained  = parseFloat(obtInput.value.trim());
+        var total     = parseFloat(totInput.value.trim());
+        var fieldOk   = true;
+
+        if(obtInput.value.trim() === "" || isNaN(obtained) || obtained < 0){ markError(obtInput); fieldOk = false; }
+        if(totInput.value.trim() === "" || isNaN(total) || total <= 0){ markError(totInput); fieldOk = false; }
+        if(fieldOk && obtained > total){ markError(obtInput); markError(totInput); fieldOk = false; }
+
+        if(fieldOk){ values[f.key] = (obtained / total) * 100; }
+        return;
+      }
+
+      // "percent" or "marks_fixed" -- single input either way
       var input = formulaCardEl.querySelector('[data-field="' + f.key + '"]');
       var raw = input.value.trim();
-      if(raw === ""){
-        input.classList.add("field-error");
-        hasError = true;
-        return;
-      }
+      if(raw === ""){ markError(input); return; }
       var num = parseFloat(raw);
-      var max = f.type === "marks" ? f.maxMarks : 100;
-      if(isNaN(num) || num < 0 || num > max){
-        input.classList.add("field-error");
-        hasError = true;
-        return;
-      }
-      values[f.key] = f.type === "marks" ? (num / f.maxMarks) * 100 : num;
+      var max = f.type === "marks_fixed" ? f.maxMarks : 100;
+      if(isNaN(num) || num < 0 || num > max){ markError(input); return; }
+      values[f.key] = f.type === "marks_fixed" ? (num / f.maxMarks) * 100 : num;
     });
 
     if(hasError){
       resultCardEl.innerHTML = '<div class="fp-card"><p class="fp-error">Check the highlighted field' +
         (formulaCardEl.querySelectorAll(".field-error").length > 1 ? "s" : "") +
-        ' \u2014 enter a value within the allowed range.</p></div>';
+        ' \u2014 enter a valid value (marks obtained can\u2019t exceed the total).</p></div>';
       return;
     }
 
     var aggregate = 0;
-    var breakdown = cfg.fields.map(function(f){
-      var contribution = (values[f.key] * f.weight) / 100;
-      aggregate += contribution;
-      return { label: f.label, pct: values[f.key], weight: f.weight, contribution: contribution };
+    cfg.fields.forEach(function(f){
+      aggregate += (values[f.key] * f.weight) / 100;
     });
 
     resultCardEl.innerHTML =
       '<div class="fp-card">' +
         '<p class="fp-step-desc" style="margin-bottom:4px;">Your ' + esc(cfg.university) + ' aggregate</p>' +
-        '<p style="font-family:var(--font-mono); font-weight:700; font-size:2.4rem; color:var(--violet-text); margin:0 0 16px;">' + aggregate.toFixed(2) + '%</p>' +
-        '<div class="fp-review-section"><h4>Breakdown</h4>' +
-          breakdown.map(function(b){
-            return '<div class="fp-review-row"><span>' + esc(b.label) + ' \u2014 ' + b.pct.toFixed(1) + '% \u00d7 ' + b.weight + '%</span><span>' + b.contribution.toFixed(2) + ' pts</span></div>';
-          }).join("") +
-        '</div>' +
-        '<p class="merit-notes">This is the formula\u2019s output, not a promise of admission \u2014 compare it against last year\u2019s closing merit for your specific program on the <a href="rankings.html">University Explorer</a> page.</p>' +
+        '<p style="font-family:var(--font-mono); font-weight:700; font-size:2.4rem; color:var(--violet-text); margin:0 0 4px;">' + aggregate.toFixed(2) + '%</p>' +
+        '<p class="merit-notes">Compare this against last year\u2019s closing merit for your specific program on the <a href="rankings.html">University Explorer</a> page.</p>' +
       '</div>';
   }
 

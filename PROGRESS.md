@@ -482,3 +482,41 @@ input, which covers Matric/FSc board students directly and requires
 O/A-Level students to convert their own grades first); universities
 beyond the five named when this was requested.
 
+**Revised after initial feedback:**
+1. Matric/SSC and FSc/HSSC are now entered as obtained + total marks
+   (`type: "marks_variable"` in `merit-calculator-data.js`), not a
+   direct percentage — the tool computes the percentage itself.
+   Only fields that are already a percentage with no natural "out of"
+   total (a test percentage, PIEAS's percentile) still take a direct
+   percent input.
+2. The result no longer shows a per-component breakdown — just the
+   final aggregate, plus a link to University Explorer to compare
+   against last year's closing merit.
+3. **The "SOURCE: Parhlai / UniCalc" line was removed from the
+   calculator UI entirely.** `sourceUrl`/`sourceLabel` still exist in
+   `merit-calculator-data.js` — kept for internal maintainability, so
+   a future update knows where a formula came from — but nothing
+   reads them for display anymore.
+
+## Important: don't cite sources where they're not load-bearing
+
+Direct instruction, worth keeping in mind for anything built after
+this: **citing an external site on a page where the citation isn't
+actually doing work for the reader makes the product look cheap** —
+like a thin wrapper around someone else's tool, not something built
+with its own credibility. This is why the merit calculator shows no
+"powered by" or "source:" line, even though its formulas originated
+from Parhlai/UniCalc.
+
+The distinction that matters: cite where the citation is *load-
+bearing* — the Merit & Entry Test Guide and University Explorer
+pages, where a `confidence` rating and a source link are the whole
+point (the reader needs to judge how much to trust a number). Don't
+cite on a tool where the person is entering *their own* data and
+getting *their own* result — the source of the formula isn't
+what they came for, and naming it there just reads as borrowing
+someone else's credibility instead of standing on the product's own.
+Applies to future pages too, not just this one — check which kind of
+page something is before deciding whether a source line belongs on
+it.
+

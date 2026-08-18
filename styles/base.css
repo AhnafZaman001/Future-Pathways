@@ -55,6 +55,16 @@
   --wrap: 780px;
   --radius: 10px;
   --radius-sm: 7px;
+  /* Proportional scale, same idea as shadcn/ui's --radius-* tokens
+     (each size derived from one base value via calc(), not picked
+     independently) — added for future components that need a size
+     between --radius-sm and --radius, or larger than --radius.
+     --radius-sm above is kept as its existing 7px rather than
+     recalculated, so nothing already using it shifts. */
+  --radius-md:  calc(var(--radius) * 0.8);
+  --radius-lg:  var(--radius);
+  --radius-xl:  calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
 
   /* --- motion: purposeful, not decorative --- */
   --dur-micro:  120ms;  /* hovers, clicks, focus rings */
@@ -275,11 +285,24 @@ button{ font-family: inherit; }
 
 ::selection{ background: var(--violet-dim); color: var(--ink); }
 
-/* visible keyboard focus everywhere */
+/* Keyboard focus — a soft, semi-transparent ring plus a border-color
+   shift, not a hard solid outline. This is shadcn/ui's actual
+   focus-visible pattern (ring + ring-color at reduced opacity,
+   border picks up the accent color too) ported to our token system.
+   Deliberately uses `outline`, not `box-shadow`, for the ring itself
+   -- box-shadow is a real collision risk here: any component with
+   its own box-shadow (buttons already have one, for their glow
+   effect) sits at the same CSS specificity as this rule and can
+   silently override it depending on stylesheet load order, which is
+   exactly what happened when this was first tried with box-shadow
+   (verified: .btn-primary's own shadow completely hid the focus
+   ring). `outline` is a separate property from `box-shadow` and
+   can't collide with it, so the ring is guaranteed to show
+   regardless of what any component declares for its own shadow. */
 :focus-visible{
-  outline: 2px solid var(--violet);
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline: 3px solid rgba(110,118,240,.45);
+  outline-offset: 1px;
+  border-color: var(--violet);
 }
 
 @media (prefers-reduced-motion: reduce){

@@ -123,11 +123,11 @@ input::placeholder, textarea::placeholder{ color: var(--ink-faint); }
 
 input:hover, select:hover, textarea:hover{ border-color: var(--border-strong); }
 
-input:focus, select:focus, textarea:focus{
+input:focus-visible, select:focus-visible, textarea:focus-visible{
   outline: none;
   border-color: var(--violet);
   background: var(--surface);
-  box-shadow: 0 0 0 3px var(--violet-dim);
+  box-shadow: 0 0 0 3px rgba(110,118,240,.45) !important;
 }
 
 input[readonly]{

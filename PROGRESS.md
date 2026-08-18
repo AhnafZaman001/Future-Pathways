@@ -585,3 +585,57 @@ just that the CSS looks plausible); calculator result screenshotted
 early-in-animation and settled, with the underlying math re-verified
 correct (GIKI: 990/1100 Matric + 170/200 test → 85.75%).
 
+## shadcn/ui-inspired tokens (not the framework — vanilla CSS only)
+
+Explicit decision: adopt shadcn/ui's *structural* CSS conventions,
+not the framework itself. shadcn/ui is React + Tailwind + a CLI that
+copies component source into a project — fundamentally incompatible
+with this app's deliberate no-build-step vanilla HTML/CSS/JS
+architecture. Cloning `github.com/shadcn-ui/ui.git` (done once, to
+`/tmp` for reference, not committed) doesn't "install" anything
+usable here; it's their own docs-site monorepo. What was actually
+useful from it: their real default `apps/v4/app/globals.css` theme
+tokens, read directly rather than trusted from memory.
+
+Two things ported into `styles/base.css` / `styles/components.css`:
+
+1. **Proportional radius scale** — `--radius-md/lg/xl/2xl`, each
+   derived from `--radius` via `calc()` (shadcn's actual approach),
+   instead of independently-picked values. `--radius`/`--radius-sm`
+   unchanged, so nothing already using them shifted.
+2. **Soft focus ring** replacing the old hard 2px outline — shadcn's
+   `ring` + `border-color` pattern, ported to `var(--violet)`.
+
+**This one feature surfaced two real, verified cascade bugs** — both
+fixed, not just described:
+
+- The global `:focus-visible` ring first used `box-shadow`. Every
+  `.btn-primary` has its own `box-shadow` (its glow effect) at equal
+  CSS specificity — depending on stylesheet load order, the button's
+  own shadow silently won and the focus ring never appeared at all
+  on buttons. Confirmed via render (no ring visible), fixed by
+  switching to `outline` for the *global* rule specifically, since
+  `outline` is a separate property that can't collide with any
+  component's `box-shadow`, present or future.
+- A **pre-existing, more specific** `input:focus` rule (higher
+  specificity than the global fix, so it kept winning for every form
+  field) had the same class of problem independently: it used
+  `:focus` (fires on mouse clicks too, not just keyboard) and
+  `var(--violet-dim)` (14% opacity — tuned for subtle background
+  fills, not an accessibility-grade focus indicator) for its own
+  ring. Renamed to `:focus-visible`, strengthened the ring opacity to
+  match the global one, and added `!important` to that specific
+  ring's `box-shadow` after confirming empirically (via
+  `getComputedStyle`, not just a screenshot) that it was still being
+  overridden without it. If a focus ring on some new form-adjacent
+  component ever looks wrong again, check for exactly this pattern
+  first — a component's own `box-shadow` at equal specificity is the
+  single most likely cause, given it's now happened twice.
+
+Verified across both themes, both interaction modes (keyboard Tab
+and mouse click), on input/button/link, via direct computed-style
+inspection (`getComputedStyle`) as well as screenshots — the
+screenshot-only check on this specific feature had already been
+fooled twice by rules that looked right but weren't winning the
+cascade.
+

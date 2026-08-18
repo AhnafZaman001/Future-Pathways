@@ -23,6 +23,7 @@ window.Dashboard = window.Dashboard || {};
   // check resolves) -- fire them the moment this script runs, instead
   // of waiting behind Dashboard.init()'s auth+role round-trip below.
   initUniModal();
+  initToolCardGlow();
   var institutesPromise = loadInstitutesWithLoadingState();
   var meritPromise = (typeof FP !== "undefined" && FP.loadMeritFormulas) ? FP.loadMeritFormulas() : Promise.resolve();
   var closingMeritPromise = (typeof FP !== "undefined" && FP.loadClosingMerit) ? FP.loadClosingMerit() : Promise.resolve();
@@ -252,6 +253,22 @@ window.Dashboard = window.Dashboard || {};
     }).catch(function(err){
       institutesLoadState = "error";
       console.error("Failed to load institutes from Supabase:", err);
+    });
+  }
+
+  // Cursor-tracking grid glow on the dashboard's 4 tool cards.
+  // --mx/--my are set in px, relative to each card's own top-left
+  // corner (not the viewport) -- the CSS mask in dashboard.css reads
+  // them to position a soft radial reveal over a faint grid pattern
+  // that's otherwise invisible. Purely decorative, no dependency on
+  // auth/data, so it's safe to wire up immediately.
+  function initToolCardGlow(){
+    document.querySelectorAll(".dash-tool-card").forEach(function(card){
+      card.addEventListener("mousemove", function(e){
+        var rect = card.getBoundingClientRect();
+        card.style.setProperty("--mx", (e.clientX - rect.left) + "px");
+        card.style.setProperty("--my", (e.clientY - rect.top) + "px");
+      });
     });
   }
 

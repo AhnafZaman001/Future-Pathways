@@ -740,3 +740,40 @@ direct assertion (via `page.evaluate`) that the not_found exclusion
 actually produces 82 from a simulated 99-row set with 17 not_found
 rows mixed in, not just "the screenshot looks right."
 
+## Cursor-tracking grid glow on the 4 dashboard tool cards
+
+Requested as "the glowing net that follows the cursor" from
+lawnline.marketing — **could not actually load that site to inspect
+it**: this sandbox's network access is a small allowlist (npm/GitHub/
+package registries), lawnline.marketing isn't on it, and `web_fetch`
+only extracts static text content regardless — it can't show a live
+cursor-tracking hover effect either way. Built from direct knowledge
+of the pattern instead (a well-established one, sometimes called a
+"spotlight card": a faint background grid + a soft radial reveal that
+follows the cursor), not from having seen their exact implementation.
+Worth knowing if it doesn't match what was seen in the podcast exactly.
+
+Applied to the 4 `.dash-tool-card` elements specifically (confirmed
+via a clarifying question — the screenshot given was actually one of
+lawnline's *program tier* cards, icon+title+description+CTA, which
+structurally matches these tool cards, not the flatter stats strip).
+
+Mechanics: `.dash-tool-card::before` holds a faint grid pattern
+(`linear-gradient` cross-hatch, violet at low opacity), masked by
+`mask-image: radial-gradient(circle 110px at var(--mx,50%)
+var(--my,50%), black 0%, transparent 100%)` — invisible everywhere
+except a 110px circle around the cursor. `--mx`/`--my` are plain CSS
+custom properties in px, relative to each card's own top-left corner
+(not the viewport), set by a `mousemove` listener in
+`initToolCardGlow()` (`js/dashboard.js`) — purely decorative, no
+auth/data dependency, wired up immediately alongside `initUniModal()`.
+Real card content gets an explicit `.dash-tool-card > *{ z-index:1 }`
+so it's never ambiguous whether it renders above the glow layer.
+
+Verified by actually moving a simulated cursor via Playwright
+(`page.mouse.move`, not just CSS reasoning) to two different corners
+of the same card and confirming the glow's position moved with it,
+confirmed clean per-card isolation (moving off one card onto an
+adjacent one correctly transfers the glow, no stuck/leftover state),
+and checked both themes.
+

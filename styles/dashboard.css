@@ -84,6 +84,7 @@
 }
 
 .dash-tool-card{
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -93,8 +94,39 @@
   padding: 16px;
   text-decoration: none;
   color: inherit;
+  overflow: hidden;
   transition: border-color var(--dur-micro) var(--ease-out), background var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out);
 }
+
+/* Real content sits above the glow layer below it, regardless of
+   DOM/stacking-context quirks -- explicit, not relying on default
+   pseudo-element ordering. */
+.dash-tool-card > *{ position: relative; z-index: 1; }
+
+/* Cursor-tracking grid glow -- a faint grid pattern, invisible at
+   rest, revealed only in a soft circle around the cursor via a
+   radial-gradient mask. --mx/--my are set by dashboard.js on
+   mousemove (in px, relative to the card's own top-left) and default
+   to the card's center so nothing looks broken before the first
+   mousemove fires. Grid line color is the violet accent at very low
+   opacity even at full reveal -- stays "texture," not "decoration",
+   same restraint as the rest of this token system. */
+.dash-tool-card::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(110,118,240,.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(110,118,240,.5) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(circle 110px at var(--mx, 50%) var(--my, 50%), black 0%, transparent 100%);
+          mask-image: radial-gradient(circle 110px at var(--mx, 50%) var(--my, 50%), black 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity var(--dur-small) var(--ease-out);
+}
+.dash-tool-card:hover::before{ opacity: 1; }
 
 .dash-tool-card:hover{
   border-color: var(--border-strong);

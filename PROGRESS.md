@@ -425,3 +425,60 @@ group has gaps, e.g. a partially-filled draft missing rank 3 still
 correctly shows "1, 2, 4, 5", not "1, 2, 3, 4" — verified with a
 render that deliberately included a gap.
 
+## Calculate Your University Merit (`merit-calculator.html`)
+
+Distinct from both `merit.html` (informational — shows each
+institute's formula as text) and `program_closing_merits`/
+`closing_merit_records` (last year's actual cutoffs) — this is a
+real interactive calculator: enter your actual marks, get the exact
+weighted aggregate for a specific university/program route.
+
+```
+merit-calculator.html         — the page
+js/merit-calculator-data.js   — the formulas (not in Supabase —
+                                 pure client-side data + arithmetic,
+                                 no DB round-trip needed to compute)
+js/merit-calculator.js        — controller: renders fields per
+                                 selected university, validates,
+                                 computes, shows the breakdown
+```
+
+Covers NUST (NET-basis), FAST-NUCES (Computing/Business AND
+Engineering — two different formulas at the same university),
+GIKI, PIEAS, and UET — sourced from Parhlai's and UniCalc's own
+merit calculators, both explicitly named when this was requested.
+
+**A real formula error was caught and fixed before shipping, not
+guessed at:** the first fetch of Parhlai's GIKI page showed "10%
+Matric + 85% Test" — which only sums to 95%, a sign of a mis-scrape,
+not a real formula (a calculator that can't reach 100% is an obvious
+bug). Cross-checked against ilmkidunya.com and CampusAxis
+independently — both confirm 15% + 85%, with FSc/Intermediate
+marks explicitly **not** weighted at all (eligibility-only, 60%
+minimum). That's why GIKI's calculator only has two fields, not
+three — verify this kind of thing before shipping a number, don't
+assume the first source is right.
+
+**The arithmetic was verified by actually running it**, not trusting
+the code: rendered the real compute logic in headless Chromium,
+manually calculated the expected result by hand for two different
+universities, and confirmed the on-screen output matched exactly
+(NUST: 90% SSC + 85% HSSC + 160/200 NET → 81.75%; GIKI: 92% Matric +
+170/200 test → 86.05%). Also verified the validation path (empty/
+out-of-range fields correctly block calculation and highlight in
+red) and that `(num / maxMarks) * 100` correctly converts a "marks"-
+type field (NET, GIKI's test — both scored out of 200) before
+applying its weight, versus a "percent"-type field (SSC, HSSC, FAST's
+test, PIEAS's percentile) which is used as entered.
+
+**Not built / intentionally out of scope:** NUST's ACT/SAT-basis
+route (same weights, but ACT/SAT use a different scale — 36 / 1600 —
+that needs its own conversion, not just a different max, and wasn't
+part of what was asked); O-Level/A-Level grade-to-percentage
+equivalence tables (each university has its own table for this;
+genuinely substantial additional research per university, out of
+scope for what was requested — this version expects a percentage
+input, which covers Matric/FSc board students directly and requires
+O/A-Level students to convert their own grades first); universities
+beyond the five named when this was requested.
+

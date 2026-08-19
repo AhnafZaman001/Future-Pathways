@@ -117,17 +117,67 @@
         '<td>' + esc(firstPriority) + '</td>' +
         '<td><span class="fp-badge ' + s.status + '">' + s.status + '</span></td>' +
         '<td>' + (s.submitted_at ? new Date(s.submitted_at).toLocaleDateString() : "\u2014") + '</td>' +
+        '<td class="fp-row-actions">' +
+          '<a href="pathways.html?student=' + esc(s.student_id) + '" class="fp-row-action-link">Edit</a>' +
+          '<button type="button" class="fp-row-action-link fp-row-action-delete" data-reset-id="' + s.id + '">Delete</button>' +
+        '</td>' +
       '</tr>';
-    }).join("") || '<tr><td colspan="5">No submissions match these filters.</td></tr>';
+    }).join("") || '<tr><td colspan="6">No submissions match these filters.</td></tr>';
 
     document.querySelectorAll("#fp-admin-tbody tr[data-id]").forEach(function(tr){
-      tr.addEventListener("click", function(){ openDetail(tr.dataset.id); });
+      tr.addEventListener("click", function(e){
+        if(e.target.closest(".fp-row-actions")) return; // let row actions handle their own clicks
+        openDetail(tr.dataset.id);
+      });
+    });
+
+    document.querySelectorAll(".fp-row-action-delete").forEach(function(btn){
+      btn.addEventListener("click", function(e){
+        e.stopPropagation();
+        var fpId = btn.dataset.resetId;
+        var sub = submissions.find(function(x){ return x.id === fpId; });
+        if(!sub) return;
+        var studentName = titleCase((sub.students && sub.students.student_name) || "");
+        resetSubmission(fpId, studentName, btn, function(ok){
+          if(!ok) return;
+          sub.status = "draft";
+          sub.submitted_at = null;
+          sub.additional_information = null;
+          renderTable();
+        });
+      });
     });
   }
 
   document.getElementById("filter-pathway").addEventListener("change", renderTable);
   document.getElementById("filter-status").addEventListener("change", renderTable);
   document.getElementById("filter-first-priority").addEventListener("change", renderTable);
+
+  // Shared "delete" action -- per the confirmed meaning from when
+  // this was first built: reset to an editable draft, keep the
+  // account (student_name/roll number/marks untouched), clear the
+  // answers (preferences + additional_information). Used by both
+  // the detail view's own button and the table row quick action
+  // below, so the confirm-copy/RPC-call/error-handling only exists
+  // once. Disables the triggering button for the duration of the
+  // call so a double-click can't fire two resets.
+  function resetSubmission(fpId, studentName, triggerBtn, onDone){
+    var confirmMsg = "Reset " + (studentName || "this student") + "'s form back to an editable draft?\n\n" +
+      "This clears their submitted answers (institute/faculty/program preferences and additional information) " +
+      "but keeps their account and profile info (name, roll number, marks) intact.";
+    if(!window.confirm(confirmMsg)){ onDone(false); return; }
+
+    if(triggerBtn) triggerBtn.disabled = true;
+    FP.client.rpc("counsellor_reset_submission", { p_future_pathway_id: fpId }).then(function(r){
+      if(r.error){
+        alert("Could not reset: " + r.error.message);
+        if(triggerBtn) triggerBtn.disabled = false;
+        onDone(false);
+        return;
+      }
+      onDone(true);
+    });
+  }
 
   function esc(s){
     return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
@@ -268,14 +318,8 @@
     var resetBtn = document.getElementById("fp-reset-submission");
     if(resetBtn){
       resetBtn.addEventListener("click", function(){
-        var confirmMsg = "Reset " + (p.student_name || "this student") + "'s form back to an editable draft?\n\n" +
-          "This clears their submitted answers (institute/faculty/program preferences and additional information) " +
-          "but keeps their account and profile info (name, roll number, marks) intact.";
-        if(!window.confirm(confirmMsg)) return;
-
-        resetBtn.disabled = true;
-        FP.client.rpc("counsellor_reset_submission", { p_future_pathway_id: sub.id }).then(function(r){
-          if(r.error){ alert("Could not reset: " + r.error.message); resetBtn.disabled = false; return; }
+        resetSubmission(sub.id, p.student_name, resetBtn, function(ok){
+          if(!ok) return;
           sub.status = "draft";
           sub.submitted_at = null;
           sub.additional_information = null;

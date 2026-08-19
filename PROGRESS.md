@@ -956,3 +956,64 @@ don't render, and the main content re-centers normally. Verified
 this fallback renders cleanly, no squeezing. Confirmed in both
 themes.
 
+## Four fixes: wider layout, admin quick actions, rename, modal cleanup
+
+1. **Widened dashboard layout.** `.dash-main-wide` no longer caps at
+   1400px — figures now sit at the true viewport edges via
+   `justify-content: space-between`, and the main content column
+   grew from 780px to 960px, so the KPI/tool cards read as
+   noticeably larger, not just "more space around the same cards".
+   Breakpoint recalculated (1240px → 1420px) to match. **Known,
+   accepted inconsistency**: the header above still uses the
+   standard 780px `.wrap` (same as every other page, for
+   consistency), so it doesn't line up with the wider content below
+   it on very wide screens — flagged, not silently fixed, since
+   widening the header wasn't asked for and might not be wanted.
+
+2. **Admin table inline Edit/Delete.** New Actions column per row —
+   "Edit" (links straight to `pathways.html?student=<id>`) and
+   "Delete" (the existing reset-to-draft RPC, same confirmed
+   meaning as before: keeps the account, clears the answers).
+   Refactored the reset logic into one shared `resetSubmission()`
+   function used by both the table row and the pre-existing
+   detail-view button, instead of duplicating the confirm-copy/RPC-
+   call/error-handling. Caught and fixed a bug introduced during
+   that refactor (a duplicated row-click event listener) before it
+   shipped. Verified the click-vs-row-click interaction directly —
+   clicking Edit or Delete does NOT also trigger the row's own
+   "open detail" handler, clicking elsewhere in the row still does.
+
+3. **Brand tagline**: "university counsellor" → "future pathway
+   university counsellor" on `index.html` and `login.html` only —
+   the other pages have their own contextual tags (e.g. "merit
+   calculator") that were correctly left alone. Verified no overflow
+   at 1400/900/500px viewport widths.
+
+4. **University modal cleanup**, two separate copies
+   (`dashboard.js` for `index.html`, `fp-app.js` for
+   `pathways.html`) each had their own bugs:
+   - `dashboard.js` had three buttons per institute row ("View
+     merit formula", "View programs", "View 2025 closing merit").
+     Removed the first two (redundant with the dedicated Merit
+     Guide page, and unused respectively), kept the closing-merit
+     one as the single remaining action — it's the more concrete,
+     less-duplicated piece of information.
+   - **Found and fixed a real pre-existing bug while in there**: the
+     closing-merit button carried both `merit-toggle` and
+     `closing-merit-toggle` classes, and the `merit-toggle` handler
+     ran first with an early `return` — meaning it was silently
+     swallowing clicks meant for the closing-merit toggle before
+     ever reaching the correct handler. Removing "View merit
+     formula" naturally fixed this, but the button's class list was
+     also cleaned up (dropped the now-pointless `merit-toggle`
+     duplicate) rather than leaving a dead collision risk in place.
+   - `fp-app.js` never had a closing-merit alternative to begin with
+     (only "View merit formula" + "View programs") — removed only
+     "View programs" there; "View merit formula" stayed, since
+     there was no duplicate to justify removing it in that copy.
+
+All four verified via actual render/interaction test (Playwright),
+not just read back from the diff — including a direct click-sequence
+test proving Edit/Delete/row-click each fire exactly the right
+handler and nothing else.
+

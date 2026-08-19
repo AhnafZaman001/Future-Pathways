@@ -25,19 +25,28 @@
 .fp-form{ display:flex; flex-direction:column; gap:16px; }
 .fp-form label{ display:flex; flex-direction:column; gap:6px; }
 
-/* --- dashboard wide layout with margin figures --- */
+/* --- dashboard wide layout with margin figures ---
+   Widened from an earlier version: the content column was 780px
+   (matching every other page's .wrap) inside a 1400px-capped outer
+   row, leaving real dead space between the figures and the true
+   viewport edges on a wide monitor. Now: no outer cap at all (the
+   row uses the full viewport, minus edge padding) and
+   justify-content:space-between pushes the two margin columns to
+   the true left/right edges; the reclaimed width goes to the
+   content column, widened from 780px to 960px so the KPI/tool cards
+   actually read as larger, not just "the same cards with more
+   space around them". */
 .dash-main-wide{
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: stretch;
-  gap: 32px;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 24px;
+  gap: 24px;
+  padding: 0 32px;
 }
 
 .dash-main-content{
-  flex: 0 1 780px;
+  flex: 1 1 960px;
+  max-width: 960px;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -54,12 +63,12 @@
 }
 
 /* Below this, there's no real room for a 170px column on each side
-   plus a 780px centered column plus gaps without everything feeling
+   plus a 960px content column plus gaps without everything feeling
    cramped -- the figures are decorative, not essential, so they
    just don't render at all rather than squeezing in badly. */
-@media (max-width: 1240px){
+@media (max-width: 1420px){
   .dash-margin-col{ display: none; }
-  .dash-main-wide{ padding: 0; max-width: none; }
+  .dash-main-wide{ padding: 0; justify-content: center; }
 }
 
 /* --- isometric figures (dashboard) --- */
@@ -388,6 +397,22 @@ body.is-review-step .fp-actions{ margin-top:28px; padding-top:20px; border-top:1
 .fp-admin-table th, .fp-admin-table td{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); }
 .fp-admin-table th{ color: var(--ink-soft); font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; }
 .fp-admin-table tr:hover td{ background: var(--surface-2); cursor:pointer; }
+
+.fp-row-actions{ white-space: nowrap; }
+.fp-row-action-link{
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  color: var(--violet-text);
+  cursor: pointer;
+  text-decoration: none;
+}
+.fp-row-action-link:hover{ text-decoration: underline; }
+.fp-row-action-link + .fp-row-action-link{ margin-left: 14px; }
+.fp-row-action-delete{ color: var(--red); }
+.fp-row-action-delete:disabled{ opacity: .5; cursor: not-allowed; text-decoration: none; }
 
 .fp-badge{ display:inline-block; padding:2px 8px; border-radius:99px; font-size:.75rem; font-weight:600; text-transform: capitalize; }
 .fp-badge.draft{ background: var(--amber-dim); color: var(--amber); }

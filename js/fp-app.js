@@ -214,21 +214,6 @@
         return;
       }
 
-      if(e.target.classList.contains("programs-toggle")){
-        var pInstName = e.target.dataset.inst;
-        var pContainer = e.target.closest("li").querySelector(".programs-inline-container");
-        var pIsOpen = !pContainer.hidden;
-        if(pIsOpen){
-          pContainer.hidden = true;
-          e.target.textContent = "View programs";
-          return;
-        }
-        pContainer.innerHTML = FP.renderProgramsSectionForInstitute(pInstName);
-        pContainer.hidden = false;
-        e.target.textContent = "Hide programs";
-        return;
-      }
-
       if(e.target.classList.contains("program-search-btn")){
         var section = e.target.closest(".programs-inline-section");
         if(section) FP.filterProgramsSection(section);
@@ -282,10 +267,8 @@
                      "<span class=\"uni-modal-programs\">" + escapeHtml(meta) + "</span>" +
                      "<div class=\"uni-modal-actions\">" +
                        "<button type=\"button\" class=\"merit-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View merit formula</button>" +
-                       "<button type=\"button\" class=\"programs-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View programs</button>" +
                      "</div></div>" +
-                     "<div class=\"merit-inline-container\" hidden></div>" +
-                     "<div class=\"programs-inline-container\" hidden></div></li>";
+                     "<div class=\"merit-inline-container\" hidden></div></li>";
             }).join("") + "</ul>";
 
         return "<div class=\"uni-modal-group\"><h3>" + name + " (" + entries.length + ")</h3>" + listHtml + "</div>";

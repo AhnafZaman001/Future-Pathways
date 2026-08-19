@@ -350,36 +350,6 @@ window.Dashboard = window.Dashboard || {};
     if(searchBtn) searchBtn.addEventListener("click", reRender);
 
     body.addEventListener("click", function(e){
-      if(e.target.classList.contains("merit-toggle")){
-        var instName = e.target.dataset.inst;
-        var container = e.target.closest("li").querySelector(".merit-inline-container");
-        var isOpen = !container.hidden;
-        if(isOpen){
-          container.hidden = true;
-          e.target.textContent = "View merit formula";
-          return;
-        }
-        container.innerHTML = FP.renderMeritSectionForInstitute(instName);
-        container.hidden = false;
-        e.target.textContent = "Hide merit formula";
-        return;
-      }
-
-      if(e.target.classList.contains("programs-toggle")){
-        var pInstName = e.target.dataset.inst;
-        var pContainer = e.target.closest("li").querySelector(".programs-inline-container");
-        var pIsOpen = !pContainer.hidden;
-        if(pIsOpen){
-          pContainer.hidden = true;
-          e.target.textContent = "View programs";
-          return;
-        }
-        pContainer.innerHTML = FP.renderProgramsSectionForInstitute(pInstName);
-        pContainer.hidden = false;
-        e.target.textContent = "Hide programs";
-        return;
-      }
-
       if(e.target.classList.contains("closing-merit-toggle")){
         var cInstName = e.target.dataset.inst;
         var cContainer = e.target.closest("li").querySelector(".closing-merit-inline-container");
@@ -457,12 +427,8 @@ window.Dashboard = window.Dashboard || {};
               return "<li><div class=\"uni-modal-row\"><span>" + escapeHtml(inst.name) + "</span>" +
                      "<span class=\"uni-modal-programs\">" + escapeHtml(meta) + "</span>" +
                      "<div class=\"uni-modal-actions\">" +
-                       "<button type=\"button\" class=\"merit-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View merit formula</button>" +
-                       "<button type=\"button\" class=\"programs-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View programs</button>" +
-                       "<button type=\"button\" class=\"merit-toggle closing-merit-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View 2025 closing merit</button>" +
+                       "<button type=\"button\" class=\"closing-merit-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View 2025 closing merit</button>" +
                      "</div></div>" +
-                     "<div class=\"merit-inline-container\" hidden></div>" +
-                     "<div class=\"programs-inline-container\" hidden></div>" +
                      "<div class=\"closing-merit-inline-container\" hidden></div></li>";
             }).join("") + "</ul>";
 

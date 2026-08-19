@@ -173,7 +173,8 @@
         '<td>' + (s.submitted_at ? new Date(s.submitted_at).toLocaleDateString() : "\u2014") + '</td>' +
         '<td class="fp-row-actions">' +
           '<a href="pathways.html?student=' + esc(s.student_id) + '" class="fp-row-action-link">Edit</a>' +
-          '<button type="button" class="fp-row-action-link fp-row-action-delete" data-reset-id="' + s.id + '">Delete</button>' +
+          '<button type="button" class="fp-row-action-link fp-row-action-clear" data-clear-id="' + s.id + '">Clear data</button>' +
+          '<button type="button" class="fp-row-action-link fp-row-action-delete" data-delete-id="' + s.id + '" data-student-id="' + esc(s.student_id) + '">Delete</button>' +
         '</td>' +
       '</tr>';
     }).join("") || '<tr><td colspan="7">No submissions match these filters.</td></tr>';
@@ -204,10 +205,12 @@
       });
     });
 
-    document.querySelectorAll("#fp-admin-tbody .fp-row-action-delete").forEach(function(btn){
+    // "Clear data" -- reversible-ish, same behavior as before this
+    // change: resets to an editable draft, keeps the account.
+    document.querySelectorAll("#fp-admin-tbody .fp-row-action-clear").forEach(function(btn){
       btn.addEventListener("click", function(e){
         e.stopPropagation();
-        var fpId = btn.dataset.resetId;
+        var fpId = btn.dataset.clearId;
         var sub = submissions.find(function(x){ return x.id === fpId; });
         if(!sub) return;
         var studentName = titleCase((sub.students && sub.students.student_name) || "");
@@ -216,6 +219,29 @@
           sub.status = "draft";
           sub.submitted_at = null;
           sub.additional_information = null;
+          selectedIds.delete(fpId);
+          renderTable();
+          updateBulkActionsBar();
+        });
+      });
+    });
+
+    // "Delete" -- REAL, PERMANENT deletion. Removes the student's
+    // account entirely (auth.users/app_users/students rows, plus
+    // every future_pathways and preference row tied to them), not
+    // just their answers. There is no undo -- see counsellor_
+    // delete_student.sql for exactly what this removes.
+    document.querySelectorAll("#fp-admin-tbody .fp-row-action-delete").forEach(function(btn){
+      btn.addEventListener("click", function(e){
+        e.stopPropagation();
+        var fpId = btn.dataset.deleteId;
+        var studentId = btn.dataset.studentId;
+        var sub = submissions.find(function(x){ return x.id === fpId; });
+        if(!sub) return;
+        var studentName = titleCase((sub.students && sub.students.student_name) || "");
+        deleteStudent(studentId, studentName, btn, function(ok){
+          if(!ok) return;
+          submissions = submissions.filter(function(x){ return x.id !== fpId; });
           selectedIds.delete(fpId);
           renderTable();
           updateBulkActionsBar();
@@ -238,7 +264,7 @@
     updateBulkActionsBar();
   });
 
-  document.getElementById("fp-bulk-delete").addEventListener("click", function(){
+  document.getElementById("fp-bulk-clear").addEventListener("click", function(){
     var ids = Array.from(selectedIds);
     if(!ids.length) return;
 
@@ -253,7 +279,7 @@
 
     FP.confirm(confirmMsg).then(function(confirmed){
       if(!confirmed) return;
-      var bulkBtn = document.getElementById("fp-bulk-delete");
+      var bulkBtn = document.getElementById("fp-bulk-clear");
       bulkBtn.disabled = true;
       Promise.all(ids.map(function(id){
         return new Promise(function(resolve){
@@ -311,6 +337,36 @@
     FP.confirm(confirmMsg).then(function(confirmed){
       if(!confirmed){ onDone(false); return; }
       performReset(fpId, triggerBtn, onDone);
+    });
+  }
+
+  // REAL, PERMANENT deletion -- distinct from resetSubmission()
+  // above (which only clears answers and keeps the account). This
+  // removes the student's account entirely: the auth.users row,
+  // app_users row, students row, and every future_pathways/
+  // preference row tied to them. There is no undo -- see
+  // supabase/counsellor_delete_student.sql for exactly what gets
+  // removed and in what order. Confirm wording is deliberately more
+  // severe than resetSubmission()'s, and doesn't reuse its message,
+  // so the two actions never read as interchangeable.
+  function deleteStudent(studentId, studentName, triggerBtn, onDone){
+    var confirmMsg = "Permanently delete " + (studentName || "this student") + "'s account?\n\n" +
+      "This removes their name, profile, and every submitted answer from the database completely \u2014 " +
+      "not just this form. This cannot be undone. If you only want to clear their submitted answers " +
+      "and let them start over, use \u201cClear data\u201d instead.";
+
+    FP.confirm(confirmMsg).then(function(confirmed){
+      if(!confirmed){ onDone(false); return; }
+      if(triggerBtn) triggerBtn.disabled = true;
+      FP.client.rpc("counsellor_delete_student", { p_student_id: studentId }).then(function(r){
+        if(r.error){
+          alert("Could not delete: " + r.error.message);
+          if(triggerBtn) triggerBtn.disabled = false;
+          onDone(false);
+          return;
+        }
+        onDone(true);
+      });
     });
   }
 
@@ -411,7 +467,8 @@
           '<h2 class="fp-step-title" style="margin-bottom:0;">' + esc(p.student_name || "Student") + '</h2>' +
           '<div style="display:flex; gap:8px;">' +
             '<a href="pathways.html?student=' + esc(sub.student_id) + '" class="nav-link">Edit this form</a>' +
-            '<button type="button" class="nav-link" id="fp-reset-submission" style="color:var(--red);">Reset to draft</button>' +
+            '<button type="button" class="nav-link" id="fp-reset-submission" style="color:var(--amber);">Clear student\'s data</button>' +
+            '<button type="button" class="nav-link" id="fp-delete-student" style="color:var(--red);">Delete</button>' +
           '</div>' +
         '</div>' +
         '<p class="fp-step-desc">' + esc(sub.pathway) + ' \u2014 <span class="fp-badge ' + sub.status + '">' + sub.status + '</span></p>' +
@@ -459,6 +516,19 @@
           sub.submitted_at = null;
           sub.additional_information = null;
           openDetail(sub.id); // re-fetch and re-render with the cleared preferences
+        });
+      });
+    }
+
+    var deleteBtn = document.getElementById("fp-delete-student");
+    if(deleteBtn){
+      deleteBtn.addEventListener("click", function(){
+        deleteStudent(sub.student_id, p.student_name, deleteBtn, function(ok){
+          if(!ok) return;
+          submissions = submissions.filter(function(x){ return x.id !== sub.id; });
+          document.getElementById("fp-admin-detail-view").hidden = true;
+          document.getElementById("fp-admin-list-view").hidden = false;
+          renderTable();
         });
       });
     }

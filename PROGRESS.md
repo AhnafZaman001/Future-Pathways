@@ -1284,3 +1284,56 @@ checkbox's own bounds — and confirmed it still toggled the checkbox
 correctly and did *not* open the detail view, compared directly
 against a dead-center click for the same result.
 
+## Real delete, separate from "Clear data" — needs a SQL migration run manually
+
+Direct feedback: "Delete" never actually deleted anything — it only
+ever did what was originally called `counsellor_reset_submission()`,
+clearing submitted answers while keeping the account (students row)
+intact. There was no way to actually remove a student's name from
+the database at all. Two now-distinct actions exist everywhere a
+delete-like action appears (table rows, the detail view, the bulk
+bar):
+
+- **"Clear data"** (amber) — unchanged behavior, just renamed for
+  clarity now that "Delete" means something else: resets to an
+  editable draft, keeps the account.
+- **"Delete"** (red) — new, genuinely irreversible. New SQL function
+  `counsellor_delete_student()` in
+  `supabase/counsellor_delete_student.sql` — **must be run manually
+  in the Supabase SQL Editor before this button will work**, same as
+  every other schema change in this project; I can't execute SQL
+  against the live database myself.
+
+**Verified the schema before writing the delete cascade**, not
+assumed: checked `future_pathways_schema.sql` directly and confirmed
+`students.id`/`app_users.id` already `references auth.users(id) on
+delete cascade`, and `future_pathways.student_id`/the three
+preference tables' `future_pathway_id` all cascade the same way —
+meaning the whole chain from `auth.users` down would already clean
+itself up automatically. Wrote the explicit multi-step deletes
+anyway (preferences → future_pathways → students → app_users →
+auth.users) rather than relying silently on the cascade — harmless
+given it's already guaranteed correct, and self-documenting about
+exactly what a "delete" removes for anyone reading the function
+later. Added a defensive guard against a counsellor deleting their
+*own* account through this path, given the operation is irreversible.
+
+Same SECURITY DEFINER pattern already proven in
+`counsellor_create_student()` (which inserts into `auth.users` the
+same way this deletes from it) — not a new technique, reusing what's
+already known to work.
+
+**Bulk stays "Clear data for selected", deliberately not upgraded to
+bulk-delete** — accidentally permanently deleting several real
+accounts at once in one click is a meaningfully bigger mistake than
+doing it one at a time, and this wasn't explicitly asked for. Bulk
+bar's color/styling switched from red to amber to match its actual
+(safer) behavior, since red now specifically means "irreversible"
+elsewhere in the same table.
+
+Verified via render: the two-button color distinction (violet Edit /
+amber Clear data / red Delete) reads clearly at a glance, and the
+delete confirmation dialog explicitly names what's removed, states
+irreversibility plainly, and points to "Clear data" as the
+alternative for anyone who clicked the wrong one.
+

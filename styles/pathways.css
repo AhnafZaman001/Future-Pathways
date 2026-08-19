@@ -435,13 +435,13 @@ body.is-review-step .fp-actions{ margin-top:28px; padding-top:20px; border-top:1
   gap: 16px;
   padding: 10px 14px;
   margin-bottom: 16px;
-  background: var(--red-dim);
-  border: 1px solid var(--red);
+  background: var(--amber-dim);
+  border: 1px solid var(--amber);
   border-radius: var(--radius-sm);
   font-size: .86rem;
   color: var(--ink);
 }
-.fp-bulk-actions .fp-row-action-delete{ font-weight: 700; }
+.fp-bulk-actions .fp-row-action-clear{ font-weight: 700; }
 .fp-row-action-link{
   background: none;
   border: none;
@@ -455,6 +455,7 @@ body.is-review-step .fp-actions{ margin-top:28px; padding-top:20px; border-top:1
 .fp-row-action-link:hover{ text-decoration: underline; }
 .fp-row-action-link + .fp-row-action-link{ margin-left: 14px; }
 .fp-row-action-delete{ color: var(--red); }
+.fp-row-action-clear{ color: var(--amber); }
 .fp-row-action-delete:disabled{ opacity: .5; cursor: not-allowed; text-decoration: none; }
 
 .fp-badge{ display:inline-block; padding:2px 8px; border-radius:99px; font-size:.75rem; font-weight:600; text-transform: capitalize; }

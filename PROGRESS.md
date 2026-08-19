@@ -1123,3 +1123,50 @@ before, plus a general UI render (stats strip, card, input field) in
 light mode showing every surface now clearly distinguishable from
 the ones around it.
 
+## Merit calculator: 3 more universities, each cross-verified before adding
+
+Asked which universities' formulas I was confident enough in to add.
+Answered honestly first — no web-research claim is truly 100%
+certain, no official page was directly the source for any of these,
+only third-party aggregators — then gave a confidence tier based on
+how many independent sources agreed, same standard already used for
+the GIKI correction earlier in this project.
+
+**COMSATS** — 10% Matric + 40% Intermediate + 50% NTS/NAT. 9
+independent sources, all in agreement, one referencing COMSATS's own
+admissions portal directly.
+
+**NED University (Karachi)** — 40% FSc + 60% Entry Test, **no Matric
+at all**. 5 independent sources, all consistent on this genuinely
+unusual detail (NED is the only major Pakistani engineering
+university that drops Matric entirely) — confirmed by *not* giving
+NED a Matric field, and adding an explicit note so it doesn't read
+as a bug.
+
+**Punjab Medical Colleges (MDCAT-based, MBBS/BDS)** — 10% Matric +
+40% FSc + 50% MDCAT (MDCAT fixed at 180 marks). Started at "one
+source, medium confidence" — went back and searched specifically to
+either raise or drop that confidence rather than shipping on a single
+source. Found 10 more independent sources, several explicitly citing
+PMDC/UHS as the governing bodies, upgrading it to high confidence.
+This is a standardized *provincial* formula, not one specific
+university's rule (framed that way in the notes field, and flagged
+that NUMS uses a different formula entirely, not covered).
+
+All three added using the exact existing patterns — `marks_variable`
+for Matric/Intermediate (obtained + total, since totals vary by
+board), `marks_fixed` for MDCAT (180, fixed and universal),
+`percent` for NTS/NED-test (already percentage, no fixed total
+found). No new field types, no new UI patterns, no source line shown
+in the app (per the earlier "don't cite where it's not load-bearing"
+principle) — `sourceUrl`/`sourceLabel` kept in the data file only,
+for internal maintainability.
+
+**Verified by actually running the math**, not just adding data and
+trusting it: computed each by hand (COMSATS 90/85/78 → 82.00%; NED
+88/82 → 84.40%; Punjab Medical 90.9/91.8/83.3 → 87.48%) and confirmed
+the live calculator produced the exact same numbers. Also confirmed
+NED's form genuinely has no Matric input field at all (not just
+hidden/disabled) — the calculator only asks for what the real
+formula actually uses.
+

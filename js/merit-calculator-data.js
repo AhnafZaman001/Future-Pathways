@@ -110,5 +110,46 @@ window.MERIT_CALCULATORS = [
       { key: "test", label: "Entry test percentage (ECAT / NAT / SAT)", type: "percent",         weight: 50 }
     ],
     notes: "\u201cUET\u201d covers multiple campuses (Lahore, Taxila, Peshawar) whose formulas can differ slightly by campus and by year \u2014 verify against your specific campus's current admission notice."
+  },
+  {
+    id: "comsats",
+    university: "COMSATS",
+    variantLabel: "",
+    formulaText: "10% Matric + 40% Intermediate + 50% NTS/NAT",
+    sourceUrl: "https://admissions.comsats.edu.pk/",
+    sourceLabel: "COMSATS Admissions",
+    fields: [
+      { key: "ssc",  label: "Matric marks",              type: "marks_variable", weight: 10 },
+      { key: "hssc", label: "Intermediate marks",        type: "marks_variable", weight: 40 },
+      { key: "test", label: "NTS / NAT percentage",      type: "percent",        weight: 50 }
+    ],
+    notes: "Architecture and Art & Design use a separate interview-based process, not this formula. A-Level result-awaiting applicants: your O-Level equivalence is used in place of Intermediate."
+  },
+  {
+    id: "ned",
+    university: "NED",
+    variantLabel: "",
+    formulaText: "40% FSc + 60% Entry Test \u2014 Matric is not used at all",
+    sourceUrl: "https://www.neduet.edu.pk/",
+    sourceLabel: "NED University of Engineering and Technology",
+    fields: [
+      { key: "hssc", label: "FSc / Intermediate marks",  type: "marks_variable", weight: 40 },
+      { key: "test", label: "NED Entry Test percentage", type: "percent",        weight: 60 }
+    ],
+    notes: "NED is the only major Pakistani engineering university that excludes Matric from its merit formula entirely \u2014 that's why there's no Matric field here, not an oversight."
+  },
+  {
+    id: "punjab_medical",
+    university: "Punjab Medical Colleges",
+    variantLabel: "MDCAT-based (MBBS/BDS)",
+    formulaText: "10% Matric + 40% FSc (Pre-Medical) + 50% MDCAT",
+    sourceUrl: "https://www.pmdc.pk/",
+    sourceLabel: "Pakistan Medical & Dental Council (PMDC) / UHS",
+    fields: [
+      { key: "ssc",  label: "Matric marks",   type: "marks_variable", weight: 10 },
+      { key: "hssc", label: "FSc marks",      type: "marks_variable", weight: 40 },
+      { key: "test", label: "MDCAT score",    type: "marks_fixed",    weight: 50, maxMarks: 180 }
+    ],
+    notes: "This is the standardized formula governing all public-sector MBBS/BDS admissions in Punjab (and, per PMDC policy, most other provinces too) \u2014 not one specific university's own rule, so it applies broadly across UHS-affiliated colleges. NUMS runs a different formula (50% FSc + 50% NUMS Entry Test, no Matric) \u2014 not covered here."
   }
 ];

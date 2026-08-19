@@ -521,3 +521,263 @@ select{ appearance: none; background: var(--surface-2)
   color: var(--ink-soft);
   font-size: .9rem;
 }
+
+/* --- active nav pill --- */
+.nav-link.is-active{
+  color: var(--ink);
+  background: var(--surface);
+  border-color: var(--violet);
+  box-shadow: 0 0 0 1px var(--violet-dim);
+}
+
+/* --- toast notification system --- */
+.fp-toast-container{
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: calc(100vw - 40px);
+}
+
+.fp-toast{
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 280px;
+  max-width: 440px;
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 10px 30px rgba(0,0,0,.45);
+  color: var(--ink);
+  font-size: .84rem;
+  font-family: var(--font-body);
+  opacity: 0;
+  transform: translateY(-12px) scale(0.96);
+  transition: opacity .22s var(--ease-out), transform .22s var(--ease-out);
+}
+
+.fp-toast.is-visible{
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.fp-toast.is-hiding{
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
+}
+
+.fp-toast-icon{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: .78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.fp-toast-success .fp-toast-icon{ background: var(--green-dim); color: var(--green); }
+.fp-toast-error .fp-toast-icon{ background: var(--red-dim); color: var(--red); }
+.fp-toast-info .fp-toast-icon{ background: var(--violet-dim); color: var(--violet); }
+.fp-toast-loading .fp-toast-icon{ background: transparent; }
+
+.fp-toast-content{
+  flex: 1;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.fp-toast-close{
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  margin-left: 4px;
+  transition: color var(--dur-micro) var(--ease-out);
+}
+.fp-toast-close:hover{ color: var(--ink); }
+
+.fp-toast-spinner{
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--violet);
+  border-radius: 50%;
+  animation: fp-spin .6s linear infinite;
+}
+
+@keyframes fp-spin{
+  to{ transform: rotate(360deg); }
+}
+
+/* --- sortable table headers --- */
+.fp-th-sortable{
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--dur-micro) var(--ease-out);
+}
+.fp-th-sortable:hover{
+  color: var(--ink);
+}
+.fp-th-btn{
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  text-transform: inherit;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+}
+.fp-th-sort-icon{
+  font-size: .7rem;
+  opacity: .4;
+  transition: opacity var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out);
+}
+.fp-th-sortable.is-sorted .fp-th-sort-icon{
+  opacity: 1;
+  color: var(--violet-text);
+}
+
+/* --- active filter chips --- */
+.fp-filter-chips{
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.fp-chip{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  color: var(--ink-soft);
+}
+.fp-chip strong{
+  color: var(--ink);
+}
+.fp-chip-remove{
+  background: none;
+  border: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  padding: 0;
+  font-size: .85rem;
+  line-height: 1;
+}
+.fp-chip-remove:hover{
+  color: var(--red);
+}
+.fp-chip-clear-all{
+  background: none;
+  border: none;
+  color: var(--violet-text);
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px 6px;
+}
+.fp-chip-clear-all:hover{
+  color: var(--ink);
+}
+
+/* --- pagination toolbar --- */
+.fp-pagination{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .82rem;
+  color: var(--ink-soft);
+}
+.fp-pagination-info{
+  font-family: var(--font-mono);
+  font-size: .76rem;
+}
+.fp-pagination-controls{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fp-page-btn{
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs, 4px);
+  color: var(--ink);
+  padding: 5px 10px;
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--dur-micro) var(--ease-out);
+}
+.fp-page-btn:hover:not(:disabled){
+  border-color: var(--violet);
+  background: var(--violet-dim);
+}
+.fp-page-btn:disabled{
+  opacity: .35;
+  cursor: not-allowed;
+}
+.fp-page-size-select{
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs, 4px);
+  color: var(--ink);
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: .74rem;
+}
+
+/* --- empty state --- */
+.fp-empty-state{
+  text-align: center;
+  padding: 42px 20px;
+  color: var(--ink-soft);
+}
+.fp-empty-icon{
+  font-size: 2rem;
+  margin-bottom: 12px;
+  opacity: .6;
+}
+.fp-empty-state h3{
+  color: var(--ink);
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+}
+.fp-empty-state p{
+  font-size: .85rem;
+  max-width: 40ch;
+  margin: 0 auto 16px;
+}
+

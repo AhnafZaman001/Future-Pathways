@@ -43,10 +43,16 @@
         </div>
       </div>
       <nav class="site-nav">
+        <a href="index.html" class="nav-link is-active">Dashboard</a>
+        <a href="admin.html" class="nav-link" id="nav-admin-link" hidden>Submissions</a>
+        <a href="pathways.html" class="nav-link">Future Pathways form</a>
+        <a href="rankings.html" class="nav-link">University Explorer</a>
+        <a href="merit.html" class="nav-link">Merit guide</a>
+        <a href="merit-calculator.html" class="nav-link">Calculator</a>
         <button type="button" id="viewUnisBtn" class="nav-link">View all universities</button>
         <span class="nav-spacer"></span>
         <button type="button" id="themeToggle" class="theme-toggle" aria-label="Switch to light theme"><span class="theme-toggle-glyph"></span><span class="theme-toggle-label">Dark</span></button>
-      <button type="button" id="fp-logout" class="nav-link is-muted">Log out</button>
+        <button type="button" id="fp-logout" class="nav-link is-muted">Log out</button>
       </nav>
     </div>
   </header>
@@ -260,6 +266,7 @@
   <script src="js/theme-toggle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/fp-client.js"></script>
+  <script src="js/fp-toast.js"></script>
   <script src="js/fp-saved-forms.js"></script>
   <script>
     FP.requireAuth().then(function(result){
@@ -271,6 +278,10 @@
       }
       window.Dashboard && window.Dashboard.init(result);
       var role = result.profile ? result.profile.role : "student";
+      if(role === "counsellor" || role === "admin"){
+        var adminLink = document.getElementById("nav-admin-link");
+        if(adminLink) adminLink.hidden = false;
+      }
       if(FP.initSavedSubmissionsWidget){
         FP.initSavedSubmissionsWidget(role);
       }

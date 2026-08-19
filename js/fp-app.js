@@ -141,11 +141,13 @@
       addStudentBtn.textContent = "Creating\u2026";
       FP.client.rpc("counsellor_create_student").then(function(r){
         if(r.error){
-          alert("Could not create student: " + r.error.message);
+          if(FP.toast) FP.toast.error("Could not create student: " + r.error.message);
+          else alert("Could not create student: " + r.error.message);
           addStudentBtn.disabled = false;
           addStudentBtn.textContent = "+ Add new student";
           return;
         }
+        if(FP.toast) FP.toast.success("Student created");
         window.location.href = "pathways.html?student=" + encodeURIComponent(r.data);
       });
     });
@@ -818,7 +820,11 @@
     if((state.status === "submitted" && !state.actingAsStaff) || state.saving) return;
     var step = STEPS[state.stepIndex];
     var err = validateStep(step);
-    if(err){ alert(err); return; }
+    if(err){
+      if(FP.toast) FP.toast.error(err);
+      else alert(err);
+      return;
+    }
 
     state.saving = true;
     var nextBtn = document.getElementById("fp-next");
@@ -836,7 +842,8 @@
       console.error(e);
       state.saving = false;
       nextBtn.disabled = false;
-      alert("Something went wrong saving that step: " + (e.message || e));
+      if(FP.toast) FP.toast.error("Something went wrong saving that step: " + (e.message || e));
+      else alert("Something went wrong saving that step: " + (e.message || e));
     });
   });
 })();

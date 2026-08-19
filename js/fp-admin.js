@@ -66,19 +66,64 @@
       addStudentBtn.textContent = "Creating\u2026";
       FP.client.rpc("counsellor_create_student").then(function(r){
         if(r.error){
-          alert("Could not create student: " + r.error.message);
+          FP.toast.error("Could not create student: " + r.error.message);
           addStudentBtn.disabled = false;
           addStudentBtn.textContent = "+ Add new student";
           return;
         }
+        FP.toast.success("Student account created");
         window.location.href = "pathways.html?student=" + encodeURIComponent(r.data);
       });
     });
   }
 
-  // "First priority" = preference_group 1, rank 1 -- the one unambiguous
-  // single "top choice" given the schema has multiple preference groups
-  // per student (2 for medical, 4 for engineering).
+  // Export CSV
+  var exportCsvBtn = document.getElementById("fp-export-csv");
+  if(exportCsvBtn){
+    exportCsvBtn.addEventListener("click", function(){
+      exportSubmissionsToCSV();
+    });
+  }
+
+  function exportSubmissionsToCSV(){
+    var filtered = getFilteredSubmissions();
+    if(!filtered.length){
+      FP.toast.info("No submissions match the current filters to export.");
+      return;
+    }
+    var headers = ["Student Name", "Father Name", "Contact", "Roll Number", "Matric Marks", "First Year Marks", "Pathway", "First Priority", "Status", "Submitted At"];
+    var rows = filtered.map(function(s){
+      var p = s.students || {};
+      return [
+        titleCase(p.student_name || ""),
+        titleCase(p.father_name || ""),
+        p.contact || "",
+        p.roll_number || "",
+        p.matric_marks || "",
+        p.first_year_marks || "",
+        s.pathway || "",
+        firstPriorityByFpId[s.id] || "",
+        s.status || "",
+        s.submitted_at ? new Date(s.submitted_at).toLocaleString() : ""
+      ].map(function(val){
+        var str = String(val).replace(/"/g, '""');
+        return '"' + str + '"';
+      }).join(",");
+    });
+    var csvContent = headers.join(",") + "\r\n" + rows.join("\r\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "future_pathways_students_" + new Date().toISOString().slice(0,10) + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    FP.toast.success("Exported " + filtered.length + " students to CSV");
+  }
+
+  // "First priority" = preference_group 1, rank 1
   function applyFirstPriorities(r){
     if(r.error){ console.error(r.error); return; }
     (r.data||[]).forEach(function(row){
@@ -86,15 +131,11 @@
       if(name) firstPriorityByFpId[row.future_pathway_id] = name;
     });
 
-    // Dropdown shows ONLY institutes that are actually someone's
-    // first priority right now -- not the full master list. An
-    // institute nobody has picked yet (e.g. seeded but unused)
-    // stays out of the dropdown until a real submission names it.
     var usedNames = Array.from(new Set(Object.values(firstPriorityByFpId))).sort();
     var select = document.getElementById("filter-first-priority");
     select.innerHTML = '<option value="">All</option>' +
       usedNames.map(function(n){ return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join("");
-    renderTable(); // in case submissions already rendered before this resolved
+    renderTable();
   }
 
   function applySubmissions(r){
@@ -124,6 +165,8 @@
   }
 
   var selectedIds = new Set();
+  var sortState = { col: null, dir: "asc" };
+  var paginationState = { page: 1, pageSize: 25 };
 
   function closeBulkMenu(){
     var menu = document.getElementById("fp-bulk-dropdown-menu");
@@ -170,25 +213,218 @@
     }
   }
 
-  function renderTable(){
-    var nameFilter = document.getElementById("filter-name").value.trim().toLowerCase();
+  function getFilteredSubmissions(){
+    var nameFilter = (document.getElementById("filter-name").value || "").trim().toLowerCase();
     var pathwayFilter = document.getElementById("filter-pathway").value;
     var statusFilter = document.getElementById("filter-status").value;
     var firstPriorityFilter = document.getElementById("filter-first-priority").value;
-    var rows = submissions.filter(function(s){
+    return submissions.filter(function(s){
       var studentName = ((s.students && s.students.student_name) || "").toLowerCase();
       return (!nameFilter || studentName.indexOf(nameFilter) !== -1)
         && (!pathwayFilter || s.pathway === pathwayFilter)
         && (!statusFilter || s.status === statusFilter)
         && (!firstPriorityFilter || firstPriorityByFpId[s.id] === firstPriorityFilter);
     });
-    document.getElementById("fp-admin-tbody").innerHTML = rows.map(function(s){
+  }
+
+  function sortRows(rows){
+    if(!sortState.col) return rows;
+    return rows.slice().sort(function(a, b){
+      var valA, valB;
+      if(sortState.col === "name"){
+        valA = ((a.students && a.students.student_name) || "").toLowerCase();
+        valB = ((b.students && b.students.student_name) || "").toLowerCase();
+      } else if(sortState.col === "pathway"){
+        valA = (a.pathway || "").toLowerCase();
+        valB = (b.pathway || "").toLowerCase();
+      } else if(sortState.col === "first_priority"){
+        valA = (firstPriorityByFpId[a.id] || "").toLowerCase();
+        valB = (firstPriorityByFpId[b.id] || "").toLowerCase();
+      } else if(sortState.col === "status"){
+        valA = (a.status || "").toLowerCase();
+        valB = (b.status || "").toLowerCase();
+      } else if(sortState.col === "submitted_at"){
+        valA = a.submitted_at ? new Date(a.submitted_at).getTime() : 0;
+        valB = b.submitted_at ? new Date(b.submitted_at).getTime() : 0;
+      } else {
+        valA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        valB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      }
+      if(valA < valB) return sortState.dir === "asc" ? -1 : 1;
+      if(valA > valB) return sortState.dir === "asc" ? 1 : -1;
+      return 0;
+    });
+  }
+
+  function renderFilterChips(){
+    var chipsContainer = document.getElementById("fp-active-filter-chips");
+    if(!chipsContainer) return;
+    var name = (document.getElementById("filter-name").value || "").trim();
+    var pathway = document.getElementById("filter-pathway").value;
+    var status = document.getElementById("filter-status").value;
+    var firstPrio = document.getElementById("filter-first-priority").value;
+
+    var chips = [];
+    if(name) chips.push({ type: "name", label: 'Search: "' + name + '"' });
+    if(pathway) chips.push({ type: "pathway", label: 'Pathway: ' + (pathway === "engineering" ? "Engineering" : "Medical") });
+    if(status) chips.push({ type: "status", label: 'Status: ' + status });
+    if(firstPrio) chips.push({ type: "first_priority", label: '1st Choice: ' + firstPrio });
+
+    if(!chips.length){
+      chipsContainer.hidden = true;
+      chipsContainer.innerHTML = "";
+      return;
+    }
+
+    chipsContainer.hidden = false;
+    chipsContainer.innerHTML = chips.map(function(c){
+      return '<span class="fp-chip"><span>' + esc(c.label) + '</span> <button type="button" class="fp-chip-remove" data-chip="' + c.type + '" aria-label="Remove filter">&times;</button></span>';
+    }).join("") + '<button type="button" class="fp-chip-clear-all" id="fp-clear-all-chips">Clear filters</button>';
+
+    chipsContainer.querySelectorAll(".fp-chip-remove").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var t = btn.dataset.chip;
+        if(t === "name") document.getElementById("filter-name").value = "";
+        if(t === "pathway") document.getElementById("filter-pathway").value = "";
+        if(t === "status") document.getElementById("filter-status").value = "";
+        if(t === "first_priority") document.getElementById("filter-first-priority").value = "";
+        paginationState.page = 1;
+        renderTable();
+      });
+    });
+
+    var clearAll = document.getElementById("fp-clear-all-chips");
+    if(clearAll){
+      clearAll.addEventListener("click", function(){
+        document.getElementById("filter-name").value = "";
+        document.getElementById("filter-pathway").value = "";
+        document.getElementById("filter-status").value = "";
+        document.getElementById("filter-first-priority").value = "";
+        paginationState.page = 1;
+        renderTable();
+      });
+    }
+  }
+
+  function renderPagination(totalCount){
+    var bar = document.getElementById("fp-pagination-bar");
+    if(!bar) return;
+    if(totalCount === 0){
+      bar.hidden = true;
+      return;
+    }
+    bar.hidden = false;
+
+    var size = paginationState.pageSize === "all" ? totalCount : parseInt(paginationState.pageSize, 10);
+    var totalPages = Math.ceil(totalCount / size) || 1;
+    if(paginationState.page > totalPages) paginationState.page = totalPages;
+
+    var startIdx = paginationState.pageSize === "all" ? 1 : ((paginationState.page - 1) * size + 1);
+    var endIdx = paginationState.pageSize === "all" ? totalCount : Math.min(paginationState.page * size, totalCount);
+
+    bar.innerHTML =
+      '<div class="fp-pagination-info">Showing <strong>' + startIdx + '&ndash;' + endIdx + '</strong> of <strong>' + totalCount + '</strong> students</div>' +
+      '<div class="fp-pagination-controls">' +
+        '<label style="display:inline-flex; align-items:center; gap:6px; font-size:.74rem; font-family:var(--font-mono);">' +
+          'Rows:' +
+          '<select class="fp-page-size-select" id="fp-page-size-select">' +
+            '<option value="25"' + (paginationState.pageSize == 25 ? ' selected' : '') + '>25</option>' +
+            '<option value="50"' + (paginationState.pageSize == 50 ? ' selected' : '') + '>50</option>' +
+            '<option value="100"' + (paginationState.pageSize == 100 ? ' selected' : '') + '>100</option>' +
+            '<option value="all"' + (paginationState.pageSize === 'all' ? ' selected' : '') + '>All</option>' +
+          '</select>' +
+        '</label>' +
+        '<button type="button" class="fp-page-btn" id="fp-page-prev"' + (paginationState.page <= 1 ? ' disabled' : '') + '>&larr; Prev</button>' +
+        '<span style="font-family:var(--font-mono); font-size:.74rem; padding: 0 4px;">' + paginationState.page + ' / ' + totalPages + '</span>' +
+        '<button type="button" class="fp-page-btn" id="fp-page-next"' + (paginationState.page >= totalPages ? ' disabled' : '') + '>Next &rarr;</button>' +
+      '</div>';
+
+    var pageSizeSelect = document.getElementById("fp-page-size-select");
+    if(pageSizeSelect){
+      pageSizeSelect.addEventListener("change", function(e){
+        paginationState.pageSize = e.target.value;
+        paginationState.page = 1;
+        renderTable();
+      });
+    }
+    var prevBtn = document.getElementById("fp-page-prev");
+    if(prevBtn){
+      prevBtn.addEventListener("click", function(){
+        if(paginationState.page > 1){
+          paginationState.page--;
+          renderTable();
+        }
+      });
+    }
+    var nextBtn = document.getElementById("fp-page-next");
+    if(nextBtn){
+      nextBtn.addEventListener("click", function(){
+        if(paginationState.page < totalPages){
+          paginationState.page++;
+          renderTable();
+        }
+      });
+    }
+  }
+
+  function updateSortHeaders(){
+    document.querySelectorAll(".fp-th-sortable").forEach(function(th){
+      var col = th.dataset.sort;
+      var icon = th.querySelector(".fp-th-sort-icon");
+      if(sortState.col === col){
+        th.classList.add("is-sorted");
+        if(icon) icon.innerHTML = sortState.dir === "asc" ? "&#9650;" : "&#9660;";
+      } else {
+        th.classList.remove("is-sorted");
+        if(icon) icon.innerHTML = "&#8693;";
+      }
+    });
+  }
+
+  function renderTable(){
+    renderFilterChips();
+    var filtered = getFilteredSubmissions();
+    var sorted = sortRows(filtered);
+    updateSortHeaders();
+
+    var totalCount = sorted.length;
+    var size = paginationState.pageSize === "all" ? totalCount : parseInt(paginationState.pageSize, 10);
+    var start = paginationState.pageSize === "all" ? 0 : (paginationState.page - 1) * size;
+    var pagedRows = sorted.slice(start, start + size);
+
+    var tbody = document.getElementById("fp-admin-tbody");
+    if(totalCount === 0){
+      tbody.innerHTML =
+        '<tr><td colspan="7">' +
+          '<div class="fp-empty-state">' +
+            '<div class="fp-empty-icon">&#128269;</div>' +
+            '<h3>No students found</h3>' +
+            '<p>No submissions match the current filters. Try changing your search query or reset filters.</p>' +
+            '<button type="button" class="btn-secondary" id="fp-empty-reset-btn">Reset all filters</button>' +
+          '</div>' +
+        '</td></tr>';
+      var emptyResetBtn = document.getElementById("fp-empty-reset-btn");
+      if(emptyResetBtn){
+        emptyResetBtn.addEventListener("click", function(){
+          document.getElementById("filter-name").value = "";
+          document.getElementById("filter-pathway").value = "";
+          document.getElementById("filter-status").value = "";
+          document.getElementById("filter-first-priority").value = "";
+          paginationState.page = 1;
+          renderTable();
+        });
+      }
+      renderPagination(0);
+      return;
+    }
+
+    tbody.innerHTML = pagedRows.map(function(s){
       var name = titleCase((s.students && s.students.student_name) || "") || "(no profile yet)";
       var firstPriority = firstPriorityByFpId[s.id] || "\u2014";
       var checked = selectedIds.has(s.id) ? " checked" : "";
       return '<tr data-id="' + s.id + '">' +
         '<td class="fp-select-td"><label class="fp-select-cell"><input type="checkbox" class="fp-row-select" data-id="' + s.id + '" aria-label="Select ' + esc(name) + '"' + checked + '></label></td>' +
-        '<td>' + esc(name) + '</td>' +
+        '<td><strong>' + esc(name) + '</strong></td>' +
         '<td class="fp-cap">' + esc(s.pathway) + '</td>' +
         '<td>' + esc(firstPriority) + '</td>' +
         '<td><span class="fp-badge ' + s.status + '">' + s.status + '</span></td>' +
@@ -199,7 +435,7 @@
           '<button type="button" class="fp-row-action-link fp-row-action-delete" data-delete-id="' + s.id + '" data-student-id="' + esc(s.student_id) + '">Delete</button>' +
         '</td>' +
       '</tr>';
-    }).join("") || '<tr><td colspan="7">No submissions match these filters.</td></tr>';
+    }).join("");
 
     document.querySelectorAll("#fp-admin-tbody tr[data-id]").forEach(function(tr){
       tr.addEventListener("click", function(e){
@@ -234,6 +470,7 @@
           sub.submitted_at = null;
           sub.additional_information = null;
           selectedIds.delete(fpId);
+          FP.toast.success("Reset " + (studentName || "student") + "'s form to draft");
           renderStatsStrip();
           renderTable();
           updateBulkActionsBar();
@@ -254,6 +491,7 @@
           if(!ok) return;
           submissions = submissions.filter(function(x){ return x.id !== fpId; });
           selectedIds.delete(fpId);
+          FP.toast.success("Deleted " + (studentName || "student") + "'s account");
           renderStatsStrip();
           renderTable();
           updateBulkActionsBar();
@@ -264,190 +502,8 @@
     var selectAllBox = document.getElementById("fp-select-all");
     var visibleBoxesNow = document.querySelectorAll("#fp-admin-tbody .fp-row-select");
     selectAllBox.checked = visibleBoxesNow.length > 0 && Array.from(visibleBoxesNow).every(function(b){ return b.checked; });
-  }
 
-  document.getElementById("fp-select-all").addEventListener("change", function(e){
-    var checked = e.target.checked;
-    document.querySelectorAll("#fp-admin-tbody .fp-row-select").forEach(function(cb){
-      cb.checked = checked;
-      if(checked) selectedIds.add(cb.dataset.id);
-      else selectedIds.delete(cb.dataset.id);
-    });
-    updateBulkActionsBar();
-  });
-
-  // Bulk Actions Dropdown toggle & dismiss
-  var bulkToggle = document.getElementById("fp-bulk-dropdown-toggle");
-  if(bulkToggle){
-    bulkToggle.addEventListener("click", toggleBulkMenu);
-  }
-  document.addEventListener("click", function(e){
-    var menu = document.getElementById("fp-bulk-dropdown-menu");
-    if(menu && !menu.hidden && !e.target.closest(".fp-bulk-menu-wrapper")){
-      closeBulkMenu();
-    }
-  });
-  document.addEventListener("keydown", function(e){
-    if(e.key === "Escape"){
-      closeBulkMenu();
-    }
-  });
-
-  function handleBulkClear(){
-    closeBulkMenu();
-    var ids = Array.from(selectedIds);
-    if(!ids.length) return;
-
-    var names = ids.map(function(id){
-      var sub = submissions.find(function(x){ return x.id === id; });
-      return sub ? (titleCase((sub.students && sub.students.student_name) || "") || null) : null;
-    }).filter(Boolean);
-
-    var count = ids.length;
-    var confirmMsg = "Reset " + count + " student" + (count === 1 ? "" : "s") + "'s form" + (count === 1 ? "" : "s") + " back to editable drafts?\n\n" +
-      (names.length ? names.slice(0, 6).join(", ") + (names.length > 6 ? ", and " + (names.length - 6) + " more" : "") + "\n\n" : "") +
-      "This clears their submitted answers (institute/faculty/program preferences and additional info) but keeps their accounts and profile info intact.";
-
-    FP.confirm(confirmMsg).then(function(confirmed){
-      if(!confirmed) return;
-      setBulkLoading(true, "Clearing data\u2026");
-      Promise.all(ids.map(function(id){
-        return new Promise(function(resolve){
-          performReset(id, null, function(ok){
-            if(ok){
-              var sub = submissions.find(function(x){ return x.id === id; });
-              if(sub){ sub.status = "draft"; sub.submitted_at = null; sub.additional_information = null; }
-              selectedIds.delete(id);
-            }
-            resolve();
-          });
-        });
-      })).then(function(){
-        setBulkLoading(false);
-        renderStatsStrip();
-        renderTable();
-        updateBulkActionsBar();
-      });
-    });
-  }
-
-  function handleBulkDelete(){
-    closeBulkMenu();
-    var ids = Array.from(selectedIds);
-    if(!ids.length) return;
-
-    var studentMap = [];
-    ids.forEach(function(id){
-      var sub = submissions.find(function(x){ return x.id === id; });
-      if(sub && sub.student_id){
-        studentMap.push({
-          fpId: id,
-          studentId: sub.student_id,
-          name: titleCase((sub.students && sub.students.student_name) || "")
-        });
-      }
-    });
-
-    if(!studentMap.length) return;
-
-    var count = studentMap.length;
-    var names = studentMap.map(function(s){ return s.name; }).filter(Boolean);
-
-    var confirmMsg = "Permanently delete " + count + " student account" + (count === 1 ? "" : "s") + "?\n\n" +
-      (names.length ? names.slice(0, 6).join(", ") + (names.length > 6 ? ", and " + (names.length - 6) + " more" : "") + "\n\n" : "") +
-      "This removes their names, profiles, and all submitted answers from the database completely. This CANNOT be undone.\n\n" +
-      "If you only want to clear their submitted answers and let them start over, use \u201cClear data\u201d instead.";
-
-    FP.confirm(confirmMsg).then(function(confirmed){
-      if(!confirmed) return;
-      setBulkLoading(true, "Deleting accounts\u2026");
-      var deletedFpIds = new Set();
-      Promise.all(studentMap.map(function(item){
-        return new Promise(function(resolve){
-          performDelete(item.studentId, null, function(ok){
-            if(ok){
-              deletedFpIds.add(item.fpId);
-              selectedIds.delete(item.fpId);
-            }
-            resolve();
-          });
-        });
-      })).then(function(){
-        submissions = submissions.filter(function(x){ return !deletedFpIds.has(x.id); });
-        setBulkLoading(false);
-        renderStatsStrip();
-        renderTable();
-        updateBulkActionsBar();
-      });
-    });
-  }
-
-  var bulkClearBtn = document.getElementById("fp-bulk-clear");
-  if(bulkClearBtn) bulkClearBtn.addEventListener("click", handleBulkClear);
-
-  var bulkClearDirect = document.getElementById("fp-bulk-clear-direct");
-  if(bulkClearDirect) bulkClearDirect.addEventListener("click", handleBulkClear);
-
-  var bulkDeleteBtn = document.getElementById("fp-bulk-delete");
-  if(bulkDeleteBtn) bulkDeleteBtn.addEventListener("click", handleBulkDelete);
-
-  var bulkDeleteDirect = document.getElementById("fp-bulk-delete-direct");
-  if(bulkDeleteDirect) bulkDeleteDirect.addEventListener("click", handleBulkDelete);
-
-  document.getElementById("filter-name").addEventListener("input", renderTable);
-  document.getElementById("filter-pathway").addEventListener("change", renderTable);
-  document.getElementById("filter-status").addEventListener("change", renderTable);
-  document.getElementById("filter-first-priority").addEventListener("change", renderTable);
-
-  // Shared "reset/clear" action -- reset to an editable draft, keep the account
-  function performReset(fpId, triggerBtn, onDone){
-    if(triggerBtn) triggerBtn.disabled = true;
-    FP.client.rpc("counsellor_reset_submission", { p_future_pathway_id: fpId }).then(function(r){
-      if(r.error){
-        alert("Could not reset: " + r.error.message);
-        if(triggerBtn) triggerBtn.disabled = false;
-        onDone(false);
-        return;
-      }
-      onDone(true);
-    });
-  }
-
-  function resetSubmission(fpId, studentName, triggerBtn, onDone){
-    var confirmMsg = "Reset " + (studentName || "this student") + "'s form back to an editable draft?\n\n" +
-      "This clears their submitted answers (institute/faculty/program preferences and additional information) " +
-      "but keeps their account and profile info (name, roll number, marks) intact.";
-
-    FP.confirm(confirmMsg).then(function(confirmed){
-      if(!confirmed){ onDone(false); return; }
-      performReset(fpId, triggerBtn, onDone);
-    });
-  }
-
-  // Shared "delete" action -- REAL, PERMANENT deletion via counsellor_delete_student
-  function performDelete(studentId, triggerBtn, onDone){
-    if(triggerBtn) triggerBtn.disabled = true;
-    FP.client.rpc("counsellor_delete_student", { p_student_id: studentId }).then(function(r){
-      if(r.error){
-        alert("Could not delete: " + r.error.message);
-        if(triggerBtn) triggerBtn.disabled = false;
-        onDone(false);
-        return;
-      }
-      onDone(true);
-    });
-  }
-
-  function deleteStudent(studentId, studentName, triggerBtn, onDone){
-    var confirmMsg = "Permanently delete " + (studentName || "this student") + "'s account?\n\n" +
-      "This removes their name, profile, and every submitted answer from the database completely \u2014 " +
-      "not just this form. This cannot be undone. If you only want to clear their submitted answers " +
-      "and let them start over, use \u201cClear data\u201d instead.";
-
-    FP.confirm(confirmMsg).then(function(confirmed){
-      if(!confirmed){ onDone(false); return; }
-      performDelete(studentId, triggerBtn, onDone);
-    });
+    renderPagination(totalCount);
   }
 
   function esc(s){
@@ -456,11 +512,7 @@
     });
   }
 
-  // Source data (real school records) has names in ALL CAPS; display
-  // formatting shouldn't mutate the underlying stored value, just how
-  // it's shown here. Straightforward per-word capitalization -- not
-  // attempting name-particle exceptions (bin/binte/ul- etc), which
-  // would need per-name judgment calls this shouldn't be guessing at.
+  // Source data (real school records) has names in ALL CAPS
   function titleCase(s){
     return String(s || "").toLowerCase().replace(/\b\w/g, function(c){ return c.toUpperCase(); });
   }
@@ -487,11 +539,7 @@
     });
   }
 
-  // Four independently-collapsible sections (institute pathway has 4
-  // groups, medical has 2) -- each shows that group's 5 ranked
-  // preferences when expanded. Not tabs: more than one group can be
-  // open at once, since a counsellor comparing groups 1 and 3 side
-  // by side shouldn't have to close one to see the other.
+  // Four independently-collapsible sections
   function groupedAccordion(rows, nameLookup, idPrefix){
     var byGroup = {};
     rows.forEach(function(r){
@@ -569,7 +617,6 @@
           '<label>Principal<input type="text" id="eval-principal" value="' + esc(evalRow.principal||"") + '"></label>' +
           '<label>Remarks<textarea id="eval-remarks" rows="4" style="width:100%; font-family:var(--font-body); padding:10px 12px; border:1px solid var(--line-strong); border-radius:var(--radius-sm);">' + esc(evalRow.remarks||"") + '</textarea></label>' +
           '<button type="button" class="btn-primary" id="eval-save">Save evaluation</button>' +
-          '<p class="fp-note" id="eval-saved" hidden>Saved.</p>' +
         '</div>' +
       '</div>';
 
@@ -595,8 +642,9 @@
           sub.status = "draft";
           sub.submitted_at = null;
           sub.additional_information = null;
+          FP.toast.success("Reset " + (p.student_name || "student") + "'s form to draft");
           renderStatsStrip();
-          openDetail(sub.id); // re-fetch and re-render with the cleared preferences
+          openDetail(sub.id);
         });
       });
     }
@@ -609,6 +657,7 @@
           submissions = submissions.filter(function(x){ return x.id !== sub.id; });
           document.getElementById("fp-admin-detail-view").hidden = true;
           document.getElementById("fp-admin-list-view").hidden = false;
+          FP.toast.success("Deleted " + (p.student_name || "student") + "'s account");
           renderStatsStrip();
           renderTable();
           updateBulkActionsBar();
@@ -617,6 +666,9 @@
     }
 
     document.getElementById("eval-save").addEventListener("click", function(){
+      var saveBtn = document.getElementById("eval-save");
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving\u2026";
       var record = { future_pathway_id: sub.id };
       for(var i=1;i<=12;i++){ record["recommendation_"+i] = document.querySelector('[data-rec="'+i+'"]').value; }
       record.counsellor_name = document.getElementById("eval-counsellor-name").value;
@@ -625,10 +677,13 @@
       record.remarks = document.getElementById("eval-remarks").value;
 
       FP.client.from("office_evaluations").upsert([record]).then(function(r){
-        if(r.error){ alert("Could not save: " + r.error.message); return; }
-        var el = document.getElementById("eval-saved");
-        el.hidden = false;
-        setTimeout(function(){ el.hidden = true; }, 2000);
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save evaluation";
+        if(r.error){
+          FP.toast.error("Could not save: " + r.error.message);
+          return;
+        }
+        FP.toast.success("Office evaluation saved successfully");
       });
     });
   }

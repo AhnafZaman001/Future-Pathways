@@ -1360,4 +1360,25 @@ action.
   `renderStatsStrip()` is called after all batch and individual delete/reset
   operations to keep total, submitted, and draft metrics synchronized.
 
+## Full SaaS UI/UX Overhaul: Toasts, Sortable Table, Pagination, CSV Export, Unified Shell
+
+Direct review and critique on product UI/UX led to a comprehensive SaaS upgrade:
+
+1. **Toast Notification System (`js/fp-toast.js`)**:
+   - Replaced all crude, blocking browser `alert(...)` dialogs with theme-aware, animated toast notifications (`FP.toast.success`, `FP.toast.error`, `FP.toast.info`, `FP.toast.loading`).
+   - Non-blocking, smooth entry/exit animations, loading spinners, and dismiss triggers.
+
+2. **Admin Data Table Supercharge (`admin.html`, `js/fp-admin.js`)**:
+   - **Clickable Sortable Columns**: Click table headers (Student, Pathway, First Priority, Status, Submitted) to toggle ascending/descending with arrow indicators (▲ / ▼ / ⇅).
+   - **Pagination Toolbar**: Page size selector (25, 50, 100, All), Previous / Next buttons, and live `Showing 1–25 of 95 students` metrics.
+   - **Faceted Active Filter Chips**: Clickable filter chips showing active queries with individual `✕` removal and a 1-click `Clear filters` button.
+   - **CSV Export**: One-click `Export CSV` button that downloads all current filtered/selected student records into an RFC-compliant `.csv` file.
+   - **Rich Empty State**: Beautiful empty search state with illustration and reset CTA when no students match filters.
+
+3. **Unified Navigation & Role-Based Routing**:
+   - Active navigation highlighting (`.nav-link.is-active`) across all pages so users always know their location.
+   - Role-based smart routing: Counsellors/admins landing on `login.html` are routed directly to the management hub (`admin.html`).
+   - Integrated `js/fp-toast.js` across every page.
+
+
 

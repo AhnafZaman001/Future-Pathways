@@ -62,11 +62,19 @@
   <script src="js/theme-toggle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/fp-client.js"></script>
+  <script src="js/fp-toast.js"></script>
   <script>
     (function(){
-      // If already signed in, skip straight to the app.
+      // If already signed in, route based on role
       FP.getSessionAndProfile().then(function(existing){
-        if(existing) window.location.href = "index.html";
+        if(existing){
+          var role = existing.profile ? existing.profile.role : "student";
+          if(role === "counsellor" || role === "admin"){
+            window.location.href = "admin.html";
+          } else {
+            window.location.href = "index.html";
+          }
+        }
       });
 
       var form = document.getElementById("login-form");
@@ -80,10 +88,19 @@
         var email = document.getElementById("login-email").value.trim();
         var password = document.getElementById("login-password").value;
         FP.signIn(email, password).then(function(){
-          window.location.href = "index.html";
+          return FP.getSessionAndProfile();
+        }).then(function(res){
+          var role = res && res.profile ? res.profile.role : "student";
+          if(role === "counsellor" || role === "admin"){
+            window.location.href = "admin.html";
+          } else {
+            window.location.href = "index.html";
+          }
         }).catch(function(err){
-          errBox.textContent = (err && err.message) || "Could not sign in. Check your email and password.";
+          var msg = (err && err.message) || "Could not sign in. Check your email and password.";
+          errBox.textContent = msg;
           errBox.hidden = false;
+          if(window.FP && window.FP.toast) FP.toast.error(msg);
           btn.disabled = false; btn.textContent = "Sign In";
         });
       });

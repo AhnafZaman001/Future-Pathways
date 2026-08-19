@@ -44,8 +44,10 @@
   <main class="wrap" style="max-width:960px;">
     <div class="fp-topbar">
       <a href="index.html" class="nav-link">&larr; Back to dashboard</a>
+      <a href="admin.html" class="nav-link is-active">Student submissions</a>
       <a href="merit.html" class="nav-link">Merit &amp; entry test guide</a>
       <a href="merit-calculator.html" class="nav-link">Calculate your merit</a>
+      <a href="rankings.html" class="nav-link">University Explorer</a>
       <span class="nav-spacer"></span>
       <button type="button" id="themeToggle" class="theme-toggle" aria-label="Switch to light theme"><span class="theme-toggle-glyph"></span><span class="theme-toggle-label">Dark</span></button>
       <button type="button" id="fp-logout" class="nav-link is-muted">Log out</button>
@@ -57,11 +59,14 @@
       <div class="fp-stats-strip" id="fp-stats-strip"></div>
 
       <div class="fp-card">
-        <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
           <h2 class="fp-step-title" style="margin-bottom:0;">Submissions</h2>
-          <button type="button" class="btn-primary" id="fp-admin-add-student">+ Add new student</button>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button type="button" class="btn-secondary" id="fp-export-csv" title="Export filtered records as CSV">&#8681; Export CSV</button>
+            <button type="button" class="btn-primary" id="fp-admin-add-student">+ Add new student</button>
+          </div>
         </div>
-        <div class="fp-grid-2" style="margin-bottom:16px;">
+        <div class="fp-grid-2" style="margin-bottom:10px;">
           <label>Search by name
             <input type="search" id="filter-name" placeholder="Type a name…" autocomplete="off">
           </label>
@@ -85,6 +90,7 @@
             </select>
           </label>
         </div>
+        <div id="fp-active-filter-chips" class="fp-filter-chips" style="margin-bottom:16px;" hidden></div>
         <div id="fp-bulk-actions" class="fp-bulk-actions" hidden>
           <span id="fp-bulk-count" class="fp-bulk-count"></span>
           <div class="fp-bulk-menu-wrapper">
@@ -108,11 +114,20 @@
         <div style="overflow-x:auto;">
           <table class="fp-admin-table" id="fp-admin-table">
             <thead>
-              <tr><th style="width:1%;"><input type="checkbox" id="fp-select-all" aria-label="Select all"></th><th>Student</th><th>Pathway</th><th>First Priority</th><th>Status</th><th>Submitted</th><th>Actions</th></tr>
+              <tr>
+                <th style="width:1%;"><input type="checkbox" id="fp-select-all" aria-label="Select all"></th>
+                <th class="fp-th-sortable" data-sort="name"><button type="button" class="fp-th-btn">Student <span class="fp-th-sort-icon">&#8693;</span></button></th>
+                <th class="fp-th-sortable" data-sort="pathway"><button type="button" class="fp-th-btn">Pathway <span class="fp-th-sort-icon">&#8693;</span></button></th>
+                <th class="fp-th-sortable" data-sort="first_priority"><button type="button" class="fp-th-btn">First Priority <span class="fp-th-sort-icon">&#8693;</span></button></th>
+                <th class="fp-th-sortable" data-sort="status"><button type="button" class="fp-th-btn">Status <span class="fp-th-sort-icon">&#8693;</span></button></th>
+                <th class="fp-th-sortable" data-sort="submitted_at"><button type="button" class="fp-th-btn">Submitted <span class="fp-th-sort-icon">&#8693;</span></button></th>
+                <th>Actions</th>
+              </tr>
             </thead>
             <tbody id="fp-admin-tbody"></tbody>
           </table>
         </div>
+        <div id="fp-pagination-bar" class="fp-pagination"></div>
       </div>
     </div>
 
@@ -122,6 +137,7 @@
   <script src="js/theme-toggle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/fp-client.js"></script>
+  <script src="js/fp-toast.js"></script>
   <script src="js/fp-confirm.js"></script>
   <script src="js/fp-admin.js"></script>
 </body>

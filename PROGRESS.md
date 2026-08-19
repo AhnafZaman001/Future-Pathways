@@ -1255,3 +1255,32 @@ already visible), and confirmed the placeholder text renders as a
 real ellipsis character, not a literal escape sequence (the same
 class of bug caught multiple times earlier in this project).
 
+## Checkbox click target: tiny, and near-misses opened the wrong thing
+
+Direct feedback: the row-select checkboxes were too small to click
+reliably, and missed clicks were landing on something else entirely
+(specifically: opening that student's detail view instead of
+selecting them). Traced the actual cause rather than just enlarging
+the checkbox and hoping — the row's click handler guarded against
+`.fp-row-select` (the checkbox element itself, ~14px), not the space
+around it. A click that missed the checkbox by even a couple of
+pixels landed on the surrounding `<td>`, which the guard didn't
+recognize, so it fell through to `openDetail()`. That's the exact
+mechanism behind "I go somewhere else."
+
+Two-part fix: the checkbox is now wrapped in a `<label>` that fills
+the *entire* cell (native HTML behavior — clicking anywhere in a
+label toggles its checkbox, not just the input itself), sized up to
+roughly 59×53px of clickable area with the checkbox itself enlarged
+to 20px and given the site's violet accent color instead of the
+unstyled browser default. The row-click guard was updated to match
+against `.fp-select-td` (the whole cell) instead of `.fp-row-select`
+(the checkbox alone), so the fallthrough-to-detail-view bug is fixed
+at its actual source, not just made less likely by a bigger target.
+
+Verified with a real precision test, not just a screenshot: clicked
+5px from the corner of the cell — deliberately nowhere near the
+checkbox's own bounds — and confirmed it still toggled the checkbox
+correctly and did *not* open the detail view, compared directly
+against a dead-center click for the same result.
+

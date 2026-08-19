@@ -400,6 +400,35 @@ body.is-review-step .fp-actions{ margin-top:28px; padding-top:20px; border-top:1
 
 .fp-row-actions{ white-space: nowrap; }
 
+/* Checkbox cell: the actual native checkbox is tiny and hard to hit
+   precisely -- a near-miss click used to fall through to opening
+   the row's detail view instead (the row click handler only guarded
+   against the checkbox element itself, not the space around it).
+   Fix is two-part: the label now fills the ENTIRE cell (so a click
+   anywhere in generous padding toggles the checkbox, not just a
+   ~14px box), and the row-click guard checks against this whole
+   cell too (see js/fp-admin.js). The checkbox itself is also
+   visually enlarged and given the site's accent color instead of
+   the tiny unstyled browser default. */
+.fp-select-td{ padding: 0 !important; }
+.fp-select-cell{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 52px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+.fp-select-cell input[type="checkbox"],
+#fp-select-all{
+  width: 20px;
+  height: 20px;
+  accent-color: var(--violet);
+  cursor: pointer;
+}
+
 .fp-bulk-actions{
   display: flex;
   align-items: center;

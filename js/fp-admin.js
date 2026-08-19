@@ -165,7 +165,7 @@
       var firstPriority = firstPriorityByFpId[s.id] || "\u2014";
       var checked = selectedIds.has(s.id) ? " checked" : "";
       return '<tr data-id="' + s.id + '">' +
-        '<td><input type="checkbox" class="fp-row-select" data-id="' + s.id + '" aria-label="Select ' + esc(name) + '"' + checked + '></td>' +
+        '<td class="fp-select-td"><label class="fp-select-cell"><input type="checkbox" class="fp-row-select" data-id="' + s.id + '" aria-label="Select ' + esc(name) + '"' + checked + '></label></td>' +
         '<td>' + esc(name) + '</td>' +
         '<td class="fp-cap">' + esc(s.pathway) + '</td>' +
         '<td>' + esc(firstPriority) + '</td>' +
@@ -180,7 +180,14 @@
 
     document.querySelectorAll("#fp-admin-tbody tr[data-id]").forEach(function(tr){
       tr.addEventListener("click", function(e){
-        if(e.target.closest(".fp-row-actions") || e.target.closest(".fp-row-select")) return; // let row actions/checkbox handle their own clicks
+        // Guard against the WHOLE checkbox cell, not just the tiny
+        // checkbox element itself -- a near-miss click that lands on
+        // the cell's padding (not precisely on the checkbox) used to
+        // fall through to opening the detail view instead, which is
+        // exactly the "I go somewhere else" complaint. The label now
+        // fills the whole cell (see .fp-select-cell below) so a click
+        // anywhere in it both toggles the checkbox AND is caught here.
+        if(e.target.closest(".fp-row-actions") || e.target.closest(".fp-select-td")) return;
         openDetail(tr.dataset.id);
       });
     });

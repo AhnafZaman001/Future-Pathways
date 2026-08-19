@@ -1044,3 +1044,30 @@ match, clearing back to all results, and case-insensitivity
 (uppercase query against a lowercase name and vice versa) all
 confirmed correct via real interaction, not just visual inspection.
 
+## Nav pills: full pill → matching button radius, site-wide
+
+`.nav-link` (every topbar button on every page — "View all
+universities", "Future Pathways form", "Log out", etc.) used
+`border-radius: 999px` — a full pill, a different shape from every
+other button on the site (`.btn-primary`/`.btn-secondary` both use
+`--radius-sm`). Direct feedback: this specific button read as
+generic/templated. The actual fix isn't a color or font tweak, it's
+shape consistency — `.nav-link` now uses the same `--radius-sm` as
+the rest of the button vocabulary, so there's one consistent
+"button" shape language across the site instead of pills as an
+outlier.
+
+Also added the same hover-lift treatment already established
+elsewhere (buttons, cards) — `translateY(-1px)` + a subtle shadow on
+hover — and switched the transition timing from hardcoded values to
+the shared `--dur-micro`/`--ease-out` tokens, matching everything
+else. One shared class, so this updates every page's topbar at
+once. Deliberately left `.fp-badge` (status tags) pill-shaped — that
+serves a different purpose (a tag/chip, not a clickable button) and
+shape-differentiating "clickable" from "label" is useful, not
+something to homogenize away.
+
+Verified via render: rest state next to `.btn-primary`/
+`.btn-secondary` for a direct shape comparison, hover state, and
+both themes.
+

@@ -1085,3 +1085,41 @@ glyph` (the small circular day/night indicator inside the button)
 also correctly stays round — that's a deliberate, meaningful shape,
 not an arbitrary pill.
 
+## Light theme: measured the "mixing into background" complaint, it was real
+
+Two complaints, same root cause: the isometric FIG diagrams almost
+invisible against the light-theme background, and the light theme
+overall reading as "totally white, no other color, hard to
+navigate." **Computed actual WCAG relative-luminance contrast
+ratios before touching anything**, rather than just eyeballing it —
+`--canvas` vs the diagram faces (which reused `--surface`/
+`--surface-2`) sat at 1.07-1.08:1. Under ~1.15:1 is essentially
+imperceptible without a border doing all the work — "mixing into
+the background" was a literal, measurable description, not just a
+feeling. `--canvas` vs `--surface-2` generally (page background vs.
+input fields, hover states) sat at only 1.07:1 too, explaining the
+"totally white" complaint — there wasn't enough tonal separation
+between page/card/input for anything to read as distinct.
+
+**Fix, verified with the same math before shipping**:
+1. Widened `--canvas`/`--surface`/`--surface-2` separation and gave
+   `--canvas` a visibly violet tint instead of near-neutral white
+   (`#F6F6FA` → `#EAE9F5`, `--surface-2` `#EEEEF4` → `#DFDCEF`) —
+   addresses "no other color" directly, not just the contrast math.
+2. New dedicated tokens for the isometric figure faces
+   (`--iso-top`/`--iso-left`/`--iso-right`) instead of reusing
+   `--surface`/`--surface-2` — **dark theme's tokens default to the
+   exact previous values** (`var(--surface-2)`/`var(--surface)` +
+   the same opacity), so dark mode is provably unchanged; light
+   theme gets dedicated solid colors with a real light-to-dark
+   gradient across the three faces (1.22:1 / 1.55:1 / 1.99:1 against
+   canvas) — both fixes the contrast problem and reads as more
+   three-dimensional than the flat opacity-blend dark mode uses.
+
+Verified via render, not just the math: the actual FIG 01 SVG in
+light mode (clearly visible now, real violet color, believable
+shading) side by side with dark mode confirmed pixel-identical to
+before, plus a general UI render (stats strip, card, input field) in
+light mode showing every surface now clearly distinguishable from
+the ones around it.
+

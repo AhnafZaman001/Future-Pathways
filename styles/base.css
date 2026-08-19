@@ -43,6 +43,17 @@
   --grid-line:        rgba(255,255,255,.028);
   --grid-line-strong: rgba(255,255,255,.055);
 
+  /* --- isometric figure faces (login/dashboard FIG illustrations) ---
+     Dark theme: unchanged from the original implementation (reuses
+     --surface/--surface-2 + opacity for the 3-face shading). Light
+     theme overrides these with dedicated solid colors instead --
+     see the [data-theme="light"] block for why. */
+  --iso-top:           var(--surface-2);
+  --iso-left:          var(--surface);
+  --iso-right:         var(--surface-2);
+  --iso-left-opacity:  .8;
+  --iso-right-opacity: .9;
+
   /* --- type --- */
   --font-display: 'Inter Tight', 'Inter', -apple-system, sans-serif;
   --font-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -101,11 +112,11 @@
       change, only where contrast math requires it to.
    ----------------------------------------------------------- */
 [data-theme="light"]{
-  --canvas:      #F6F6FA;
+  --canvas:      #EAE9F5;
   --surface:     #FFFFFF;
-  --surface-2:   #EEEEF4;
-  --border:      rgba(20,18,40,.09);
-  --border-strong: rgba(20,18,40,.16);
+  --surface-2:   #DFDCEF;
+  --border:      rgba(20,18,40,.1);
+  --border-strong: rgba(20,18,40,.18);
 
   --ink:         #16161C;
   --ink-soft:    #5B5E6B;
@@ -120,8 +131,31 @@
   --red:         #C93E37;
   --red-dim:     rgba(201,62,55,.12);
 
-  --grid-line:        rgba(20,18,40,.035);
-  --grid-line-strong: rgba(20,18,40,.07);
+  --grid-line:        rgba(20,18,40,.04);
+  --grid-line-strong: rgba(20,18,40,.08);
+
+  /* Measured, not guessed: canvas/surface/surface-2 sat around
+     1.07-1.16:1 contrast against each other before this change --
+     under ~1.15:1 is essentially imperceptible without a border
+     doing all the work, confirmed by computing real WCAG relative-
+     luminance contrast ratios, not just looking at it. Isometric
+     figure faces specifically (which reused --surface/--surface-2)
+     sat at 1.07-1.08:1 against the canvas -- "mixing into the
+     background" was a literal, measurable description, not just a
+     feeling. These dedicated colors (not reused from
+     canvas/surface/surface-2) give the figures a real light-to-
+     dark gradient across their three faces -- 1.22:1 / 1.55:1 /
+     1.99:1 against canvas respectively -- both fixing the contrast
+     problem and reading as more three-dimensional (a lit top face,
+     progressively shadowed sides) than the flat opacity-blend the
+     dark theme uses. Also gives the light theme actual violet hue
+     in it rather than being pure neutral gray, addressing "no
+     other color, totally white" directly. */
+  --iso-top:           #D6D2EE;
+  --iso-left:          #C0B9E2;
+  --iso-right:         #AAA1D6;
+  --iso-left-opacity:  1;
+  --iso-right-opacity: 1;
 
   --shadow-card: 0 1px 2px rgba(20,18,40,.04), 0 6px 20px rgba(20,18,40,.06);
 }

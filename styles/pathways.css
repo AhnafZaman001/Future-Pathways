@@ -105,9 +105,9 @@
   stroke: var(--border-strong);
   stroke-width: 1;
 }
-.iso-face-top{ fill: var(--surface-2); }
-.iso-face-left{ fill: var(--surface); opacity: .8; }
-.iso-face-right{ fill: var(--surface-2); opacity: .9; }
+.iso-face-top{ fill: var(--iso-top); }
+.iso-face-left{ fill: var(--iso-left); opacity: var(--iso-left-opacity); }
+.iso-face-right{ fill: var(--iso-right); opacity: var(--iso-right-opacity); }
 .fp-hint{ font-weight:400; color: var(--ink-soft); }
 .fp-error{ color: var(--red); font-size:.85rem; margin:0; }
 .fp-note{ color: var(--green); font-size:.85rem; margin:0; }

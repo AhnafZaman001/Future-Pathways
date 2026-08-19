@@ -25,21 +25,21 @@
 .fp-form{ display:flex; flex-direction:column; gap:16px; }
 .fp-form label{ display:flex; flex-direction:column; gap:6px; }
 
-/* --- login-page isometric figures --- */
-.login-figs{ margin-top: 64px; margin-bottom: 40px; }
+/* --- isometric figures (dashboard) --- */
+.dash-figs{ margin-top: 56px; margin-bottom: 40px; padding-top: 40px; border-top: 1px solid var(--border); }
 
-.login-figs-grid{
+.dash-figs-grid{
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 32px;
 }
 @media (max-width: 640px){
-  .login-figs-grid{ grid-template-columns: 1fr; gap: 40px; }
+  .dash-figs-grid{ grid-template-columns: 1fr; gap: 40px; }
 }
 
-.login-fig{ margin: 0; }
+.dash-fig{ margin: 0; }
 
-.login-fig-label{
+.dash-fig-label{
   display: block;
   font-family: var(--font-mono);
   font-size: .68rem;
@@ -48,15 +48,15 @@
   margin-bottom: 10px;
 }
 
-.login-fig-svg{ display: block; width: 100%; height: auto; max-width: 170px; margin: 0 auto; }
+.dash-fig-svg{ display: block; width: 100%; height: auto; max-width: 150px; margin: 0 auto; }
 
-.login-fig figcaption{
+.dash-fig figcaption{
   margin-top: 14px;
   font-size: .84rem;
   color: var(--ink-soft);
   font-weight: 600;
 }
-.login-fig figcaption span{
+.dash-fig figcaption span{
   display: block;
   font-size: .76rem;
   font-weight: 400;

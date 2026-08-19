@@ -889,3 +889,26 @@ built earlier in this session (crimson glow KPI cards, tool cards) —
 solid card backgrounds sit correctly above the grid with no visual
 conflicts.
 
+## Isometric FIG illustrations moved: login.html → index.html
+
+Real usability problem with the original placement, not just a
+preference change: `login.html` redirects away immediately if the
+browser already has a session (`FP.getSessionAndProfile()` check at
+the top of the page) — so a returning, already-logged-in user (the
+normal case after the first visit) never sees that page again at
+all. Putting the one place with real "look how substantial this is"
+content on a page most usage skips past entirely defeated the point.
+
+Moved the three figures (unchanged content/geometry) to `index.html`
+— the dashboard, which gets seen every session. Placed at the very
+bottom, after "Recently saved forms", behind a `border-top` divider,
+deliberately below all actionable content (stats, tools, saved
+forms table) rather than competing with it for attention.
+
+Renamed the CSS classes from `.login-fig*` to `.dash-fig*` while
+moving them (`.login-figs` → `.dash-figs`, etc.) — they're not
+login-specific anymore, and leaving the old name would have been
+confusing for anyone reading the CSS later. Verified no leftover
+`login-fig` references anywhere in the codebase after the rename.
+`login.html` is back to just the sign-in form.
+

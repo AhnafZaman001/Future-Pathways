@@ -25,18 +25,44 @@
 .fp-form{ display:flex; flex-direction:column; gap:16px; }
 .fp-form label{ display:flex; flex-direction:column; gap:6px; }
 
-/* --- isometric figures (dashboard) --- */
-.dash-figs{ margin-top: 56px; margin-bottom: 40px; padding-top: 40px; border-top: 1px solid var(--border); }
-
-.dash-figs-grid{
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+/* --- dashboard wide layout with margin figures --- */
+.dash-main-wide{
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
   gap: 32px;
-}
-@media (max-width: 640px){
-  .dash-figs-grid{ grid-template-columns: 1fr; gap: 40px; }
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
+.dash-main-content{
+  flex: 0 1 780px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.dash-margin-col{
+  flex: 0 0 170px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 40px;
+  padding: 40px 0 60px;
+}
+
+/* Below this, there's no real room for a 170px column on each side
+   plus a 780px centered column plus gaps without everything feeling
+   cramped -- the figures are decorative, not essential, so they
+   just don't render at all rather than squeezing in badly. */
+@media (max-width: 1240px){
+  .dash-margin-col{ display: none; }
+  .dash-main-wide{ padding: 0; max-width: none; }
+}
+
+/* --- isometric figures (dashboard) --- */
 .dash-fig{ margin: 0; }
 
 .dash-fig-label{
@@ -46,19 +72,21 @@
   letter-spacing: .1em;
   color: var(--ink-faint);
   margin-bottom: 10px;
+  text-align: center;
 }
 
-.dash-fig-svg{ display: block; width: 100%; height: auto; max-width: 150px; margin: 0 auto; }
+.dash-fig-svg{ display: block; width: 100%; height: auto; max-width: 130px; margin: 0 auto; }
 
 .dash-fig figcaption{
-  margin-top: 14px;
-  font-size: .84rem;
+  margin-top: 12px;
+  font-size: .78rem;
   color: var(--ink-soft);
   font-weight: 600;
+  text-align: center;
 }
 .dash-fig figcaption span{
   display: block;
-  font-size: .76rem;
+  font-size: .7rem;
   font-weight: 400;
   color: var(--ink-faint);
   margin-top: 3px;

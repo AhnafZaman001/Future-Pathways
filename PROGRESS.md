@@ -912,3 +912,47 @@ confusing for anyone reading the CSS later. Verified no leftover
 `login-fig` references anywhere in the codebase after the rename.
 `login.html` is back to just the sign-in form.
 
+## Dashboard margin figures — 3 more, scroll normally with the page
+
+Direct feedback: on a wide screen, the centered 780px content column
+leaves real dead space in the left/right margins. Expanded the
+isometric illustrations from 3 to 6 (the original 3 concepts + 3
+new ones tied to other real features: calculate-your-merit as
+ascending bars, University Explorer as a varied-height cluster, the
+counsellor-managed workflow as 3 connected nodes) and moved them
+into those margins instead of one bottom-clustered section.
+
+**Layout mechanics** — this is the first time anything on the site
+breaks out of the single centered `.wrap` pattern used everywhere
+else, so worth documenting precisely: `index.html`'s `<main>` is now
+a flex row (`.dash-main-wide`) with three children — a 170px-wide
+margin column on each side (`.dash-margin-col`, `display:flex;
+flex-direction:column; justify-content:space-between`) and the
+actual dashboard content in the middle (`.dash-main-content`, still
+`.wrap`-based, `flex:0 1 780px`). The margin columns use
+`align-items:stretch` (inherited from the parent) to match the
+content column's actual height, then `justify-content:space-between`
++ a `gap:40px` floor distributes each column's 3 figures evenly
+across whatever that height turns out to be — no fixed pixel offsets,
+no JS measurement, correct regardless of how many rows are in the
+"Recently saved forms" table. Verified this specifically: an early
+test render with unrealistically short content (no stats populated)
+showed the figures crowding together, which could have been mistaken
+for a real bug — re-tested with realistic mock content (populated
+stats, table rows) and confirmed proper spacing; the `gap` floor
+stays as a safety net regardless.
+
+**Also verified**: had to explicitly override `.dash-main-content`'s
+inherited `margin:0 auto` (from `.wrap`) to `margin:0` — auto-margins
+on a flex item behave very differently than in a normal block
+context and could have fought with the side columns' fixed widths;
+caught and fixed before testing, not discovered as a rendering bug.
+
+Below `max-width:1240px` the margin columns disable entirely
+(`display:none`) rather than trying to fit — the figures are
+decorative, not essential, so on narrower screens (where there's no
+room for 170px margins either side of a 780px column) they simply
+don't render, and the main content re-centers normally. Verified
+this fallback renders cleanly, no squeezing. Confirmed in both
+themes.
+

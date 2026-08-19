@@ -837,3 +837,55 @@ sandbox can't reach that site (small network allowlist), and even
 `web_fetch` only pulls static text, not a live interactive render.
 Built from direct knowledge of the general pattern instead.
 
+## Background replaced + original isometric "FIG" illustrations
+
+Direct feedback: the aurora glow background (soft blurred violet
+blobs, animated) read as generic "AI-generated SaaS" — a fair
+critique regardless of how carefully it was tuned (color-banding
+fixes, noise dither, etc. from earlier work) — soft glowing gradient
+blobs are simply an overused trope at this point.
+
+**Background**: replaced entirely with a static technical grid
+(`body::before` in `base.css`) — fine 24px lines plus a bolder line
+every 4th cell (96px), like real graph paper. No blur, no animation,
+no noise layer (hard-edged 1px lines don't have the gradient
+color-banding problem the noise dither existed to fix, so that whole
+layer is gone too — genuinely simpler than what it replaced, not
+just different). `--aurora-*` tokens removed entirely, replaced with
+`--grid-line`/`--grid-line-strong`, both themes.
+
+**Illustrations**: reference images shown were a purchased/AI-
+generated stock illustration set (thin monochrome isometric line art,
+"FIG 0.X" patent-diagram labeling) of unknown license — didn't just
+reuse the JPG. Instead built three *original* SVG illustrations in
+the same visual language, tied to real product concepts instead of
+generic geometry:
+- FIG 01 — stacked layers = ranked preference groups (4 groups × 5
+  choices)
+- FIG 02 — clustered cubes = tracked institutes
+- FIG 03 — fanned panels = verified merit/closing-merit records
+
+Coordinates computed precisely via a small Python script (proper
+isometric projection math — top diamond + two side parallelograms
+per cube, consistent 30°-equivalent angles), not eyeballed. Colored
+with the site's own theme tokens (`var(--surface-2)`, `var(--violet-
+dim)` for one accent face per figure) so they correctly adapt to
+both themes automatically — verified via render in both, including
+catching and ruling out a timing artifact in my own test harness
+(the first light-theme screenshot looked broken — body/card
+background hadn't visually settled yet because I only waited 200ms
+against a 220ms CSS transition; re-tested with an 800ms wait and
+confirmed via `getComputedStyle` that theme switching was actually
+correct all along).
+
+Placed on `login.html` specifically — the closest thing this
+product has to a public "first impression," since everything else
+sits behind the login wall. Login form stays narrow/centered as the
+primary action; the three figures sit below as a real explanatory
+strip, not decoration bolted onto an unrelated page.
+
+Also verified the new background composes cleanly with everything
+built earlier in this session (crimson glow KPI cards, tool cards) —
+solid card backgrounds sit correctly above the grid with no visual
+conflicts.
+

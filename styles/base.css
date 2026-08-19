@@ -39,12 +39,9 @@
   --red:         #EF6461;
   --red-dim:     rgba(239,100,97,.14);
 
-  /* --- ambient background gradient stops (see body::before/::after
-     below) — kept as tokens so [data-theme="light"] can retune
-     intensity without duplicating the whole layer/animation setup --- */
-  --aurora-a-stops: rgba(110,118,240,.14) 0%, rgba(110,118,240,.06) 40%, transparent 72%;
-  --aurora-b-stops: rgba(110,118,240,.11) 0%, rgba(110,118,240,.04) 40%, transparent 72%;
-  --aurora-noise-opacity: .09;
+  /* --- background grid (see body::before below) --- */
+  --grid-line:        rgba(255,255,255,.028);
+  --grid-line-strong: rgba(255,255,255,.055);
 
   /* --- type --- */
   --font-display: 'Inter Tight', 'Inter', -apple-system, sans-serif;
@@ -123,9 +120,8 @@
   --red:         #C93E37;
   --red-dim:     rgba(201,62,55,.12);
 
-  --aurora-a-stops: rgba(110,118,240,.10) 0%, rgba(110,118,240,.045) 40%, transparent 72%;
-  --aurora-b-stops: rgba(110,118,240,.08) 0%, rgba(110,118,240,.03) 40%, transparent 72%;
-  --aurora-noise-opacity: .05;
+  --grid-line:        rgba(20,18,40,.035);
+  --grid-line-strong: rgba(20,18,40,.07);
 
   --shadow-card: 0 1px 2px rgba(20,18,40,.04), 0 6px 20px rgba(20,18,40,.06);
 }
@@ -158,76 +154,39 @@ body{
 }
 
 /* -----------------------------------------------------------
-   Site-wide animated background — soft ambient violet glow
-   ("aurora"), replacing an earlier isometric-cube-grid pattern
-   that read as generic/technical rather than fitting a guidance
-   product. Two contained, heavily-blurred radial gradients drift
-   independently and very slowly; kept to the existing --violet
-   token only (no new brand color introduced) and at low opacity
-   so it reads as atmosphere, not decoration — same restraint
-   principle as the rest of this token system.
+   Site-wide background — a static technical grid, replacing an
+   earlier soft ambient "aurora" glow (blurred, animated,
+   color-blob gradients). Direct feedback on that version: it read
+   as generic "AI-generated SaaS" — soft glowing gradient blobs are
+   a very overused trope at this point, regardless of how carefully
+   tuned. A precise, static, blueprint-style grid is the opposite
+   instinct: still restrained (very low opacity, no new brand
+   color introduced), but reads as engineered rather than dreamy —
+   matching the "FIG"-style isometric illustrations used elsewhere
+   (see login.html) rather than fighting them.
 
-   The gradients are deliberately multi-stop and contained
-   (ellipse sized well under the viewport, not stretched edge to
-   edge) rather than a single huge two-stop radial-gradient —
-   tested in a real headless-Chromium render, and a wide, sparse
-   two-stop gradient under this much blur produces visible 8-bit
-   color-banding rings against this near-black canvas. A tighter,
-   three-stop falloff avoids that. html::before below adds a
-   faint noise/dither layer — the standard second fix for the
-   same class of problem — and the two together render clean at
-   1280x800 in headless Chromium with and without a GPU
-   rasterizer. Re-verify if the canvas color or opacities change
-   materially.
-
-   Fixed + negative z-index so every layer sits behind all page
-   content. body::before/::after carry the two blurred gradients;
-   html::before carries the (unblurred, so it must be a separate
-   layer) noise texture. All three are pure CSS on shared
-   elements, so every page picks this up via base.css with no
-   per-page markup. Respects prefers-reduced-motion via the
-   shared rule below.
+   Two-tier grid, like real graph paper: fine 24px lines plus a
+   bolder line every 4th cell (96px) for a sense of scale/structure
+   rather than a flat, undifferentiated mesh. No blur, no
+   animation, no noise layer -- hard-edged 1px lines don't suffer
+   the gradient color-banding problem that motivated the noise
+   dither on the old aurora version, so that whole extra layer is
+   gone too. Fixed + negative z-index so it sits behind all page
+   content; one rule on body means every page picks it up via
+   base.css with no per-page markup.
    ----------------------------------------------------------- */
-body::before,
-body::after{
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  filter: blur(70px);
-  will-change: transform;
-}
-
 body::before{
-  background: radial-gradient(ellipse 42% 38% at 26% 24%, var(--aurora-a-stops));
-  animation: aurora-drift-a 95s ease-in-out infinite;
-}
-
-body::after{
-  background: radial-gradient(ellipse 38% 34% at 76% 74%, var(--aurora-b-stops));
-  animation: aurora-drift-b 125s ease-in-out infinite;
-}
-
-html::before{
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: var(--aurora-noise-opacity);
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-}
-
-@keyframes aurora-drift-a{
-  0%, 100%{ transform: translate(0, 0) scale(1); }
-  50%{ transform: translate(5%, 7%) scale(1.1); }
-}
-
-@keyframes aurora-drift-b{
-  0%, 100%{ transform: translate(0, 0) scale(1); }
-  50%{ transform: translate(-6%, -5%) scale(1.05); }
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(var(--grid-line-strong) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line-strong) 1px, transparent 1px);
+  background-size: 24px 24px, 24px 24px, 96px 96px, 96px 96px;
 }
 
 /* Shared "this just appeared" entrance — a result, a saved

@@ -24,6 +24,53 @@
 
 .fp-form{ display:flex; flex-direction:column; gap:16px; }
 .fp-form label{ display:flex; flex-direction:column; gap:6px; }
+
+/* --- login-page isometric figures --- */
+.login-figs{ margin-top: 64px; margin-bottom: 40px; }
+
+.login-figs-grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+@media (max-width: 640px){
+  .login-figs-grid{ grid-template-columns: 1fr; gap: 40px; }
+}
+
+.login-fig{ margin: 0; }
+
+.login-fig-label{
+  display: block;
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  letter-spacing: .1em;
+  color: var(--ink-faint);
+  margin-bottom: 10px;
+}
+
+.login-fig-svg{ display: block; width: 100%; height: auto; max-width: 170px; margin: 0 auto; }
+
+.login-fig figcaption{
+  margin-top: 14px;
+  font-size: .84rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.login-fig figcaption span{
+  display: block;
+  font-size: .76rem;
+  font-weight: 400;
+  color: var(--ink-faint);
+  margin-top: 3px;
+}
+
+.iso-face-top, .iso-face-left, .iso-face-right{
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.iso-face-top{ fill: var(--surface-2); }
+.iso-face-left{ fill: var(--surface); opacity: .8; }
+.iso-face-right{ fill: var(--surface-2); opacity: .9; }
 .fp-hint{ font-weight:400; color: var(--ink-soft); }
 .fp-error{ color: var(--red); font-size:.85rem; margin:0; }
 .fp-note{ color: var(--green); font-size:.85rem; margin:0; }

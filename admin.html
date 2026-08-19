@@ -61,6 +61,10 @@
           <h2 class="fp-step-title" style="margin-bottom:0;">Submissions</h2>
           <button type="button" class="btn-primary" id="fp-admin-add-student">+ Add new student</button>
         </div>
+        <div id="fp-bulk-actions" class="fp-bulk-actions" hidden>
+          <span id="fp-bulk-count"></span>
+          <button type="button" class="fp-row-action-link fp-row-action-delete" id="fp-bulk-delete">Delete selected</button>
+        </div>
         <div class="fp-grid-2" style="margin-bottom:16px;">
           <label>Search by name
             <input type="search" id="filter-name" placeholder="e.g. Ahmed Khan" autocomplete="off">
@@ -88,7 +92,7 @@
         <div style="overflow-x:auto;">
           <table class="fp-admin-table" id="fp-admin-table">
             <thead>
-              <tr><th>Student</th><th>Pathway</th><th>First Priority</th><th>Status</th><th>Submitted</th><th>Actions</th></tr>
+              <tr><th style="width:1%;"><input type="checkbox" id="fp-select-all" aria-label="Select all"></th><th>Student</th><th>Pathway</th><th>First Priority</th><th>Status</th><th>Submitted</th><th>Actions</th></tr>
             </thead>
             <tbody id="fp-admin-tbody"></tbody>
           </table>
@@ -102,6 +106,7 @@
   <script src="js/theme-toggle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/fp-client.js"></script>
+  <script src="js/fp-confirm.js"></script>
   <script src="js/fp-admin.js"></script>
 </body>
 </html>

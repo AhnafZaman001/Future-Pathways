@@ -1170,3 +1170,51 @@ NED's form genuinely has no Matric input field at all (not just
 hidden/disabled) — the calculator only asks for what the real
 formula actually uses.
 
+## Three admin fixes: white search box, native confirm(), bulk delete
+
+**White search input** — `input[type="search"]` was missing from the
+base input styling selector list (`input[type="text"],
+input[type="number"]...` etc.), so every `type="search"` field in
+the app (4 of them: admin's name search, the "View all universities"
+search on two pages, merit.html's institute search) fell back to
+raw browser default styling — a plain white box, matching the exact
+bug shown. Fixed by adding the missing selector, plus
+`appearance: none` (WebKit/Safari specifically retain native search-
+input chrome — rounded corners, clear button — even after custom
+background/border CSS is applied, unless explicitly reset).
+
+**Native `window.confirm()` dialog** — the browser's own popup,
+showing the raw hostname, completely unstyled, ignoring the app's
+theme. New `js/fp-confirm.js`: `FP.confirm(message) -> Promise<boolean>`,
+reusing the exact fade/scale overlay choreography already proven for
+the "View all universities" modal (force a reflow before adding
+`.is-open` so the transition plays, delay re-applying `hidden` on
+close to match the transition duration) rather than inventing new
+mechanics. Verified all three resolution paths directly (OK, Cancel,
+Escape key) via real click/keypress interaction, not just visual
+inspection. Only one `window.confirm()` existed in the whole
+codebase (`resetSubmission()`) — now the only place needing it.
+
+**No bulk select/delete** — added a checkbox column (header
+"select all" + one per row) and a bulk-actions bar that appears when
+1+ rows are selected, showing the count and the affected students'
+names in the confirm dialog (so "Delete selected" doesn't read as a
+black box). Required refactoring `resetSubmission()`: split the
+confirm step from the actual RPC call (`performReset()`) so a bulk
+action shows **one** confirm covering the whole batch instead of one
+per student — the original function conflated "ask" and "do", which
+would've meant N confirm dialogs for N selected students otherwise.
+**Caught a real selector collision before it shipped**: the bulk
+button and the per-row buttons share a CSS class
+(`.fp-row-action-delete`) for consistent styling, but a bare
+`document.querySelectorAll(".fp-row-action-delete")` would have
+wired the per-row click handler (which expects `data-reset-id`) onto
+the bulk button too — scoped the row-button query to
+`#fp-admin-tbody .fp-row-action-delete` specifically to avoid it.
+
+Verified via actual interaction testing, not just visual checks:
+select-all correctly checks every visible row, individual selection
+correctly updates the bulk bar's count, and the bulk confirm dialog
+correctly lists the real selected students' names before the RPC
+calls ever fire.
+

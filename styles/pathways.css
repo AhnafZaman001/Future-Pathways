@@ -399,6 +399,20 @@ body.is-review-step .fp-actions{ margin-top:28px; padding-top:20px; border-top:1
 .fp-admin-table tr:hover td{ background: var(--surface-2); cursor:pointer; }
 
 .fp-row-actions{ white-space: nowrap; }
+
+.fp-bulk-actions{
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  background: var(--red-dim);
+  border: 1px solid var(--red);
+  border-radius: var(--radius-sm);
+  font-size: .86rem;
+  color: var(--ink);
+}
+.fp-bulk-actions .fp-row-action-delete{ font-weight: 700; }
 .fp-row-action-link{
   background: none;
   border: none;

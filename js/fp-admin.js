@@ -123,6 +123,19 @@
     }).join("");
   }
 
+  var selectedIds = new Set();
+
+  function updateBulkActionsBar(){
+    var bar = document.getElementById("fp-bulk-actions");
+    var countEl = document.getElementById("fp-bulk-count");
+    if(selectedIds.size === 0){
+      bar.hidden = true;
+      return;
+    }
+    bar.hidden = false;
+    countEl.textContent = selectedIds.size + " selected";
+  }
+
   function renderTable(){
     var nameFilter = document.getElementById("filter-name").value.trim().toLowerCase();
     var pathwayFilter = document.getElementById("filter-pathway").value;
@@ -138,7 +151,9 @@
     document.getElementById("fp-admin-tbody").innerHTML = rows.map(function(s){
       var name = titleCase((s.students && s.students.student_name) || "") || "(no profile yet)";
       var firstPriority = firstPriorityByFpId[s.id] || "\u2014";
+      var checked = selectedIds.has(s.id) ? " checked" : "";
       return '<tr data-id="' + s.id + '">' +
+        '<td><input type="checkbox" class="fp-row-select" data-id="' + s.id + '" aria-label="Select ' + esc(name) + '"' + checked + '></td>' +
         '<td>' + esc(name) + '</td>' +
         '<td class="fp-cap">' + esc(s.pathway) + '</td>' +
         '<td>' + esc(firstPriority) + '</td>' +
@@ -149,16 +164,28 @@
           '<button type="button" class="fp-row-action-link fp-row-action-delete" data-reset-id="' + s.id + '">Delete</button>' +
         '</td>' +
       '</tr>';
-    }).join("") || '<tr><td colspan="6">No submissions match these filters.</td></tr>';
+    }).join("") || '<tr><td colspan="7">No submissions match these filters.</td></tr>';
 
     document.querySelectorAll("#fp-admin-tbody tr[data-id]").forEach(function(tr){
       tr.addEventListener("click", function(e){
-        if(e.target.closest(".fp-row-actions")) return; // let row actions handle their own clicks
+        if(e.target.closest(".fp-row-actions") || e.target.closest(".fp-row-select")) return; // let row actions/checkbox handle their own clicks
         openDetail(tr.dataset.id);
       });
     });
 
-    document.querySelectorAll(".fp-row-action-delete").forEach(function(btn){
+    document.querySelectorAll("#fp-admin-tbody .fp-row-select").forEach(function(cb){
+      cb.addEventListener("click", function(e){ e.stopPropagation(); });
+      cb.addEventListener("change", function(){
+        if(cb.checked) selectedIds.add(cb.dataset.id);
+        else selectedIds.delete(cb.dataset.id);
+        var selectAll = document.getElementById("fp-select-all");
+        var visibleBoxes = document.querySelectorAll("#fp-admin-tbody .fp-row-select");
+        selectAll.checked = visibleBoxes.length > 0 && Array.from(visibleBoxes).every(function(b){ return b.checked; });
+        updateBulkActionsBar();
+      });
+    });
+
+    document.querySelectorAll("#fp-admin-tbody .fp-row-action-delete").forEach(function(btn){
       btn.addEventListener("click", function(e){
         e.stopPropagation();
         var fpId = btn.dataset.resetId;
@@ -170,11 +197,63 @@
           sub.status = "draft";
           sub.submitted_at = null;
           sub.additional_information = null;
+          selectedIds.delete(fpId);
           renderTable();
+          updateBulkActionsBar();
         });
       });
     });
+
+    var selectAllBox = document.getElementById("fp-select-all");
+    var visibleBoxesNow = document.querySelectorAll("#fp-admin-tbody .fp-row-select");
+    selectAllBox.checked = visibleBoxesNow.length > 0 && Array.from(visibleBoxesNow).every(function(b){ return b.checked; });
   }
+
+  document.getElementById("fp-select-all").addEventListener("change", function(e){
+    var checked = e.target.checked;
+    document.querySelectorAll("#fp-admin-tbody .fp-row-select").forEach(function(cb){
+      cb.checked = checked;
+      if(checked) selectedIds.add(cb.dataset.id);
+      else selectedIds.delete(cb.dataset.id);
+    });
+    updateBulkActionsBar();
+  });
+
+  document.getElementById("fp-bulk-delete").addEventListener("click", function(){
+    var ids = Array.from(selectedIds);
+    if(!ids.length) return;
+
+    var names = ids.map(function(id){
+      var sub = submissions.find(function(x){ return x.id === id; });
+      return sub ? (titleCase((sub.students && sub.students.student_name) || "") || null) : null;
+    }).filter(Boolean);
+
+    var confirmMsg = "Reset " + ids.length + " student" + (ids.length === 1 ? "" : "s") + "'s form" + (ids.length === 1 ? "" : "s") + " back to editable drafts?\n\n" +
+      (names.length ? names.slice(0, 6).join(", ") + (names.length > 6 ? ", and " + (names.length - 6) + " more" : "") + "\n\n" : "") +
+      "This clears their submitted answers but keeps their accounts and profile info intact.";
+
+    FP.confirm(confirmMsg).then(function(confirmed){
+      if(!confirmed) return;
+      var bulkBtn = document.getElementById("fp-bulk-delete");
+      bulkBtn.disabled = true;
+      Promise.all(ids.map(function(id){
+        return new Promise(function(resolve){
+          performReset(id, null, function(ok){
+            if(ok){
+              var sub = submissions.find(function(x){ return x.id === id; });
+              if(sub){ sub.status = "draft"; sub.submitted_at = null; sub.additional_information = null; }
+              selectedIds.delete(id);
+            }
+            resolve();
+          });
+        });
+      })).then(function(){
+        bulkBtn.disabled = false;
+        renderTable();
+        updateBulkActionsBar();
+      });
+    });
+  });
 
   document.getElementById("filter-name").addEventListener("input", renderTable);
   document.getElementById("filter-pathway").addEventListener("change", renderTable);
@@ -189,12 +268,10 @@
   // below, so the confirm-copy/RPC-call/error-handling only exists
   // once. Disables the triggering button for the duration of the
   // call so a double-click can't fire two resets.
-  function resetSubmission(fpId, studentName, triggerBtn, onDone){
-    var confirmMsg = "Reset " + (studentName || "this student") + "'s form back to an editable draft?\n\n" +
-      "This clears their submitted answers (institute/faculty/program preferences and additional information) " +
-      "but keeps their account and profile info (name, roll number, marks) intact.";
-    if(!window.confirm(confirmMsg)){ onDone(false); return; }
-
+  // Does the actual RPC call, no confirmation -- callers decide when/
+  // how to confirm (a single row asks about one student, a bulk
+  // action asks once about the whole batch, not once per student).
+  function performReset(fpId, triggerBtn, onDone){
     if(triggerBtn) triggerBtn.disabled = true;
     FP.client.rpc("counsellor_reset_submission", { p_future_pathway_id: fpId }).then(function(r){
       if(r.error){
@@ -204,6 +281,17 @@
         return;
       }
       onDone(true);
+    });
+  }
+
+  function resetSubmission(fpId, studentName, triggerBtn, onDone){
+    var confirmMsg = "Reset " + (studentName || "this student") + "'s form back to an editable draft?\n\n" +
+      "This clears their submitted answers (institute/faculty/program preferences and additional information) " +
+      "but keeps their account and profile info (name, roll number, marks) intact.";
+
+    FP.confirm(confirmMsg).then(function(confirmed){
+      if(!confirmed){ onDone(false); return; }
+      performReset(fpId, triggerBtn, onDone);
     });
   }
 

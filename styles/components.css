@@ -111,8 +111,11 @@ input[type="text"],
 input[type="number"],
 input[type="email"],
 input[type="password"],
+input[type="search"],
 select,
 textarea{
+  -webkit-appearance: none;
+  appearance: none;
   font-family: var(--font-body);
   font-size: .96rem;
   color: var(--ink);
@@ -335,6 +338,24 @@ select{ appearance: none; background: var(--surface-2)
   transition: transform var(--dur-medium) var(--ease-out);
 }
 .uni-modal-overlay.is-open .uni-modal{ transform: scale(1) translateY(0); }
+
+.confirm-modal{
+  max-width: 420px;
+  padding: 24px;
+  gap: 0;
+}
+.confirm-modal-message{
+  color: var(--ink);
+  font-size: .94rem;
+  line-height: 1.55;
+  white-space: pre-line;
+  margin: 0 0 20px;
+}
+.confirm-modal-actions{
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
 
 .uni-modal-head{
   display: flex;

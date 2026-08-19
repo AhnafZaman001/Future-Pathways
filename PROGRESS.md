@@ -1071,3 +1071,17 @@ Verified via render: rest state next to `.btn-primary`/
 `.btn-secondary` for a direct shape comparison, hover state, and
 both themes.
 
+**Follow-up correction**: `.theme-toggle` is a separate CSS class
+from `.nav-link` (its own rule block, own hover/active states) and
+was missed in the pass above — still a full pill. Fixed the same
+way: `border-radius: 999px` → `var(--radius-sm)`, added the same
+hover-lift, switched to the shared timing tokens. Also audited every
+other remaining `border-radius: 999px` in the codebase (6 more:
+`.badge`, `.dash-status-tag`, `.merit-institute-pathway-tag`,
+`.merit-conf-badge`, `.cm-badge`, `.rk-tag`) to make sure nothing
+else got missed — confirmed all six are genuinely tags/labels, not
+clickable buttons, and correctly stay pill-shaped. `.theme-toggle-
+glyph` (the small circular day/night indicator inside the button)
+also correctly stays round — that's a deliberate, meaningful shape,
+not an arbitrary pill.
+

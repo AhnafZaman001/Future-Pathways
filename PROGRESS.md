@@ -1218,3 +1218,40 @@ correctly updates the bulk bar's count, and the bulk confirm dialog
 correctly lists the real selected students' names before the RPC
 calls ever fire.
 
+## Bulk-delete "where's the button" — a real positioning flaw, not a bug
+
+Traced through the bulk-select code carefully first (fresh clone,
+line-by-line read, re-ran the exact interaction tests from the
+previous session against the current pushed state, checked for
+console errors) — the underlying logic was correct, no regression.
+But re-reading `admin.html`'s actual layout order surfaced a real,
+independent problem regardless: the bulk-actions bar sat *above all
+four filter fields* (search, pathway, status, first-priority),
+several elements away from the table where someone's actually
+looking when they check a box. Functioning correctly and being
+*findable* aren't the same thing — worth remembering that "I built
+it and it works in my test" doesn't mean "a person will actually see
+it," especially several actual scroll-lengths of unrelated filter UI
+away.
+
+Fixed by moving `#fp-bulk-actions` to sit directly above the table,
+after the filters — the closest it can be to where the interaction
+that reveals it just happened. Also added the `.reveal-in` animation
+(already established elsewhere in the app for "this just appeared"
+moments) specifically on the transition from hidden → visible, as
+extra insurance beyond repositioning alone.
+
+**Separately**: removed the "e.g. Ahmed Khan" placeholder from the
+name-search field — replaced with a generic "Type a name…" that
+doesn't reference any name at all. Checked the rest of the codebase
+for the same pattern (any other placeholder using an example
+person's name) — found none.
+
+Verified via render: the bar now appears immediately adjacent to the
+checkbox that revealed it, not scrolled away above unrelated
+filters, confirmed the reveal-in animation triggers correctly on the
+hidden→visible transition specifically (not on every re-render while
+already visible), and confirmed the placeholder text renders as a
+real ellipsis character, not a literal escape sequence (the same
+class of bug caught multiple times earlier in this project).
+

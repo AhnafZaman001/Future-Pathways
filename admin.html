@@ -61,13 +61,9 @@
           <h2 class="fp-step-title" style="margin-bottom:0;">Submissions</h2>
           <button type="button" class="btn-primary" id="fp-admin-add-student">+ Add new student</button>
         </div>
-        <div id="fp-bulk-actions" class="fp-bulk-actions" hidden>
-          <span id="fp-bulk-count"></span>
-          <button type="button" class="fp-row-action-link fp-row-action-delete" id="fp-bulk-delete">Delete selected</button>
-        </div>
         <div class="fp-grid-2" style="margin-bottom:16px;">
           <label>Search by name
-            <input type="search" id="filter-name" placeholder="e.g. Ahmed Khan" autocomplete="off">
+            <input type="search" id="filter-name" placeholder="Type a name…" autocomplete="off">
           </label>
           <label>Pathway
             <select id="filter-pathway">
@@ -88,6 +84,10 @@
               <option value="">All</option>
             </select>
           </label>
+        </div>
+        <div id="fp-bulk-actions" class="fp-bulk-actions" hidden>
+          <span id="fp-bulk-count"></span>
+          <button type="button" class="fp-row-action-link fp-row-action-delete" id="fp-bulk-delete">Delete selected</button>
         </div>
         <div style="overflow-x:auto;">
           <table class="fp-admin-table" id="fp-admin-table">

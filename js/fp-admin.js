@@ -130,10 +130,22 @@
     var countEl = document.getElementById("fp-bulk-count");
     if(selectedIds.size === 0){
       bar.hidden = true;
+      bar.classList.remove("reveal-in");
       return;
     }
+    var wasHidden = bar.hidden;
     bar.hidden = false;
     countEl.textContent = selectedIds.size + " selected";
+    if(wasHidden){
+      // Draws the eye the moment it appears -- it's directly above
+      // the table now (moved there specifically because it used to
+      // sit above the filter row, several elements away from where
+      // someone's actually looking when they check a box), but the
+      // animation is extra insurance against it going unnoticed.
+      bar.classList.remove("reveal-in");
+      void bar.offsetWidth;
+      bar.classList.add("reveal-in");
+    }
   }
 
   function renderTable(){

@@ -23,7 +23,8 @@ window.Dashboard = window.Dashboard || {};
   // check resolves) -- fire them the moment this script runs, instead
   // of waiting behind Dashboard.init()'s auth+role round-trip below.
   initUniModal();
-  initToolCardGlow();
+  initCursorGlow(".dash-tool-card");
+  initCursorGlow(".fp-dash-glow"); // "Recently saved forms" panel
   var institutesPromise = loadInstitutesWithLoadingState();
   var meritPromise = (typeof FP !== "undefined" && FP.loadMeritFormulas) ? FP.loadMeritFormulas() : Promise.resolve();
   var closingMeritPromise = (typeof FP !== "undefined" && FP.loadClosingMerit) ? FP.loadClosingMerit() : Promise.resolve();
@@ -105,18 +106,22 @@ window.Dashboard = window.Dashboard || {};
         // added yet shouldn't just see a bare "0" -- that reads as
         // broken, not as an invitation. Same slot, same visual
         // weight, but it's a call to action instead of a number.
-        ? '<a class="fp-stat fp-stat-cta" href="pathways.html">' +
+        ? '<a class="fp-stat fp-stat-cta glow-red" href="pathways.html">' +
             '<div class="fp-stat-value">+ Add</div>' +
             '<div class="fp-stat-label">First student &rarr;</div>' +
           '</a>'
-        : '<div class="fp-stat"><div class="fp-stat-value">' + counts.studentsHelped + '</div><div class="fp-stat-label">STUDENTS HELPED</div></div>';
+        : '<div class="fp-stat glow-red"><div class="fp-stat-value">' + counts.studentsHelped + '</div><div class="fp-stat-label">STUDENTS HELPED</div></div>';
     }
 
     if(!stats.length && !studentsCardHtml){ el.innerHTML = ""; return; }
     el.innerHTML = stats.map(function(s){
-      return '<div class="fp-stat"><div class="fp-stat-value">' + s[1] + '</div><div class="fp-stat-label">' + s[0] + '</div></div>';
+      return '<div class="fp-stat glow-red"><div class="fp-stat-value">' + s[1] + '</div><div class="fp-stat-label">' + s[0] + '</div></div>';
     }).join("") + studentsCardHtml;
     el.dataset.counts = JSON.stringify(counts); // so the staff-only re-render below can preserve what's already shown
+    // el.innerHTML above just replaced every .fp-stat node, so any
+    // glow listeners attached to the old ones are gone with them --
+    // has to be re-wired after every render, not just once.
+    initCursorGlow(".dash-stats .fp-stat");
   }
 
   Dashboard.init = function init(authResult){
@@ -262,12 +267,38 @@ window.Dashboard = window.Dashboard || {};
   // them to position a soft radial reveal over a faint grid pattern
   // that's otherwise invisible. Purely decorative, no dependency on
   // auth/data, so it's safe to wire up immediately.
-  function initToolCardGlow(){
-    document.querySelectorAll(".dash-tool-card").forEach(function(card){
-      card.addEventListener("mousemove", function(e){
-        var rect = card.getBoundingClientRect();
-        card.style.setProperty("--mx", (e.clientX - rect.left) + "px");
-        card.style.setProperty("--my", (e.clientY - rect.top) + "px");
+  // Cursor-tracking grid glow -- shared utility, reused for the tool
+  // cards, the "Recently saved forms" panel, and the KPI strip.
+  // --mx/--my are set in px, relative to each element's own top-left
+  // corner (not the viewport); the CSS mask in dashboard.css reads
+  // them to position the reveal.
+  //
+  // Throttled via requestAnimationFrame -- this is the actual fix
+  // for the lag that was reported: the first version called
+  // style.setProperty() directly inside the raw mousemove handler,
+  // which on a fast mouse or a high-polling-rate device can fire
+  // far more often than the browser can actually repaint (mask-image
+  // recalculation is comparatively expensive, unlike a cheap
+  // transform change) -- each of those extra updates queues up
+  // work the browser can't keep up with, and the glow visibly trails
+  // behind the real cursor position instead of tracking it live.
+  // rAF collapses any number of mousemove events that land within
+  // the same frame into a single style update, so the update rate
+  // is naturally capped at the display's actual refresh rate instead
+  // of the mouse's raw event rate.
+  function initCursorGlow(selector){
+    document.querySelectorAll(selector).forEach(function(el){
+      var pending = null;
+      var raf = null;
+      el.addEventListener("mousemove", function(e){
+        var rect = el.getBoundingClientRect();
+        pending = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        if(raf) return; // an update is already scheduled for this frame
+        raf = requestAnimationFrame(function(){
+          el.style.setProperty("--mx", pending.x + "px");
+          el.style.setProperty("--my", pending.y + "px");
+          raf = null;
+        });
       });
     });
   }

@@ -105,28 +105,73 @@
 
 /* Cursor-tracking grid glow -- a faint grid pattern, invisible at
    rest, revealed only in a soft circle around the cursor via a
-   radial-gradient mask. --mx/--my are set by dashboard.js on
-   mousemove (in px, relative to the card's own top-left) and default
-   to the card's center so nothing looks broken before the first
-   mousemove fires. Grid line color is the violet accent at very low
-   opacity even at full reveal -- stays "texture," not "decoration",
-   same restraint as the rest of this token system. */
-.dash-tool-card::before{
+   radial-gradient mask. --mx/--my are set by js/dashboard.js's
+   initCursorGlow() on mousemove (in px, relative to the element's
+   own top-left) and default to center so nothing looks broken
+   before the first mousemove fires.
+
+   Shared mechanics across all three places this is used
+   (.dash-tool-card, the "Recently saved forms" panel via
+   .fp-dash-glow, and the KPI strip via .dash-stats .fp-stat) --
+   color is the ONE thing that varies between them, controlled by
+   --glow-line-color (default: violet; .glow-red overrides it).
+   Applying the effect somewhere new should mean adding one
+   selector to this list, not copy-pasting the whole block. */
+.dash-tool-card,
+.fp-dash-glow,
+.dash-stats .fp-stat{
+  position: relative;
+  overflow: hidden;
+}
+.dash-tool-card > *,
+.fp-dash-glow > *,
+.dash-stats .fp-stat > *{ position: relative; z-index: 1; }
+
+.dash-tool-card::before,
+.fp-dash-glow::before,
+.dash-stats .fp-stat::before{
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  --glow-line-color: rgba(110,118,240,.5); /* violet, the default */
   background-image:
-    linear-gradient(rgba(110,118,240,.5) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(110,118,240,.5) 1px, transparent 1px);
+    linear-gradient(var(--glow-line-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--glow-line-color) 1px, transparent 1px);
   background-size: 22px 22px;
   -webkit-mask-image: radial-gradient(circle 110px at var(--mx, 50%) var(--my, 50%), black 0%, transparent 100%);
           mask-image: radial-gradient(circle 110px at var(--mx, 50%) var(--my, 50%), black 0%, transparent 100%);
   opacity: 0;
   transition: opacity var(--dur-small) var(--ease-out);
 }
-.dash-tool-card:hover::before{ opacity: 1; }
+.dash-tool-card:hover::before,
+.fp-dash-glow:hover::before,
+.dash-stats .fp-stat:hover::before{ opacity: 1; }
+
+/* Crimson variant -- applied via an extra .glow-red class, not a
+   second copy of the mechanics above. Deliberately not var(--red)
+   (that token means "error" everywhere else in this app -- reusing
+   it here would make a purely decorative card look like it's
+   signaling a problem). This is a real crimson, not the app's
+   semantic red.
+
+   Each selector here deliberately matches the specificity of its
+   corresponding shared-mechanics selector above (both are two
+   classes + a pseudo-element for the KPI strip case, etc) rather
+   than relying on source order to decide the winner -- a plain
+   ".glow-red::before" is LOWER specificity than ".dash-stats
+   .fp-stat::before" (one class vs two), so it silently lost every
+   time regardless of which rule was written later, and the KPI
+   strip rendered violet instead of red. Confirmed via
+   getComputedStyle, not guessed at -- same class of bug already
+   hit twice before with the focus-ring work; matching specificity
+   explicitly here instead of hoping order wins. */
+.dash-tool-card.glow-red::before,
+.fp-dash-glow.glow-red::before,
+.dash-stats .fp-stat.glow-red::before{
+  --glow-line-color: rgba(220,20,60,.55);
+}
 
 .dash-tool-card:hover{
   border-color: var(--border-strong);

@@ -777,3 +777,63 @@ confirmed clean per-card isolation (moving off one card onto an
 adjacent one correctly transfers the glow, no stuck/leftover state),
 and checked both themes.
 
+## Crimson glow variant + fixed a real lag bug + a real specificity bug
+
+Extended the cursor-glow effect to two more places, plus fixed a
+reported performance issue in the original.
+
+**Lag fix (root cause, not a guess):** the original `mousemove`
+handler called `style.setProperty()` synchronously on every raw
+event. `mask-image` recalculation is comparatively expensive
+(unlike a `transform` change, which is cheap/GPU-composited) --
+on a fast mouse, events can fire faster than the browser can
+actually repaint, and each of those extra `setProperty()` calls
+queues up real work, so the glow visibly trails the cursor instead
+of tracking it live. Fixed by collapsing all mousemove events into
+at most one `requestAnimationFrame`-scheduled style update per
+frame (`initCursorGlow()`, replacing the old `initToolCardGlow()`,
+now shared across all three uses instead of copy-pasted).
+**Proved the fix, not just described it:** dispatched 50 synthetic
+mousemove events synchronously (simulating a fast mouse in a single
+frame) and counted actual `style.setProperty()` calls via a wrapped
+spy -- 50 events collapsed to 2 real writes (one rAF-scheduled
+update, `--mx` + `--my`), versus the ~100 the old code would have
+made for the same input.
+
+**New locations, both crimson, not the app's semantic `--red`:**
+the "Recently saved forms" panel (applied to the whole `.fp-card`
+wrapping the table, not per-`<tr>` -- table rows handle absolutely-
+positioned pseudo-elements poorly, and a table is a scan-down list,
+not a grid of discrete cards, so a per-row glow wouldn't have made
+visual sense anyway) and the KPI stats strip (`.dash-stats .fp-stat`,
+re-wired via `initCursorGlow()` after every render since
+`innerHTML` replacement destroys the previous elements' listeners
+along with them -- this strip re-renders twice, once for public
+data and again when the staff-only students-helped count arrives).
+Deliberately not reusing `var(--red)` for the color -- that token
+means "error" everywhere else in this app; a purely decorative
+glow shouldn't borrow the same signal.
+
+**Second real bug, caught before it shipped wrong:** the first
+crimson attempt used a bare `.glow-red::before` selector, which is
+LOWER CSS specificity (one class) than `.dash-stats .fp-stat::before`
+(two classes) -- so on the KPI strip specifically, the shared violet
+default silently won regardless of source order, and the "crimson"
+cards rendered violet. Same class of cascade bug already hit twice
+before with the focus-ring work (see above) -- confirmed via
+`getComputedStyle` (not a screenshot) that `--glow-line-color` was
+resolving to the violet default, then fixed by writing the override
+selectors to match each shared-mechanics selector's specificity
+exactly (`.dash-tool-card.glow-red::before`,
+`.fp-dash-glow.glow-red::before`, `.dash-stats
+.fp-stat.glow-red::before`) instead of hoping a single lower-
+specificity rule would win on order alone. Re-confirmed via
+`getComputedStyle` that the override now resolves correctly before
+calling it done.
+
+**Also worth being honest about:** none of this was built by
+actually inspecting lawnline.marketing's real effect -- this
+sandbox can't reach that site (small network allowlist), and even
+`web_fetch` only pulls static text, not a live interactive render.
+Built from direct knowledge of the general pattern instead.
+

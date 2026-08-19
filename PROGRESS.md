@@ -1017,3 +1017,30 @@ not just read back from the diff — including a direct click-sequence
 test proving Edit/Delete/row-click each fire exactly the right
 handler and nothing else.
 
+## Admin panel: add-student + name search, and a merit-toggle correction
+
+**Correction, not a new decision**: the last session's choice on
+`index.html`'s university modal (keep "View 2025 closing merit",
+drop "View merit formula") was wrong — direct feedback was to keep
+the formula and drop the closing-merit one instead. Swapped back:
+`dashboard.js` now has only `merit-toggle` (same as `fp-app.js`
+already did), `closing-merit-toggle` and its container are gone
+entirely. Both copies are now consistent with each other.
+
+**`admin.html` gets its own "+ Add new student"**, in addition to
+the one already on `pathways.html` (not instead of — both stay).
+Same proven RPC-then-redirect pattern already working there:
+`counsellor_create_student()`, then `pathways.html?student=<id>` --
+actual data entry always happens on the form page regardless of
+where you started, this just saves a trip through the list view
+first if that's where you already are.
+
+**Search by name**, live-filtered (fires on `input`, not requiring
+Enter), case-insensitive substring match against `student_name`,
+combined with the existing pathway/status/first-priority filters
+(all four apply together, same `renderTable()` pass). Verified the
+actual filtering logic directly, not just the UI: multi-match single-
+match, clearing back to all results, and case-insensitivity
+(uppercase query against a lowercase name and vice versa) all
+confirmed correct via real interaction, not just visual inspection.
+

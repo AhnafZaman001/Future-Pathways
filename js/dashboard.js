@@ -350,18 +350,18 @@ window.Dashboard = window.Dashboard || {};
     if(searchBtn) searchBtn.addEventListener("click", reRender);
 
     body.addEventListener("click", function(e){
-      if(e.target.classList.contains("closing-merit-toggle")){
-        var cInstName = e.target.dataset.inst;
-        var cContainer = e.target.closest("li").querySelector(".closing-merit-inline-container");
-        var cIsOpen = !cContainer.hidden;
-        if(cIsOpen){
-          cContainer.hidden = true;
-          e.target.textContent = "View 2025 closing merit";
+      if(e.target.classList.contains("merit-toggle")){
+        var instName = e.target.dataset.inst;
+        var container = e.target.closest("li").querySelector(".merit-inline-container");
+        var isOpen = !container.hidden;
+        if(isOpen){
+          container.hidden = true;
+          e.target.textContent = "View merit formula";
           return;
         }
-        cContainer.innerHTML = FP.renderClosingMeritSectionForInstitute(cInstName);
-        cContainer.hidden = false;
-        e.target.textContent = "Hide 2025 closing merit";
+        container.innerHTML = FP.renderMeritSectionForInstitute(instName);
+        container.hidden = false;
+        e.target.textContent = "Hide merit formula";
         return;
       }
 
@@ -427,9 +427,9 @@ window.Dashboard = window.Dashboard || {};
               return "<li><div class=\"uni-modal-row\"><span>" + escapeHtml(inst.name) + "</span>" +
                      "<span class=\"uni-modal-programs\">" + escapeHtml(meta) + "</span>" +
                      "<div class=\"uni-modal-actions\">" +
-                       "<button type=\"button\" class=\"closing-merit-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View 2025 closing merit</button>" +
+                       "<button type=\"button\" class=\"merit-toggle\" data-inst=\"" + escapeHtml(inst.name) + "\">View merit formula</button>" +
                      "</div></div>" +
-                     "<div class=\"closing-merit-inline-container\" hidden></div></li>";
+                     "<div class=\"merit-inline-container\" hidden></div></li>";
             }).join("") + "</ul>";
 
         return "<div class=\"uni-modal-group\"><h3>" + name + " (" + entries.length + ")</h3>" + listHtml + "</div>";

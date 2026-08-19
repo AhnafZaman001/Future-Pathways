@@ -52,6 +52,30 @@
     FP.signOut();
   });
 
+  // "+ Add new student" -- also available directly from admin.html
+  // now, alongside the one already on pathways.html itself. Same
+  // RPC + redirect either place: create the account, then land on
+  // pathways.html?student=<id> to actually fill in the student's
+  // info -- data entry always happens on the form page regardless
+  // of where you started, this just saves a trip through the list
+  // view first if you're already looking at it.
+  var addStudentBtn = document.getElementById("fp-admin-add-student");
+  if(addStudentBtn){
+    addStudentBtn.addEventListener("click", function(){
+      addStudentBtn.disabled = true;
+      addStudentBtn.textContent = "Creating\u2026";
+      FP.client.rpc("counsellor_create_student").then(function(r){
+        if(r.error){
+          alert("Could not create student: " + r.error.message);
+          addStudentBtn.disabled = false;
+          addStudentBtn.textContent = "+ Add new student";
+          return;
+        }
+        window.location.href = "pathways.html?student=" + encodeURIComponent(r.data);
+      });
+    });
+  }
+
   // "First priority" = preference_group 1, rank 1 -- the one unambiguous
   // single "top choice" given the schema has multiple preference groups
   // per student (2 for medical, 4 for engineering).
@@ -100,11 +124,14 @@
   }
 
   function renderTable(){
+    var nameFilter = document.getElementById("filter-name").value.trim().toLowerCase();
     var pathwayFilter = document.getElementById("filter-pathway").value;
     var statusFilter = document.getElementById("filter-status").value;
     var firstPriorityFilter = document.getElementById("filter-first-priority").value;
     var rows = submissions.filter(function(s){
-      return (!pathwayFilter || s.pathway === pathwayFilter)
+      var studentName = ((s.students && s.students.student_name) || "").toLowerCase();
+      return (!nameFilter || studentName.indexOf(nameFilter) !== -1)
+        && (!pathwayFilter || s.pathway === pathwayFilter)
         && (!statusFilter || s.status === statusFilter)
         && (!firstPriorityFilter || firstPriorityByFpId[s.id] === firstPriorityFilter);
     });
@@ -149,6 +176,7 @@
     });
   }
 
+  document.getElementById("filter-name").addEventListener("input", renderTable);
   document.getElementById("filter-pathway").addEventListener("change", renderTable);
   document.getElementById("filter-status").addEventListener("change", renderTable);
   document.getElementById("filter-first-priority").addEventListener("change", renderTable);

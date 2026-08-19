@@ -86,8 +86,24 @@
           </label>
         </div>
         <div id="fp-bulk-actions" class="fp-bulk-actions" hidden>
-          <span id="fp-bulk-count"></span>
-          <button type="button" class="fp-row-action-link fp-row-action-clear" id="fp-bulk-clear">Clear data for selected</button>
+          <span id="fp-bulk-count" class="fp-bulk-count"></span>
+          <div class="fp-bulk-menu-wrapper">
+            <button type="button" class="fp-bulk-dropdown-btn" id="fp-bulk-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+              Actions <span class="fp-bulk-dropdown-caret">&#9662;</span>
+            </button>
+            <div class="fp-bulk-dropdown-menu" id="fp-bulk-dropdown-menu" hidden>
+              <button type="button" class="fp-bulk-dropdown-item fp-bulk-clear-item" id="fp-bulk-clear">
+                <span class="fp-bulk-item-icon">&#8635;</span> Clear data for selected
+              </button>
+              <button type="button" class="fp-bulk-dropdown-item fp-bulk-delete-item" id="fp-bulk-delete">
+                <span class="fp-bulk-item-icon">&#10005;</span> Delete selected
+              </button>
+            </div>
+          </div>
+          <div class="fp-bulk-quick-actions">
+            <button type="button" class="fp-row-action-link fp-row-action-clear" id="fp-bulk-clear-direct">Clear data</button>
+            <button type="button" class="fp-row-action-link fp-row-action-delete" id="fp-bulk-delete-direct">Delete</button>
+          </div>
         </div>
         <div style="overflow-x:auto;">
           <table class="fp-admin-table" id="fp-admin-table">

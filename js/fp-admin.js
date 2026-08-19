@@ -125,23 +125,45 @@
 
   var selectedIds = new Set();
 
+  function closeBulkMenu(){
+    var menu = document.getElementById("fp-bulk-dropdown-menu");
+    var toggle = document.getElementById("fp-bulk-dropdown-toggle");
+    if(menu) menu.hidden = true;
+    if(toggle) toggle.setAttribute("aria-expanded", "false");
+  }
+
+  function toggleBulkMenu(e){
+    if(e) e.stopPropagation();
+    var menu = document.getElementById("fp-bulk-dropdown-menu");
+    var toggle = document.getElementById("fp-bulk-dropdown-toggle");
+    if(!menu) return;
+    var isHidden = menu.hidden;
+    menu.hidden = !isHidden;
+    if(toggle) toggle.setAttribute("aria-expanded", String(isHidden));
+  }
+
+  function setBulkLoading(isLoading, label){
+    var btns = document.querySelectorAll(".fp-bulk-actions button");
+    btns.forEach(function(b){ b.disabled = isLoading; });
+    var countEl = document.getElementById("fp-bulk-count");
+    if(countEl && label){
+      countEl.textContent = label;
+    }
+  }
+
   function updateBulkActionsBar(){
     var bar = document.getElementById("fp-bulk-actions");
     var countEl = document.getElementById("fp-bulk-count");
     if(selectedIds.size === 0){
       bar.hidden = true;
       bar.classList.remove("reveal-in");
+      closeBulkMenu();
       return;
     }
     var wasHidden = bar.hidden;
     bar.hidden = false;
-    countEl.textContent = selectedIds.size + " selected";
+    countEl.textContent = selectedIds.size + (selectedIds.size === 1 ? " student" : " students") + " selected";
     if(wasHidden){
-      // Draws the eye the moment it appears -- it's directly above
-      // the table now (moved there specifically because it used to
-      // sit above the filter row, several elements away from where
-      // someone's actually looking when they check a box), but the
-      // animation is extra insurance against it going unnoticed.
       bar.classList.remove("reveal-in");
       void bar.offsetWidth;
       bar.classList.add("reveal-in");
@@ -181,13 +203,6 @@
 
     document.querySelectorAll("#fp-admin-tbody tr[data-id]").forEach(function(tr){
       tr.addEventListener("click", function(e){
-        // Guard against the WHOLE checkbox cell, not just the tiny
-        // checkbox element itself -- a near-miss click that lands on
-        // the cell's padding (not precisely on the checkbox) used to
-        // fall through to opening the detail view instead, which is
-        // exactly the "I go somewhere else" complaint. The label now
-        // fills the whole cell (see .fp-select-cell below) so a click
-        // anywhere in it both toggles the checkbox AND is caught here.
         if(e.target.closest(".fp-row-actions") || e.target.closest(".fp-select-td")) return;
         openDetail(tr.dataset.id);
       });
@@ -205,8 +220,7 @@
       });
     });
 
-    // "Clear data" -- reversible-ish, same behavior as before this
-    // change: resets to an editable draft, keeps the account.
+    // "Clear data" -- resets to an editable draft, keeps the account.
     document.querySelectorAll("#fp-admin-tbody .fp-row-action-clear").forEach(function(btn){
       btn.addEventListener("click", function(e){
         e.stopPropagation();
@@ -220,17 +234,14 @@
           sub.submitted_at = null;
           sub.additional_information = null;
           selectedIds.delete(fpId);
+          renderStatsStrip();
           renderTable();
           updateBulkActionsBar();
         });
       });
     });
 
-    // "Delete" -- REAL, PERMANENT deletion. Removes the student's
-    // account entirely (auth.users/app_users/students rows, plus
-    // every future_pathways and preference row tied to them), not
-    // just their answers. There is no undo -- see counsellor_
-    // delete_student.sql for exactly what this removes.
+    // "Delete" -- REAL, PERMANENT deletion. Removes student account entirely.
     document.querySelectorAll("#fp-admin-tbody .fp-row-action-delete").forEach(function(btn){
       btn.addEventListener("click", function(e){
         e.stopPropagation();
@@ -243,6 +254,7 @@
           if(!ok) return;
           submissions = submissions.filter(function(x){ return x.id !== fpId; });
           selectedIds.delete(fpId);
+          renderStatsStrip();
           renderTable();
           updateBulkActionsBar();
         });
@@ -264,7 +276,25 @@
     updateBulkActionsBar();
   });
 
-  document.getElementById("fp-bulk-clear").addEventListener("click", function(){
+  // Bulk Actions Dropdown toggle & dismiss
+  var bulkToggle = document.getElementById("fp-bulk-dropdown-toggle");
+  if(bulkToggle){
+    bulkToggle.addEventListener("click", toggleBulkMenu);
+  }
+  document.addEventListener("click", function(e){
+    var menu = document.getElementById("fp-bulk-dropdown-menu");
+    if(menu && !menu.hidden && !e.target.closest(".fp-bulk-menu-wrapper")){
+      closeBulkMenu();
+    }
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){
+      closeBulkMenu();
+    }
+  });
+
+  function handleBulkClear(){
+    closeBulkMenu();
     var ids = Array.from(selectedIds);
     if(!ids.length) return;
 
@@ -273,14 +303,14 @@
       return sub ? (titleCase((sub.students && sub.students.student_name) || "") || null) : null;
     }).filter(Boolean);
 
-    var confirmMsg = "Reset " + ids.length + " student" + (ids.length === 1 ? "" : "s") + "'s form" + (ids.length === 1 ? "" : "s") + " back to editable drafts?\n\n" +
+    var count = ids.length;
+    var confirmMsg = "Reset " + count + " student" + (count === 1 ? "" : "s") + "'s form" + (count === 1 ? "" : "s") + " back to editable drafts?\n\n" +
       (names.length ? names.slice(0, 6).join(", ") + (names.length > 6 ? ", and " + (names.length - 6) + " more" : "") + "\n\n" : "") +
-      "This clears their submitted answers but keeps their accounts and profile info intact.";
+      "This clears their submitted answers (institute/faculty/program preferences and additional info) but keeps their accounts and profile info intact.";
 
     FP.confirm(confirmMsg).then(function(confirmed){
       if(!confirmed) return;
-      var bulkBtn = document.getElementById("fp-bulk-clear");
-      bulkBtn.disabled = true;
+      setBulkLoading(true, "Clearing data\u2026");
       Promise.all(ids.map(function(id){
         return new Promise(function(resolve){
           performReset(id, null, function(ok){
@@ -293,29 +323,83 @@
           });
         });
       })).then(function(){
-        bulkBtn.disabled = false;
+        setBulkLoading(false);
+        renderStatsStrip();
         renderTable();
         updateBulkActionsBar();
       });
     });
-  });
+  }
+
+  function handleBulkDelete(){
+    closeBulkMenu();
+    var ids = Array.from(selectedIds);
+    if(!ids.length) return;
+
+    var studentMap = [];
+    ids.forEach(function(id){
+      var sub = submissions.find(function(x){ return x.id === id; });
+      if(sub && sub.student_id){
+        studentMap.push({
+          fpId: id,
+          studentId: sub.student_id,
+          name: titleCase((sub.students && sub.students.student_name) || "")
+        });
+      }
+    });
+
+    if(!studentMap.length) return;
+
+    var count = studentMap.length;
+    var names = studentMap.map(function(s){ return s.name; }).filter(Boolean);
+
+    var confirmMsg = "Permanently delete " + count + " student account" + (count === 1 ? "" : "s") + "?\n\n" +
+      (names.length ? names.slice(0, 6).join(", ") + (names.length > 6 ? ", and " + (names.length - 6) + " more" : "") + "\n\n" : "") +
+      "This removes their names, profiles, and all submitted answers from the database completely. This CANNOT be undone.\n\n" +
+      "If you only want to clear their submitted answers and let them start over, use \u201cClear data\u201d instead.";
+
+    FP.confirm(confirmMsg).then(function(confirmed){
+      if(!confirmed) return;
+      setBulkLoading(true, "Deleting accounts\u2026");
+      var deletedFpIds = new Set();
+      Promise.all(studentMap.map(function(item){
+        return new Promise(function(resolve){
+          performDelete(item.studentId, null, function(ok){
+            if(ok){
+              deletedFpIds.add(item.fpId);
+              selectedIds.delete(item.fpId);
+            }
+            resolve();
+          });
+        });
+      })).then(function(){
+        submissions = submissions.filter(function(x){ return !deletedFpIds.has(x.id); });
+        setBulkLoading(false);
+        renderStatsStrip();
+        renderTable();
+        updateBulkActionsBar();
+      });
+    });
+  }
+
+  var bulkClearBtn = document.getElementById("fp-bulk-clear");
+  if(bulkClearBtn) bulkClearBtn.addEventListener("click", handleBulkClear);
+
+  var bulkClearDirect = document.getElementById("fp-bulk-clear-direct");
+  if(bulkClearDirect) bulkClearDirect.addEventListener("click", handleBulkClear);
+
+  var bulkDeleteBtn = document.getElementById("fp-bulk-delete");
+  if(bulkDeleteBtn) bulkDeleteBtn.addEventListener("click", handleBulkDelete);
+
+  var bulkDeleteDirect = document.getElementById("fp-bulk-delete-direct");
+  if(bulkDeleteDirect) bulkDeleteDirect.addEventListener("click", handleBulkDelete);
 
   document.getElementById("filter-name").addEventListener("input", renderTable);
   document.getElementById("filter-pathway").addEventListener("change", renderTable);
   document.getElementById("filter-status").addEventListener("change", renderTable);
   document.getElementById("filter-first-priority").addEventListener("change", renderTable);
 
-  // Shared "delete" action -- per the confirmed meaning from when
-  // this was first built: reset to an editable draft, keep the
-  // account (student_name/roll number/marks untouched), clear the
-  // answers (preferences + additional_information). Used by both
-  // the detail view's own button and the table row quick action
-  // below, so the confirm-copy/RPC-call/error-handling only exists
-  // once. Disables the triggering button for the duration of the
-  // call so a double-click can't fire two resets.
-  // Does the actual RPC call, no confirmation -- callers decide when/
-  // how to confirm (a single row asks about one student, a bulk
-  // action asks once about the whole batch, not once per student).
+  // Shared "reset/clear" action -- reset to an editable draft, keep the account
   function performReset(fpId, triggerBtn, onDone){
     if(triggerBtn) triggerBtn.disabled = true;
     FP.client.rpc("counsellor_reset_submission", { p_future_pathway_id: fpId }).then(function(r){
@@ -340,15 +424,20 @@
     });
   }
 
-  // REAL, PERMANENT deletion -- distinct from resetSubmission()
-  // above (which only clears answers and keeps the account). This
-  // removes the student's account entirely: the auth.users row,
-  // app_users row, students row, and every future_pathways/
-  // preference row tied to them. There is no undo -- see
-  // supabase/counsellor_delete_student.sql for exactly what gets
-  // removed and in what order. Confirm wording is deliberately more
-  // severe than resetSubmission()'s, and doesn't reuse its message,
-  // so the two actions never read as interchangeable.
+  // Shared "delete" action -- REAL, PERMANENT deletion via counsellor_delete_student
+  function performDelete(studentId, triggerBtn, onDone){
+    if(triggerBtn) triggerBtn.disabled = true;
+    FP.client.rpc("counsellor_delete_student", { p_student_id: studentId }).then(function(r){
+      if(r.error){
+        alert("Could not delete: " + r.error.message);
+        if(triggerBtn) triggerBtn.disabled = false;
+        onDone(false);
+        return;
+      }
+      onDone(true);
+    });
+  }
+
   function deleteStudent(studentId, studentName, triggerBtn, onDone){
     var confirmMsg = "Permanently delete " + (studentName || "this student") + "'s account?\n\n" +
       "This removes their name, profile, and every submitted answer from the database completely \u2014 " +
@@ -357,16 +446,7 @@
 
     FP.confirm(confirmMsg).then(function(confirmed){
       if(!confirmed){ onDone(false); return; }
-      if(triggerBtn) triggerBtn.disabled = true;
-      FP.client.rpc("counsellor_delete_student", { p_student_id: studentId }).then(function(r){
-        if(r.error){
-          alert("Could not delete: " + r.error.message);
-          if(triggerBtn) triggerBtn.disabled = false;
-          onDone(false);
-          return;
-        }
-        onDone(true);
-      });
+      performDelete(studentId, triggerBtn, onDone);
     });
   }
 
@@ -515,6 +595,7 @@
           sub.status = "draft";
           sub.submitted_at = null;
           sub.additional_information = null;
+          renderStatsStrip();
           openDetail(sub.id); // re-fetch and re-render with the cleared preferences
         });
       });
@@ -528,7 +609,9 @@
           submissions = submissions.filter(function(x){ return x.id !== sub.id; });
           document.getElementById("fp-admin-detail-view").hidden = true;
           document.getElementById("fp-admin-list-view").hidden = false;
+          renderStatsStrip();
           renderTable();
+          updateBulkActionsBar();
         });
       });
     }

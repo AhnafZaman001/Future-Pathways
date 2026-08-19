@@ -1337,3 +1337,27 @@ delete confirmation dialog explicitly names what's removed, states
 irreversibility plainly, and points to "Clear data" as the
 alternative for anyone who clicked the wrong one.
 
+## Bulk Actions Dropdown: "Clear data" and "Delete" for selected students
+
+Direct feedback: when multiple or all students (e.g. 95 students) are
+selected via select-all, the user expected an Actions dropdown menu
+offering both "Clear data" (reset to draft) and "Delete" (permanently
+delete student accounts) rather than solely offering a single clear-data
+action.
+
+- Added an **Actions Dropdown menu** (`#fp-bulk-dropdown-toggle` and
+  `#fp-bulk-dropdown-menu`) directly in the `#fp-bulk-actions` bar.
+- Includes two clearly delineated options:
+  - 🟠 **Clear data for selected** — batch resets forms to editable
+    drafts while keeping accounts intact via `counsellor_reset_submission`.
+  - 🔴 **Delete selected** — batch permanently deletes student
+    accounts and all submitted data from the database via `counsellor_delete_student`.
+- Also provided direct quick-action links (`Clear data` and `Delete`) on
+  the bulk bar for immediate 1-click access.
+- Enhanced confirmation dialogs for batch operations to list student names
+  and explicitly differentiate between resetting drafts vs permanent deletion.
+- Added loading/disabled states during batch execution and ensured
+  `renderStatsStrip()` is called after all batch and individual delete/reset
+  operations to keep total, submitted, and draft metrics synchronized.
+
+

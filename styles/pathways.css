@@ -169,7 +169,15 @@
   font-size:.74rem;
   letter-spacing:.02em;
   border-left: 2px solid transparent;
+  /* now a <button> -- strip native styling */
+  width: 100%;
+  background: none;
+  border-top: none; border-right: none; border-bottom: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-micro) var(--ease-out);
 }
+.fp-manifest-line:hover:not(.is-current){ background: var(--surface-2); }
 .fp-manifest-line .fp-m-glyph{ flex-shrink:0; width:12px; color: var(--ink-faint); }
 .fp-manifest-line .fp-m-label{ color: var(--ink-faint); flex-shrink:0; min-width:76px; text-transform:uppercase; }
 .fp-manifest-line .fp-m-value{ color: var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

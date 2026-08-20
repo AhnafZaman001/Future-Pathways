@@ -437,12 +437,24 @@
       var isCurrent = i === state.stepIndex;
       var cls = value ? "is-done" : (isCurrent ? "is-current" : "");
       var glyph = value ? "\u2713" : (isCurrent ? "\u25B8" : "\u2013");
-      return '<div class="fp-manifest-line ' + cls + '">' +
+      return '<button type="button" class="fp-manifest-line ' + cls + '" data-step-index="' + i + '">' +
         '<span class="fp-m-glyph">' + glyph + '</span>' +
         '<span class="fp-m-label">' + MANIFEST_LABELS[s] + '</span>' +
         '<span class="fp-m-value">' + esc(value || "") + '</span>' +
-      '</div>';
+      '</button>';
     }).join("");
+
+    // Wire jump-to clicks — developer/tester shortcut, no save on jump
+    wrap.querySelectorAll(".fp-manifest-line").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var target = parseInt(btn.dataset.stepIndex, 10);
+        if(target !== state.stepIndex){
+          state.stepIndex = target;
+          render();
+        }
+      });
+    });
+
     document.getElementById("fp-progress-label").innerHTML =
       "<span>STEP " + String(state.stepIndex+1).padStart(2,"0") + " / " + String(STEPS.length).padStart(2,"0") + "</span>" +
       "<span>" + esc(STEP_LABELS[STEPS[state.stepIndex]].toUpperCase()) + "</span>";

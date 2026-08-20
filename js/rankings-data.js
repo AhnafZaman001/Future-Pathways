@@ -73,9 +73,9 @@ window.RANKING_DATA = {
       ]
     },
     alsoOffered: [
-      "UET Taxila / Chakwal", "Punjab University Engineering Programs", "Air University",
-      "Bahria University", "NTU Faisalabad", "IST Islamabad", "International Islamic University",
-      "NASTP", "Namal University"
+      "FAST-NUCES", "UET Taxila / Chakwal", "Punjab University Engineering Programs",
+      "Air University", "Bahria University", "NTU Faisalabad", "IST Islamabad",
+      "International Islamic University", "NASTP", "Namal University"
     ]
   },
 

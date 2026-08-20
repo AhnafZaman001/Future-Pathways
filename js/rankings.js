@@ -160,13 +160,21 @@
     }
 
     if(field.industryReputation){
-      html += '<div class="rk-industry">' +
-        '<h3>Industry reputation <span class="rk-industry-badge">not a ranking</span></h3>' +
-        '<p class="rk-industry-note">' + esc(field.industryReputation.note) + '</p>' +
-        '<div class="rk-tags">' + field.industryReputation.names.map(function(n){
-          return '<span class="rk-tag">' + esc(n) + '</span>';
-        }).join("") + '</div>' +
-      '</div>';
+      // Filter the industry-reputation names by city too -- previously
+      // these were shown unfiltered even when a city was selected, so
+      // Lahore-only universities appeared in the Islamabad results.
+      var repNames = field.industryReputation.names.filter(function(n){
+        return institutePresentInCity(n, city);
+      });
+      if(repNames.length){
+        html += '<div class="rk-industry">' +
+          '<h3>Industry reputation <span class="rk-industry-badge">not a ranking</span></h3>' +
+          '<p class="rk-industry-note">' + esc(field.industryReputation.note) + '</p>' +
+          '<div class="rk-tags">' + repNames.map(function(n){
+            return '<span class="rk-tag">' + esc(n) + '</span>';
+          }).join("") + '</div>' +
+        '</div>';
+      }
     }
 
     html += '</div>';

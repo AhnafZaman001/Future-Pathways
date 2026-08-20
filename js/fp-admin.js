@@ -241,13 +241,7 @@
     });
   });
 
-  // Quick-action buttons (always visible in the bulk bar, not dropdown)
-  document.getElementById("fp-bulk-clear-direct").addEventListener("click", function(){
-    document.getElementById("fp-bulk-clear").click();
-  });
-  document.getElementById("fp-bulk-delete-direct").addEventListener("click", function(){
-    document.getElementById("fp-bulk-delete").click();
-  });
+  // Quick-action buttons removed (dropdown covers both actions now)
 
   // Column sort headers
   document.querySelectorAll(".fp-th-sortable").forEach(function(th){

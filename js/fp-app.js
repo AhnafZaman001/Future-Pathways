@@ -511,7 +511,13 @@
           '</div>' +
           '<div class="fp-grid-2">' +
             field("father_profession", "Father\'s profession", p.father_profession) +
-            field("contact", "Contact number", p.contact) +
+            '<label>Contact number' +
+              '<input type="tel" data-field="contact" id="fp-contact-input"' +
+              ' value="' + esc(p.contact) + '"' +
+              ' maxlength="11" inputmode="numeric"' +
+              ' placeholder="03XXXXXXXXX" autocomplete="tel" required>' +
+              '<span class="fp-field-hint" id="fp-contact-hint"></span>' +
+            '</label>' +
           '</div>' +
           '<div class="fp-grid-2">' +
             field("discipline", "Discipline", p.discipline) +
@@ -675,7 +681,32 @@
 
     if(step === "profile"){
       container.querySelectorAll("[data-field]").forEach(function(input){
-        input.addEventListener("input", function(){ state.profile[input.dataset.field] = input.value; });
+        input.addEventListener("input", function(){
+          // Strip non-digits for the contact field and enforce 11-digit mask
+          if(input.dataset.field === "contact"){
+            var digits = input.value.replace(/\D/g, "").slice(0, 11);
+            input.value = digits;
+            state.profile.contact = digits;
+            var hint = document.getElementById("fp-contact-hint");
+            if(hint){
+              if(digits.length === 0){
+                hint.textContent = "";
+                hint.className = "fp-field-hint";
+              } else if(!digits.startsWith("03")){
+                hint.textContent = "Pakistani mobile numbers start with 03 \u2014 e.g. 03214908865";
+                hint.className = "fp-field-hint is-error";
+              } else if(digits.length < 11){
+                hint.textContent = (11 - digits.length) + " more digit" + (11 - digits.length === 1 ? "" : "s") + " needed \u2014 format: 03XX XXXXXXX";
+                hint.className = "fp-field-hint is-warn";
+              } else {
+                hint.textContent = "\u2713 Looks good";
+                hint.className = "fp-field-hint is-ok";
+              }
+            }
+            return;
+          }
+          state.profile[input.dataset.field] = input.value;
+        });
       });
     }
     if(step === "pathway"){
@@ -761,6 +792,10 @@
       var required = ["student_name","father_name","contact","discipline","roll_number","matric_marks","first_year_marks"];
       var missing = required.filter(function(k){ return !p[k] && p[k] !== 0; });
       if(missing.length) return "Please fill in all required student information fields.";
+      // Contact-specific validation: must be exactly 11 digits starting with 03
+      var contact = String(p.contact || "").replace(/\D/g,"");
+      if(contact.length !== 11) return "Contact number must be exactly 11 digits \u2014 e.g. 03214908865.";
+      if(!contact.startsWith("03")) return "Contact number must start with 03 \u2014 e.g. 03214908865.";
     }
     if(step === "pathway" && !state.pathway) return "Please select a pathway to continue.";
     if(step === "institutes" || step === "faculties"){

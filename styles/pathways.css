@@ -110,6 +110,20 @@
 .iso-face-right{ fill: var(--iso-right); opacity: var(--iso-right-opacity); }
 .fp-hint{ font-weight:400; color: var(--ink-soft); }
 .fp-error{ color: var(--red); font-size:.85rem; margin:0; }
+
+.fp-field-hint{
+  display: block;
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  letter-spacing: .02em;
+  margin-top: 5px;
+  min-height: 1em;
+  transition: color var(--dur-micro) var(--ease-out);
+}
+.fp-field-hint:empty{ display: none; }
+.fp-field-hint.is-error{ color: var(--red); }
+.fp-field-hint.is-warn{ color: var(--amber); }
+.fp-field-hint.is-ok{ color: var(--green); }
 .fp-note{ color: var(--green); font-size:.85rem; margin:0; }
 
 .btn-primary{

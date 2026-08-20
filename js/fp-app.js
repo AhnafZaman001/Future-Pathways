@@ -614,7 +614,14 @@
       var dupes = findDupes(ranks);
       var ranksHtml = ranks.map(function(val, ri){
         var isDupe = val && dupes.indexOf(val) > -1;
-        var selectHtml = '<select data-kind="' + kind + '" data-group="' + gi + '" data-rank="' + ri + '">' +
+        var uid = kind + "-" + gi + "-" + ri;
+        // Searchable select: a text input filters the <select> options
+        // live so you can type "NUST" instead of scrolling a long list.
+        var searchHtml = '<input type="search" class="fp-pref-search" ' +
+          'data-target="' + uid + '" ' +
+          'placeholder="Type to search\u2026" autocomplete="off" ' +
+          'style="margin-bottom:4px;">';
+        var selectHtml = '<select id="' + uid + '" data-kind="' + kind + '" data-group="' + gi + '" data-rank="' + ri + '">' +
           '<option value="">\u2014 select \u2014</option>' +
           options.map(function(o){
             var sel = (val === o.id) ? "selected" : "";
@@ -625,7 +632,7 @@
         var showCustom = customName && customName.name === "Other";
         var customInput = showCustom ?
           '<input type="text" placeholder="Name it" data-kind="' + kind + '-custom" data-group="' + gi + '" data-rank="' + ri + '" value="' + esc(customArr[gi][ri]) + '" style="max-width:160px;">' : "";
-        return '<div class="fp-pref-rank ' + (isDupe?"has-dupe":"") + '"><span class="fp-rank-badge">' + (ri+1) + '</span>' + selectHtml + customInput + '</div>';
+        return '<div class="fp-pref-rank ' + (isDupe?"has-dupe":"") + '"><span class="fp-rank-badge">' + (ri+1) + '</span><div class="fp-pref-rank-inner">' + searchHtml + selectHtml + customInput + '</div></div>';
       }).join("");
       return '<div class="fp-pref-group"><h4>Preference group ' + (gi+1) + '</h4><div class="fp-pref-ranks">' + ranksHtml + '</div></div>';
     }).join("");
@@ -690,6 +697,46 @@
           var gi = +inp.dataset.group, ri = +inp.dataset.rank;
           var target = inp.dataset.kind.indexOf("institute") === 0 ? state.instituteCustom : state.facultyCustom;
           target[gi][ri] = inp.value;
+        });
+      });
+      // Search filter -- type to narrow the select options, then click
+      // the matching one. On selection, clears the search box so the
+      // full list is visible again next time.
+      container.querySelectorAll(".fp-pref-search").forEach(function(inp){
+        var sel = document.getElementById(inp.dataset.target);
+        if(!sel) return;
+        // Store full option list once on first keydown so filtering
+        // is always from the original set, not the already-filtered one.
+        var allOptions = Array.from(sel.options);
+        inp.addEventListener("input", function(){
+          var q = inp.value.trim().toLowerCase();
+          // Rebuild option list -- show only matches, keep selected
+          // value even if it's now filtered out (so state isn't lost)
+          while(sel.options.length) sel.remove(0);
+          allOptions.forEach(function(opt){
+            if(!q || opt.text.toLowerCase().indexOf(q) !== -1){
+              sel.appendChild(opt.cloneNode(true));
+            }
+          });
+          // Auto-select if exactly one result (not the blank placeholder)
+          var realOpts = Array.from(sel.options).filter(function(o){ return o.value; });
+          if(realOpts.length === 1){
+            sel.value = realOpts[0].value;
+            sel.dispatchEvent(new Event("change"));
+            inp.value = "";
+            // Restore full list after auto-select
+            while(sel.options.length) sel.remove(0);
+            allOptions.forEach(function(opt){ sel.appendChild(opt.cloneNode(true)); });
+            sel.value = realOpts[0].value;
+          }
+        });
+        sel.addEventListener("change", function(){
+          inp.value = "";
+          // Restore full option list when user picks from select
+          var cur = sel.value;
+          while(sel.options.length) sel.remove(0);
+          allOptions.forEach(function(opt){ sel.appendChild(opt.cloneNode(true)); });
+          sel.value = cur;
         });
       });
     }

@@ -274,10 +274,20 @@ body.is-review-step .fp-actions{ margin-top:28px; padding-top:20px; border-top:1
 .fp-pref-group h4{ margin:0 0 10px; font-family: var(--font-body); font-size:.95rem; }
 .fp-pref-search{ margin-bottom:10px; }
 .fp-pref-ranks{ display:flex; flex-direction:column; gap:8px; }
-.fp-pref-rank{ display:flex; align-items:center; gap:10px; }
+.fp-pref-rank{ display:flex; align-items:flex-start; gap:10px; }
+.fp-pref-rank .fp-rank-badge{
+  margin-top: 8px; /* align badge with search input, not the select below */
+}
 .fp-pref-rank .fp-rank-badge{
   flex-shrink:0; width:26px; height:26px; border-radius:50%; background: var(--surface-2);
   color: var(--ink-soft); font-size:.8rem; font-weight:700; display:flex; align-items:center; justify-content:center;
+}
+.fp-pref-rank-inner{ display:flex; flex-direction:column; gap:4px; flex:1; }
+.fp-pref-rank-inner select{ width:100%; }
+.fp-pref-rank-inner .fp-pref-search{
+  font-size: .82rem;
+  padding: 5px 10px;
+  height: auto;
 }
 .fp-pref-rank select{ flex:1; }
 .fp-pref-rank.has-dupe select{ border-color: var(--red); }

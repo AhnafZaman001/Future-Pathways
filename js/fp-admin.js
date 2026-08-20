@@ -145,6 +145,177 @@
     renderTable();
   }
 
+  // ---------------------------------------------------------
+  // Missing event listeners — these functions were defined in
+  // the overhaul commit but never wired to the DOM elements.
+  // ---------------------------------------------------------
+
+  // Select-all checkbox
+  document.getElementById("fp-select-all").addEventListener("change", function(e){
+    var checked = e.target.checked;
+    document.querySelectorAll("#fp-admin-tbody .fp-row-select").forEach(function(cb){
+      cb.checked = checked;
+      if(checked) selectedIds.add(cb.dataset.id);
+      else selectedIds.delete(cb.dataset.id);
+    });
+    updateBulkActionsBar();
+  });
+
+  // Bulk action dropdown toggle
+  document.getElementById("fp-bulk-dropdown-toggle").addEventListener("click", function(e){
+    toggleBulkMenu(e);
+  });
+  document.addEventListener("click", function(e){
+    if(!e.target.closest(".fp-bulk-menu-wrapper")) closeBulkMenu();
+  });
+
+  // Bulk "Clear data for selected" (dropdown item)
+  document.getElementById("fp-bulk-clear").addEventListener("click", function(){
+    closeBulkMenu();
+    var ids = Array.from(selectedIds);
+    if(!ids.length) return;
+    var names = ids.map(function(id){
+      var sub = submissions.find(function(x){ return x.id === id; });
+      return sub ? (titleCase((sub.students && sub.students.student_name) || "") || null) : null;
+    }).filter(Boolean);
+    var confirmMsg = "Clear data for " + ids.length + " student" + (ids.length === 1 ? "" : "s") + "?\n\n" +
+      (names.length ? names.slice(0, 6).join(", ") + (names.length > 6 ? ", and " + (names.length - 6) + " more" : "") + "\n\n" : "") +
+      "This resets their forms to draft and clears submitted answers, but keeps their accounts and profile info (name, marks) intact.";
+    FP.confirm(confirmMsg).then(function(confirmed){
+      if(!confirmed) return;
+      setBulkLoading(true, "Clearing\u2026");
+      Promise.all(ids.map(function(id){
+        return new Promise(function(resolve){
+          performReset(id, null, function(ok){
+            if(ok){
+              var sub = submissions.find(function(x){ return x.id === id; });
+              if(sub){ sub.status = "draft"; sub.submitted_at = null; sub.additional_information = null; }
+              selectedIds.delete(id);
+            }
+            resolve();
+          });
+        });
+      })).then(function(){
+        setBulkLoading(false);
+        FP.toast.success("Cleared data for " + ids.length + " student" + (ids.length === 1 ? "" : "s"));
+        renderStatsStrip();
+        renderTable();
+        updateBulkActionsBar();
+      });
+    });
+  });
+
+  // Bulk "Delete selected" (dropdown item)
+  document.getElementById("fp-bulk-delete").addEventListener("click", function(){
+    closeBulkMenu();
+    var ids = Array.from(selectedIds);
+    if(!ids.length) return;
+    var studentIds = ids.map(function(id){
+      var sub = submissions.find(function(x){ return x.id === id; });
+      return sub ? { fpId: id, studentId: sub.student_id, name: titleCase((sub.students && sub.students.student_name) || "") } : null;
+    }).filter(Boolean);
+    var names = studentIds.map(function(s){ return s.name; }).filter(Boolean);
+    var confirmMsg = "Permanently delete " + studentIds.length + " student account" + (studentIds.length === 1 ? "" : "s") + "?\n\n" +
+      (names.length ? names.slice(0, 6).join(", ") + (names.length > 6 ? ", and " + (names.length - 6) + " more" : "") + "\n\n" : "") +
+      "This removes their names, profiles, and all submitted data from the database completely. This cannot be undone.";
+    FP.confirm(confirmMsg).then(function(confirmed){
+      if(!confirmed) return;
+      setBulkLoading(true, "Deleting\u2026");
+      Promise.all(studentIds.map(function(s){
+        return new Promise(function(resolve){
+          FP.client.rpc("counsellor_delete_student", { p_student_id: s.studentId }).then(function(r){
+            if(!r.error){
+              submissions = submissions.filter(function(x){ return x.id !== s.fpId; });
+              selectedIds.delete(s.fpId);
+            }
+            resolve();
+          });
+        });
+      })).then(function(){
+        setBulkLoading(false);
+        FP.toast.success("Deleted " + studentIds.length + " student account" + (studentIds.length === 1 ? "" : "s"));
+        renderStatsStrip();
+        renderTable();
+        updateBulkActionsBar();
+      });
+    });
+  });
+
+  // Quick-action buttons (always visible in the bulk bar, not dropdown)
+  document.getElementById("fp-bulk-clear-direct").addEventListener("click", function(){
+    document.getElementById("fp-bulk-clear").click();
+  });
+  document.getElementById("fp-bulk-delete-direct").addEventListener("click", function(){
+    document.getElementById("fp-bulk-delete").click();
+  });
+
+  // Column sort headers
+  document.querySelectorAll(".fp-th-sortable").forEach(function(th){
+    th.querySelector(".fp-th-btn").addEventListener("click", function(){
+      var col = th.dataset.sort;
+      if(sortState.col === col){
+        sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
+      } else {
+        sortState.col = col;
+        sortState.dir = "asc";
+      }
+      paginationState.page = 1;
+      renderTable();
+    });
+  });
+
+  // Filter inputs
+  document.getElementById("filter-name").addEventListener("input", function(){ paginationState.page = 1; renderTable(); });
+  document.getElementById("filter-pathway").addEventListener("change", function(){ paginationState.page = 1; renderTable(); });
+  document.getElementById("filter-status").addEventListener("change", function(){ paginationState.page = 1; renderTable(); });
+  document.getElementById("filter-first-priority").addEventListener("change", function(){ paginationState.page = 1; renderTable(); });
+
+  // ---------------------------------------------------------
+  // Action functions (missing from overhaul commit)
+  // ---------------------------------------------------------
+
+  function performReset(fpId, triggerBtn, onDone){
+    if(triggerBtn) triggerBtn.disabled = true;
+    FP.client.rpc("counsellor_reset_submission", { p_future_pathway_id: fpId }).then(function(r){
+      if(r.error){
+        FP.toast.error("Could not reset: " + r.error.message);
+        if(triggerBtn) triggerBtn.disabled = false;
+        onDone(false);
+        return;
+      }
+      onDone(true);
+    });
+  }
+
+  function resetSubmission(fpId, studentName, triggerBtn, onDone){
+    var confirmMsg = "Clear " + (studentName || "this student") + "'s form back to an editable draft?\n\n" +
+      "This clears their submitted answers but keeps their account and profile info (name, roll number, marks) intact.";
+    FP.confirm(confirmMsg).then(function(confirmed){
+      if(!confirmed){ onDone(false); return; }
+      performReset(fpId, triggerBtn, onDone);
+    });
+  }
+
+  function deleteStudent(studentId, studentName, triggerBtn, onDone){
+    var confirmMsg = "Permanently delete " + (studentName || "this student") + "'s account?\n\n" +
+      "This removes their name, profile, and every submitted answer from the database completely \u2014 " +
+      "not just this form. This cannot be undone. If you only want to clear their submitted answers " +
+      "and let them start over, use \u201cClear data\u201d instead.";
+    FP.confirm(confirmMsg).then(function(confirmed){
+      if(!confirmed){ onDone(false); return; }
+      if(triggerBtn) triggerBtn.disabled = true;
+      FP.client.rpc("counsellor_delete_student", { p_student_id: studentId }).then(function(r){
+        if(r.error){
+          FP.toast.error("Could not delete: " + r.error.message);
+          if(triggerBtn) triggerBtn.disabled = false;
+          onDone(false);
+          return;
+        }
+        onDone(true);
+      });
+    });
+  }
+
   function renderStatsStrip(){
     var el = document.getElementById("fp-stats-strip");
     if(!el) return;

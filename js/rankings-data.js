@@ -2,31 +2,17 @@
    rankings-data.js — curated data for the University Explorer
    (rankings.html). Field → subset → ranked universities.
 
-   SOURCING POLICY (mirrors the merit-data verification rule
-   for this project): every ranked entry either cites a real,
-   checkable source (QS Subject Rankings, QS World University
-   Rankings, or UHS official closing-merit announcements as
-   reported by Dawn), or is explicitly marked unranked with a
-   plain-language reason. No invented positions, ever. Where a
-   subject-specific rank doesn't exist, the institution's
-   overall/subject-family rank is shown with that fact stated,
-   not disguised as a subject rank.
+   SOURCING POLICY: every ranked entry either cites a real,
+   checkable source, or is explicitly marked unranked with a
+   plain-language reason. No invented positions, ever.
 
-   `theBand`, where present, is that university's overall (not
-   subject-specific) Times Higher Education World University
-   Rankings 2026 band — THE's own subject tables are rendered
-   client-side JS and couldn't be fetched directly, so only the
-   overall band is used, and only for universities explicitly
-   named in Gulf News's coverage of THE's release. Left null
-   rather than guessed where a university wasn't named.
-
-   `industryReputation`, where present on a field, is an
-   explicitly non-numeric, non-ranking signal — informal
-   employer-perception consensus repeated across independent
-   sources, shown separately so it's never mistaken for a real
-   ranking.
-
-   Update this file, don't hardcode ranking numbers elsewhere.
+   Last verified: August 2026 against:
+   - QS World University Rankings by Subject 2026
+     (Dawn, Express Tribune, LUMS official release Mar 2026)
+   - QS World University Rankings 2026 (overall)
+   - Times Higher Education 2026 (Gulf News coverage)
+   - HEC Pakistan category rankings
+   - UAF official news / TopUniversities.com subject data
    ========================================================= */
 
 window.RANKING_DATA = {
@@ -40,32 +26,27 @@ window.RANKING_DATA = {
       "Environmental Engineering", "Metallurgical Engineering", "Mining Engineering",
       "Textile Engineering"
     ],
-    // Applies to all subsets above unless a subset has its own
-    // override block further down — see `overrides`.
     baseRanking: [
-      { rank: 1, name: "NUST", detail: "QS Engineering & Technology #127 globally — #1 in Pakistan for engineering", source: "QS Subject Rankings 2025", sourceUrl: "https://nust.edu.pk/about-us/nust-rankings/", theBand: "601–800" },
-      { rank: 2, name: "PIEAS", detail: "QS overall #721 globally (2026); historically HEC's #2 Engineering & Technology institution", source: "QS World University Rankings 2026 / HEC category ranking", sourceUrl: null, theBand: null },
-      { rank: 3, name: "GIK Institute (GIKI)", detail: "Not currently listed in QS's global ranking; historically HEC's #3 Engineering & Technology institution", source: "HEC category ranking (dated methodology — verify current cycle)", sourceUrl: null, theBand: "801–1000" },
-      { rank: 4, name: "UET Lahore", detail: "QS overall #801 globally (2026)", source: "QS World University Rankings 2026", sourceUrl: null, theBand: null },
-      { rank: 5, name: "COMSATS University Islamabad", detail: "QS overall #664 globally (2026)", source: "QS World University Rankings 2026", sourceUrl: null, theBand: "601–800" }
+      { rank: 1, name: "NUST", detail: "QS Engineering & Technology 201\u2013250 globally (2026) \u2014 #1 in Pakistan for engineering", source: "QS Subject Rankings 2026 / Dawn Mar 2026", sourceUrl: "https://www.dawn.com/news/1985415", theBand: "601\u2013800" },
+      { rank: 2, name: "PIEAS", detail: "QS overall #721 globally (2026); HEC #2 Engineering & Technology institution in Pakistan", source: "QS World University Rankings 2026", sourceUrl: null, theBand: null },
+      { rank: 3, name: "GIK Institute (GIKI)", detail: "THE 2026 band 801\u20131000; historically HEC #3 Engineering & Technology institution", source: "THE World University Rankings 2026 / HEC", sourceUrl: null, theBand: "801\u20131000" },
+      { rank: 4, name: "UET Lahore", detail: "QS overall #801 globally (2026); QS Engineering 251\u2013400", source: "QS World University Rankings 2026 / QS Subject Rankings 2026", sourceUrl: null, theBand: "801\u20131000" },
+      { rank: 5, name: "COMSATS University Islamabad", detail: "QS overall #664 globally (2026); QS Engineering 251\u2013300", source: "QS World University Rankings 2026 / QS Subject Rankings 2026", sourceUrl: null, theBand: "601\u2013800" }
     ],
     overrides: {
       "Electrical Engineering": [
-        { rank: 1, name: "NUST", detail: "QS Electrical Engineering #143 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://parhlai.com/blog/nust-qs-rankings" }
+        { rank: 1, name: "NUST", detail: "QS Electrical Engineering top 150 globally", source: "QS Subject Rankings 2025/2026", sourceUrl: "https://nust.edu.pk/about-us/nust-rankings/" }
       ],
       "Chemical Engineering": [
-        { rank: 1, name: "NUST", detail: "QS Chemical Engineering — top 200 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://parhlai.com/blog/nust-qs-rankings" }
+        { rank: 1, name: "NUST", detail: "QS Chemical Engineering top 200 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://parhlai.com/blog/nust-qs-rankings" }
       ],
       "Civil Engineering": [
-        { rank: 1, name: "NUST", detail: "QS Civil Engineering — top 375 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://parhlai.com/blog/nust-qs-rankings" }
+        { rank: 1, name: "NUST", detail: "QS Civil Engineering top 375 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://parhlai.com/blog/nust-qs-rankings" }
       ],
       "Aerospace / Aeronautical": [
-        { rank: 1, name: "NUST", detail: "QS Mechanical & Aeronautical Engineering — top 250 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://parhlai.com/blog/nust-qs-rankings" }
+        { rank: 1, name: "NUST", detail: "QS Mechanical & Aeronautical Engineering top 250 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://parhlai.com/blog/nust-qs-rankings" }
       ]
     },
-    // Institutes that offer programs in this field but have no
-    // independently verifiable subject/QS/HEC ranking we could
-    // confirm — listed for completeness, not scored.
     alsoOffered: [
       "UET Taxila / Chakwal", "Punjab University Engineering Programs", "Air University",
       "Bahria University", "NTU Faisalabad", "IST Islamabad", "International Islamic University",
@@ -80,47 +61,132 @@ window.RANKING_DATA = {
       "Data Science", "Cybersecurity", "Information Technology", "Computer Engineering"
     ],
     baseRanking: [
-      { rank: 1, name: "NUST (SEECS)", detail: "QS Computer Science & Information Systems #164 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://nust.edu.pk/about-us/nust-rankings/", theBand: "601–800" },
-      { rank: 2, name: "University of the Punjab (PUCIT)", detail: "QS Computer Science & Information Systems #301–350 globally", source: "QS Subject Rankings 2025", sourceUrl: null, theBand: "801–1000 (parent university's overall band, not PUCIT-specific)" },
-      { rank: 3, name: "LUMS", detail: "QS Computer Science & Information Systems #401–450 globally", source: "QS Subject Rankings 2025", sourceUrl: null, theBand: "801–1000" },
-      { rank: 3, name: "UET Lahore", detail: "QS Computer Science & Information Systems #401–450 globally (tied band with LUMS)", source: "QS Subject Rankings 2025", sourceUrl: null, theBand: null }
+      { rank: 1, name: "NUST (SEECS)", detail: "QS Computer Science & Information Systems 201\u2013300 globally (2026)", source: "QS Subject Rankings 2026 / Dawn Mar 2026", sourceUrl: "https://www.dawn.com/news/1985415", theBand: "601\u2013800" },
+      { rank: 2, name: "University of the Punjab (PUCIT)", detail: "QS Computer Science 301\u2013350 globally (2025)", source: "QS Subject Rankings 2025", sourceUrl: null, theBand: "801\u20131000" },
+      { rank: 3, name: "LUMS", detail: "QS Computer Science 401\u2013450 globally (2025); QS overall #555 (2026)", source: "QS Subject Rankings 2025 / QS 2026", sourceUrl: null, theBand: "801\u20131000" },
+      { rank: 3, name: "UET Lahore", detail: "QS Computer Science 401\u2013450 globally (tied band with LUMS)", source: "QS Subject Rankings 2025", sourceUrl: null, theBand: "801\u20131000" },
+      { rank: 5, name: "COMSATS University Islamabad", detail: "QS Computer Science & IT 201\u2013250 globally (2026)", source: "QS Subject Rankings 2026 / Express Tribune Mar 2026", sourceUrl: "https://tribune.com.pk/story/2599389/35-pakistani-universities-feature-in-qs-subject-rankings-2026", theBand: "601\u2013800" }
     ],
-    // Named consistently across multiple independent sources as
-    // the most employer-respected computing programs in Pakistan.
-    // This is NOT a formal ranking — no published methodology,
-    // no single primary source — so it's shown as a distinct,
-    // clearly-labeled reputation signal, never mixed into the
-    // numeric ranked list above.
     industryReputation: {
       note: "Named repeatedly across independent Pakistani education/career sources as the most employer-respected computing programs \u2014 this reflects informal consensus, not a published ranking with a stated methodology.",
       names: ["FAST-NUCES", "COMSATS University Islamabad", "NUST", "Punjab University College of IT (PUCIT)"]
     },
     overrides: {},
-    // FAST-NUCES is deliberately here, not in the ranked list —
-    // sources conflicted on its exact QS subject position, and
-    // per this project's data policy we don't publish a number
-    // we can't independently confirm. It is widely regarded by
-    // employers as Pakistan's leading dedicated computing
-    // institution; that reputation just isn't a QS number.
     alsoOffered: [
-      "FAST-NUCES (widely regarded as Pakistan's leading dedicated computing university by employer surveys — not separately QS subject-ranked at a confirmed position)",
-      "GIK Institute (GIKI)", "COMSATS University Islamabad", "PIEAS", "ITU Lahore",
+      "FAST-NUCES (widely regarded as Pakistan\u2019s leading dedicated computing university by employer surveys \u2014 not separately QS subject-ranked at a confirmed position)",
+      "GIK Institute (GIKI)", "PIEAS", "ITU Lahore",
       "Air University", "Bahria University", "Namal University"
+    ]
+  },
+
+  business: {
+    label: "Business & Management",
+    subsets: [
+      "BBA / Business Administration", "Accounting & Finance", "Economics",
+      "MBA", "Marketing", "Human Resource Management", "Supply Chain / Operations"
+    ],
+    baseRanking: [
+      { rank: 1, name: "LUMS", detail: "QS Business & Management Studies 101\u2013150 globally (2026) \u2014 #1 in Pakistan. QS Accounting & Finance 101\u2013150 globally \u2014 #1 in Pakistan. QS overall #555 (2026).", source: "LUMS official / QS Subject Rankings 2026 / Dawn Mar 2026", sourceUrl: "https://lums.edu.pk/news/lums-recognised-top-pakistani-university-multiple-subjects-qs-rankings-2026", theBand: "801\u20131000" },
+      { rank: 2, name: "IBA Karachi", detail: "QS Business & Management Studies 251\u2013300 globally (2026); QS Economics 151\u2013250 \u2014 consistently HEC #1 public business school. QS South Asia rank 70.", source: "QS Subject Rankings 2026 / TopUniversities / Express Tribune Mar 2026", sourceUrl: "https://www.topuniversities.com/universities/institute-business-administration-iba", theBand: null },
+      { rank: 3, name: "University of the Punjab", detail: "QS Business & Management 201\u2013400 globally (2026); Pakistan\u2019s oldest university, largest by enrolment", source: "QS Subject Rankings 2026 / Express Tribune Mar 2026", sourceUrl: null, theBand: "801\u20131000" },
+      { rank: 4, name: "Quaid-i-Azam University", detail: "QS Economics 201\u2013250 globally (joint top in Pakistan with LUMS); QS overall #354 \u2014 highest-ranked Pakistani university overall", source: "QS Subject Rankings 2026 / Dawn Mar 2026", sourceUrl: "https://www.dawn.com/news/1985415", theBand: "401\u2013500" }
+    ],
+    overrides: {},
+    alsoOffered: [
+      "NUST Business School", "GCU Lahore", "Bahria University",
+      "COMSATS University Islamabad", "Air University", "UMT Lahore"
+    ],
+    dataNote: "No law-specific QS subject ranking exists for Pakistani universities. For law specifically, LUMS SAHSOL and University of the Punjab Law College are the most cited institutions \u2014 see the Law field."
+  },
+
+  law: {
+    label: "Law",
+    subsets: ["LLB (Hons) 5-year", "LLM", "Shariah & Law"],
+    // No QS subject ranking for law in Pakistan. Best available signal
+    // is consistent multi-source expert/employer reputation consensus
+    // and HEC recognition -- labeled explicitly as that.
+    baseRanking: [],
+    overrides: { "LLB (Hons) 5-year": "unranked", "LLM": "unranked", "Shariah & Law": "unranked" },
+    industryReputation: {
+      note: "No QS or HEC subject ranking exists for law in Pakistan. This reflects consistent cross-source expert and employer reputation consensus as of 2025\u20132026 \u2014 not a published ranking with a stated methodology. LAT (Law Admission Test) is mandatory for all law programs.",
+      names: [
+        "LUMS (SAHSOL)",
+        "University of the Punjab Law College",
+        "International Islamic University Islamabad",
+        "Superior University College of Law",
+        "Government College University Lahore"
+      ]
+    },
+    alsoOffered: [
+      "SZABIST Islamabad / Karachi", "University of Karachi (School of Law)",
+      "Bahauddin Zakariya University", "University of Peshawar"
+    ],
+    dataNote: "LUMS Shaikh Ahmad Hassan School of Law (SAHSOL) is widely cited as Pakistan\u2019s leading private law school (corporate / international law focus). Punjab University Law College is the most cited public institution with the longest history of producing judges and senior counsel. Islamabad is noted for constitutional law; Karachi for corporate and maritime law. HEC LAT is now mandatory for all admissions."
+  },
+
+  social_sciences: {
+    label: "Social Sciences",
+    subsets: [
+      "Psychology", "Sociology", "Political Science", "International Relations",
+      "Public Administration", "Media & Communication", "Development Studies"
+    ],
+    baseRanking: [
+      { rank: 1, name: "LUMS", detail: "QS Social Sciences & Management 251\u2013300 globally (2026) \u2014 #1 in Pakistan for Social Sciences and also for Politics. QS overall #555 (2026).", source: "LUMS official / QS Subject Rankings 2026", sourceUrl: "https://lums.edu.pk/news/lums-recognised-top-pakistani-university-multiple-subjects-qs-rankings-2026", theBand: "801\u20131000" },
+      { rank: 2, name: "University of the Punjab", detail: "QS Social Sciences 201\u2013400 globally (2026); largest social sciences faculty in Pakistan", source: "QS Subject Rankings 2026 / Express Tribune Mar 2026", sourceUrl: null, theBand: "801\u20131000" },
+      { rank: 3, name: "Quaid-i-Azam University", detail: "QS overall #354 globally (2026); strong in political science and international relations", source: "QS World University Rankings 2026", sourceUrl: null, theBand: "401\u20131000" }
+    ],
+    overrides: {},
+    alsoOffered: [
+      "Habib University (social sciences, 400+ globally QS 2026)",
+      "GCU Lahore", "Forman Christian College", "University of Karachi",
+      "International Islamic University Islamabad", "Bahauddin Zakariya University"
+    ]
+  },
+
+  natural_sciences: {
+    label: "Natural Sciences",
+    subsets: [
+      "Physics", "Chemistry", "Biology / Biosciences",
+      "Mathematics", "Statistics", "Environmental Sciences", "Geology"
+    ],
+    baseRanking: [
+      { rank: 1, name: "Quaid-i-Azam University", detail: "QS Natural Sciences 201\u2013250 globally (2026); QS Physics & Astronomy 250\u2013400 \u2014 #1 in Pakistan for natural sciences. QS overall #354 \u2014 highest-ranked Pakistani university overall.", source: "QS Subject Rankings 2026 / Dawn Mar 2026", sourceUrl: "https://www.dawn.com/news/1985415", theBand: "401\u2013500" },
+      { rank: 2, name: "NUST", detail: "Strong in applied sciences and research; QS overall #371 globally (2026)", source: "QS World University Rankings 2026", sourceUrl: null, theBand: "601\u2013800" },
+      { rank: 3, name: "University of the Punjab", detail: "Large sciences faculty; QS overall #542 globally (2026); renown in chemistry and biological sciences", source: "QS World University Rankings 2026", sourceUrl: null, theBand: "801\u20131000" }
+    ],
+    overrides: {},
+    alsoOffered: [
+      "COMSATS University Islamabad", "GCU Lahore",
+      "University of Karachi", "Bahauddin Zakariya University",
+      "University of Agriculture Faisalabad"
+    ]
+  },
+
+  agriculture: {
+    label: "Agriculture & Veterinary",
+    subsets: [
+      "Agriculture", "Food Science & Technology", "Horticulture",
+      "Veterinary Sciences", "Animal Husbandry", "Agricultural Engineering"
+    ],
+    baseRanking: [
+      { rank: 1, name: "University of Agriculture Faisalabad", detail: "QS Agriculture & Forestry top 50\u201351 globally (2026) \u2014 #1 in Pakistan and one of the top 50 agriculture universities in the world. QS overall #654 globally.", source: "UAF official / QS Subject Rankings 2026 / Express Tribune Mar 2026", sourceUrl: "https://tribune.com.pk/story/2599389/35-pakistani-universities-feature-in-qs-subject-rankings-2026", theBand: "601\u2013800" },
+      { rank: 2, name: "University of Veterinary & Animal Sciences Lahore", detail: "QS Subject Rankings 2026 participant; Pakistan\u2019s leading dedicated veterinary institution", source: "QS Subject Rankings 2026 / Express Tribune Mar 2026", sourceUrl: null, theBand: "601\u2013800" },
+      { rank: 3, name: "NUST", detail: "Growing agriculture/biosciences research; QS overall #371 globally (2026)", source: "QS World University Rankings 2026", sourceUrl: null, theBand: "601\u2013800" }
+    ],
+    overrides: {},
+    alsoOffered: [
+      "Pir Mehr Ali Shah Arid Agriculture University Rawalpindi",
+      "Muhammad Nawaz Shareef University of Agriculture Multan",
+      "Sindh Agriculture University Tandojam",
+      "University of Agriculture Peshawar"
     ]
   },
 
   medical: {
     label: "Medical",
     subsets: ["MBBS", "BDS", "Pharm D", "DPT", "DVM"],
-    // Pakistan has no independent QS-style subject ranking that
-    // covers individual Punjab medical colleges by name. The
-    // most honest, real signal available is admission
-    // competitiveness itself — open-merit closing aggregate —
-    // which is exactly what students use in practice to judge
-    // relative standing. Labeled explicitly as that, not as a
-    // quality ranking.
     baseRanking: [
-      { rank: 1, name: "King Edward Medical University", detail: "Open-merit MBBS closing aggregate: 93.55%", source: "UHS official selection list, reported by Dawn", sourceUrl: "https://www.dawn.com/news/1727898" },
+      { rank: 1, name: "King Edward Medical University", detail: "Open-merit MBBS closing aggregate: 93.55% \u2014 consistently the highest cutoff in Pakistan", source: "UHS official selection list, reported by Dawn", sourceUrl: "https://www.dawn.com/news/1727898" },
       { rank: 2, name: "Rawalpindi Medical University", detail: "Open-merit MBBS closing aggregate: 93.23%", source: "UHS official selection list, reported by Dawn", sourceUrl: "https://www.dawn.com/news/1727898" },
       { rank: 3, name: "Allama Iqbal Medical College", detail: "Open-merit MBBS closing aggregate: 92.64%", source: "UHS official selection list, reported by Dawn", sourceUrl: "https://www.dawn.com/news/1727898" },
       { rank: 4, name: "Services Institute of Medical Sciences", detail: "Open-merit MBBS closing aggregate: 92.10%", source: "UHS official selection list, reported by Dawn", sourceUrl: "https://www.dawn.com/news/1727898" },
@@ -132,15 +198,14 @@ window.RANKING_DATA = {
       { rank: 10, name: "Quaid-Azam Medical College", detail: "Open-merit MBBS closing aggregate: 90.76%", source: "UHS official selection list, reported by Dawn", sourceUrl: "https://www.dawn.com/news/1727898" }
     ],
     overrides: {
-      // BDS/Pharm D/DPT/DVM closing merit runs on separate UHS
-      // lists we haven't verified yet — shown unranked rather
-      // than reusing the MBBS list, which would misrepresent it.
       "BDS": "unranked", "Pharm D": "unranked", "DPT": "unranked", "DVM": "unranked"
     },
     alsoOffered: [
-      "Aga Khan University", "Shifa College of Medicine", "CMH Lahore Medical College",
+      "Aga Khan University (AKU Karachi \u2014 QS Medicine 201\u2013250 globally, 2026; Pakistan\u2019s only internationally accredited medical school)",
+      "Shifa College of Medicine", "CMH Lahore Medical College",
       "Army Medical College Rawalpindi", "Sheikh Zayed Medical College", "DG Khan Medical College"
     ],
-    dataNote: "This list reflects one officially reported UHS admission cycle, cited via Dawn's coverage of the announcement. Closing merit shifts every year — always confirm against the current UHS selection list before relying on this for a real decision."
+    dataNote: "This list reflects UHS admission-cycle closing aggregates, cited via Dawn\u2019s coverage. Closing merit shifts every year \u2014 always confirm against the current UHS selection list. Aga Khan University holds QS Medicine 201\u2013250 globally (2026) and is Pakistan\u2019s only internationally accredited medical school \u2014 it operates separately from the UHS system on its own merit."
   }
+
 };

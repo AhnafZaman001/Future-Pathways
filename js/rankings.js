@@ -21,17 +21,26 @@
   // values ("NUST", "GIK"). This maps display name -> canonical
   // name so the closing-merit lookup actually finds a match.
   var INSTITUTE_ALIAS = {
+    // Variants used in rankings-data.js -> canonical DB name
     "GIK Institute (GIKI)": "GIK",
     "COMSATS University Islamabad": "COMSATS",
     "NUST (SEECS)": "NUST",
     "University of the Punjab (PUCIT)": "Punjab University/PUCIT",
     "Punjab University College of IT (PUCIT)": "Punjab University/PUCIT",
-    // alsoOffered entries carry a full parenthetical explanation appended
-    // to the name for display context -- the city-filter lookup needs to
-    // strip that to find the short database name.
-    "FAST-NUCES (widely regarded as Pakistan's leading dedicated computing university by employer surveys \u2014 not separately QS subject-ranked at a confirmed position)": "FAST-NUCES",
     "ITU Lahore": "ITU",
     "Namal University": "Namal",
+    "IBA Karachi": "IBA",
+    "LUMS (SAHSOL)": "LUMS",
+    "GCU Lahore": "Government College University Lahore",
+    "University of the Punjab": "Punjab University/PUCIT",
+    "University of Agriculture Faisalabad": "University of Agriculture Faisalabad",
+    // alsoOffered entries carry full parenthetical explanations for display --
+    // strip to the short DB name for city-filter lookup
+    "FAST-NUCES (widely regarded as Pakistan\u2019s leading dedicated computing university by employer surveys \u2014 not separately QS subject-ranked at a confirmed position)": "FAST-NUCES",
+    "Aga Khan University (AKU Karachi \u2014 QS Medicine 201\u2013250 globally, 2026; Pakistan\u2019s only internationally accredited medical school)": "Aga Khan University",
+    "Habib University (social sciences, 400+ globally QS 2026)": "Habib University",
+    "NUST Business School": "NUST",
+    "University of Karachi (School of Law)": "University of Karachi",
   };
   function canonicalName(displayName){
     return INSTITUTE_ALIAS[displayName] || displayName;

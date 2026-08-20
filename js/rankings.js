@@ -153,118 +153,56 @@
     lastField = field; lastSubset = subsetName;
     var override = field.overrides ? field.overrides[subsetName] : null;
     var allRanked = (override === "unranked") ? [] : (override || field.baseRanking);
-    var isSubjectSpecific = !!(override && override !== "unranked");
     var city = cityEl.value;
 
-    var ranked = allRanked.filter(function(entry){ return institutePresentInCity(entry.name, city); });
-    var alsoOffered = (field.alsoOffered || []).filter(function(name){ return institutePresentInCity(name, city); });
+    // Collect all universities -- ranked entries + alsoOffered +
+    // industryReputation names -- into one flat, deduplicated list,
+    // filtered by city. No divisions, no numbers, no badges.
+    var seen = {};
+    var all = [];
+
+    function addName(name){
+      // Strip trailing parentheticals used for display context
+      // (e.g. "FAST-NUCES (widely regarded as...)" -> "FAST-NUCES")
+      var clean = name.replace(/\s*\([^)]{20,}\)$/, "").trim();
+      var key = clean.toLowerCase();
+      if(!seen[key] && institutePresentInCity(name, city)){
+        seen[key] = true;
+        all.push(clean);
+      }
+    }
+
+    allRanked.forEach(function(entry){ addName(entry.name); });
+    (field.alsoOffered || []).forEach(addName);
+    if(field.industryReputation){
+      field.industryReputation.names.forEach(addName);
+    }
 
     var html = '<div class="fp-card rk-results-card">';
-    html += '<div class="rk-results-head">' +
-      '<h2 class="fp-step-title">' + esc(field.label) + ' &mdash; ' + esc(subsetName) + (city ? ' &mdash; ' + esc(city) : '') + '</h2>' +
-      '<span class="rk-count">' + ranked.length + ' RANKED</span>' +
-      '</div>';
+    html += '<h2 class="fp-step-title">' +
+      esc(field.label) + ' &mdash; ' + esc(subsetName) +
+      (city ? ' &mdash; ' + esc(city) : '') +
+    '</h2>';
 
-    if(city && ranked.length < allRanked.length){
-      html += '<p class="rk-scope-note">Filtered to ' + esc(city) + ' \u2014 ' + (allRanked.length - ranked.length) + ' result' + (allRanked.length - ranked.length === 1 ? '' : 's') + ' elsewhere hidden.</p>';
-    }
-    if(!isSubjectSpecific && ranked.length){
-      html += '<p class="rk-scope-note">Showing ' + esc(field.label).toLowerCase() + '-wide standing &mdash; a ' + esc(subsetName).toLowerCase() + '-specific ranking isn\'t independently published.</p>';
-    }
-
-    if(ranked.length === 0){
-      html += '<div class="rk-empty">' + (city
-        ? 'No independently verifiable ranking exists yet for ' + esc(subsetName) + ' in ' + esc(city) + '.'
-        : 'No independently verifiable ranking exists yet for ' + esc(subsetName) + '. We don\'t publish estimated numbers &mdash; check back as more official data is verified.') + '</div>';
+    if(all.length === 0){
+      html += '<p class="rk-empty">No universities found' + (city ? ' in ' + esc(city) : '') + ' for this program.</p>';
     } else {
-      html += '<div class="rk-list">' + ranked.map(function(entry){ return rowHtml(entry, subsetName); }).join("") + '</div>';
-    }
-
-    if(field.dataNote){
-      html += '<p class="rk-data-note">' + esc(field.dataNote) + '</p>';
-    }
-    if(ranked.some(function(e){ return e.theBand; })){
-      html += '<p class="rk-data-note">"THE 2026" badges show that university\'s overall Times Higher Education World University Rankings 2026 band (not subject-specific — THE\'s subject tables aren\'t available for direct citation here), reported via Gulf News\'s coverage of THE\'s release.</p>';
-    }
-    if(ranked.some(function(e){ return !!closingMeritMatch(e, subsetName); })){
-      html += '<p class="rk-data-note">Closing-merit figures shown are the actual 2025 admission cycle cutoff for that program, separate from the QS/THE rankings above — see each figure\'s own source badge.</p>';
-    }
-
-    if(alsoOffered.length){
-      html += '<div class="rk-also"><h3>Also offered at</h3>' +
-        '<div class="rk-list">' + alsoOffered.map(alsoRowHtml).join("") + '</div>' +
-      '</div>';
-    }
-
-    if(field.industryReputation){
-      // Filter the industry-reputation names by city too -- previously
-      // these were shown unfiltered even when a city was selected, so
-      // Lahore-only universities appeared in the Islamabad results.
-      var repNames = field.industryReputation.names.filter(function(n){
-        return institutePresentInCity(n, city);
-      });
-      if(repNames.length){
-        html += '<div class="rk-industry">' +
-          '<h3>Industry reputation <span class="rk-industry-badge">not a ranking</span></h3>' +
-          '<p class="rk-industry-note">' + esc(field.industryReputation.note) + '</p>' +
-          '<div class="rk-tags">' + repNames.map(function(n){
-            return '<span class="rk-tag">' + esc(n) + '</span>';
-          }).join("") + '</div>' +
-        '</div>';
-      }
+      html += '<ul class="rk-flat-list">' +
+        all.map(function(name){
+          return '<li class="rk-flat-item">' + esc(name) + '</li>';
+        }).join("") +
+      '</ul>';
     }
 
     html += '</div>';
     resultsEl.innerHTML = html;
   }
 
-  function closingMeritMatch(entry, subsetName){
-    if(typeof FP === "undefined" || !FP.findClosingMeritMatch) return null;
-    return FP.findClosingMeritMatch(canonicalName(entry.name), subsetName);
-  }
-
-  function closingMeritHtml(entry, subsetName){
-    var match = closingMeritMatch(entry, subsetName);
-    if(!match || match.closing_merit_percentage === null) return "";
-    var sameName = normalize(match.program) === normalize(subsetName);
-    return '<div class="rk-cm">' +
-      '<span class="rk-cm-label">2025 CLOSING MERIT</span> ' +
-      '<span class="rk-cm-pct">' + match.closing_merit_percentage + '%</span> ' +
-      FP.renderClosingMeritBadge(match.source_type) +
-      (sameName ? '' : ' <span class="rk-cm-program">(listed as &ldquo;' + esc(match.program) + '&rdquo;)</span>') +
-      (match.campus ? ' <span class="rk-cm-campus">' + esc(match.campus) + '</span>' : '') +
-    '</div>';
-  }
-
-  function normalize(s){
-    return String(s == null ? "" : s).toLowerCase().replace(/[^a-z0-9]/g, "");
-  }
-
-  function rowHtml(entry, subsetName){
-    var link = entry.sourceUrl ? '<a href="' + esc(entry.sourceUrl) + '" target="_blank" rel="noopener">' + esc(entry.source) + '</a>' : esc(entry.source);
-    var theBandHtml = entry.theBand ?
-      '<div class="rk-the-band"><span class="rk-the-label">THE 2026</span> ' + esc(entry.theBand) + '</div>' : "";
-    return '<div class="rk-row">' +
-      '<div class="rk-rank">' + entry.rank + '</div>' +
-      '<div class="rk-row-body">' +
-        '<div class="rk-uni-name">' + esc(entry.name) + '</div>' +
-        '<div class="rk-detail">' + esc(entry.detail) + '</div>' +
-        theBandHtml +
-        closingMeritHtml(entry, subsetName) +
-        '<div class="rk-source">SOURCE: ' + link + '</div>' +
-      '</div>' +
-    '</div>';
-  }
-
-  function alsoRowHtml(name){
-    return '<div class="rk-row rk-row-also">' +
-      '<div class="rk-rank rk-rank-also">&mdash;</div>' +
-      '<div class="rk-row-body">' +
-        '<div class="rk-uni-name">' + esc(name) + '</div>' +
-        '<div class="rk-detail">Offers this program &mdash; no independently verified rank yet</div>' +
-      '</div>' +
-    '</div>';
-  }
+  function closingMeritMatch(){ return null; } // retained so nothing else breaks
+  function closingMeritHtml(){ return ""; }
+  function normalize(s){ return String(s==null?"":s).toLowerCase().replace(/[^a-z0-9]/g,""); }
+  function rowHtml(){ return ""; }
+  function alsoRowHtml(){ return ""; }
 
   function esc(s){
     return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){

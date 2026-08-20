@@ -10,105 +10,26 @@
 .rk-selector{ margin-bottom: 24px; }
 
 .rk-results-card{ padding: 24px 28px; }
-.rk-results-head{
-  display:flex; align-items:baseline; justify-content:space-between; gap:12px;
-  margin-bottom: 4px;
-}
-.rk-count{
-  font-family: var(--font-mono); font-size:.72rem; letter-spacing:.08em;
-  color: var(--violet-text); background: var(--violet-dim);
-  padding: 4px 10px; border-radius: 99px; white-space:nowrap;
-}
-.rk-scope-note{
-  font-size:.85rem; color: var(--ink-soft); margin: 8px 0 20px;
-  padding: 10px 14px; background: var(--surface-2); border-radius: var(--radius-sm);
-  border-left: 2px solid var(--amber);
-}
+.rk-results-card .fp-step-title{ margin-bottom: 20px; }
 
-.rk-list{ display:flex; flex-direction:column; gap:2px; margin-top: 16px; }
-.rk-row{
-  display:flex; align-items:flex-start; gap:16px;
-  padding: 14px 4px; border-bottom: 1px solid var(--line);
+.rk-flat-list{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
-.rk-row:last-child{ border-bottom:none; }
-.rk-rank{
-  flex-shrink:0; width:34px; height:34px; border-radius:8px;
-  background: var(--surface-2); color: var(--ink);
-  font-family: var(--font-mono); font-weight:700; font-size:.95rem;
-  display:flex; align-items:center; justify-content:center;
+.rk-flat-item{
+  padding: 13px 4px;
+  border-bottom: 1px solid var(--line);
+  font-size: .95rem;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.4;
 }
-.rk-row:first-child .rk-rank{ background: var(--violet); color:#fff; }
-.rk-row-body{ flex:1; min-width:0; }
-.rk-uni-name{ font-family: var(--font-display); font-weight:600; font-size:1rem; color: var(--ink); }
-.rk-detail{ font-size:.85rem; color: var(--ink-soft); margin-top:2px; }
-.rk-source{
-  font-family: var(--font-mono); font-size:.68rem; letter-spacing:.05em;
-  color: var(--ink-faint); margin-top:6px; text-transform:uppercase;
-}
-.rk-source a{ color: var(--ink-faint); text-decoration:underline; }
-.rk-source a:hover{ color: var(--violet-text); }
-
-.rk-the-band{
-  display:inline-flex; align-items:center; gap:6px;
-  font-size:.78rem; color: var(--ink-soft); margin-top:6px;
-}
-.rk-the-label{
-  font-family: var(--font-mono); font-size:.65rem; letter-spacing:.06em;
-  color: var(--amber); background: var(--amber-dim);
-  padding: 2px 7px; border-radius: 5px;
-}
-
-.rk-cm{
-  display:flex; align-items:center; flex-wrap:wrap; gap:6px;
-  font-size:.78rem; color: var(--ink-soft); margin-top:8px;
-  padding-top:8px; border-top:1px dashed var(--line);
-}
-.rk-cm-label{
-  font-family: var(--font-mono); font-size:.65rem; letter-spacing:.06em;
-  color: var(--violet-text); background: var(--violet-dim);
-  padding: 2px 7px; border-radius: 5px;
-}
-.rk-cm-pct{ font-family: var(--font-mono); font-weight:700; color: var(--ink); }
-.rk-cm-program{ color: var(--ink-faint); font-style:italic; }
-.rk-cm-campus{ color: var(--ink-faint); }
-
-.rk-industry{ margin-top:18px; padding-top:14px; border-top:1px solid var(--line); }
-.rk-industry h3{
-  font-family: var(--font-mono); font-size:.7rem; letter-spacing:.08em; text-transform:uppercase;
-  color: var(--ink-faint); margin:0 0 6px;
-  display:flex; align-items:center; gap:8px;
-}
-.rk-industry-badge{
-  font-family: var(--font-body); font-size:.65rem; letter-spacing:normal; text-transform:none;
-  color: var(--ink-faint); background: var(--surface-2);
-  padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line);
-}
-.rk-industry-note{ font-size:.8rem; color: var(--ink-soft); margin: 0 0 10px; line-height:1.6; }
-.rk-tags{ display:flex; flex-wrap:wrap; gap:8px; }
-.rk-tag{
-  font-family: var(--font-body); font-size:.8rem; font-weight:600; color: var(--ink);
-  background: var(--surface-2); border: 1px solid var(--line);
-  padding: 6px 12px; border-radius: 999px;
-}
+.rk-flat-item:last-child{ border-bottom: none; }
 
 .rk-empty{
   padding: 20px; text-align:center; color: var(--ink-soft); font-size:.9rem;
   background: var(--surface-2); border-radius: var(--radius-sm);
-}
-
-.rk-data-note{
-  font-size:.78rem; color: var(--ink-faint); margin-top:18px;
-  padding-top:14px; border-top:1px solid var(--line);
-}
-
-.rk-also{ margin-top:18px; padding-top:14px; border-top:1px solid var(--line); }
-.rk-also h3{
-  font-family: var(--font-mono); font-size:.7rem; letter-spacing:.08em; text-transform:uppercase;
-  color: var(--ink-faint); margin:0 0 6px;
-}
-.rk-row-also{ opacity: .85; }
-.rk-rank-also{
-  background: transparent;
-  color: var(--ink-faint);
-  border: 1px dashed var(--line-strong);
 }

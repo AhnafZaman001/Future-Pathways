@@ -371,6 +371,13 @@
           location: null
         });
       });
+      // Sort both lists alphabetically by name so the dropdowns
+      // are easy to scan -- previously ordered by display_order
+      // from the DB which is insertion order, not meaningful to
+      // the person reading the list.
+      function byName(a, b){ return a.name.localeCompare(b.name); }
+      state.allInstitutes.sort(byName);
+      state.allFaculties.sort(byName);
     });
   }
 

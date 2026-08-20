@@ -4,11 +4,10 @@
    ========================================================= */
 
 (function(){
-  var STEPS = ["profile", "pathway", "careers", "institutes", "faculties", "additional", "review"];
+  var STEPS = ["profile", "pathway", "institutes", "faculties", "additional", "review"];
   var STEP_LABELS = {
     profile: "Student information",
     pathway: "Pathway",
-    careers: "Programs & career interests",
     institutes: "Institute preferences",
     faculties: "Faculty preferences",
     additional: "Additional information",
@@ -21,7 +20,7 @@
     stepIndex: 0,
     profile: { student_name:"", father_name:"", father_profession:"", contact:"", discipline:"", section:"", roll_number:"", matric_marks:"", first_year_marks:"" },
     pathway: null,               // 'engineering' | 'medical'
-    careerIds: [],                // selected career_options ids
+    careerIds: [],                // retained for backward-compat load; no longer used in UI
     customCareer: "",
     institutes: [],               // master data, filtered by pathway
     faculties: [],
@@ -354,6 +353,24 @@
       state.allInstitutes = results[0].data || [];
       state.allFaculties = results[1].data || [];
       state.allCareers = results[2].data || [];
+      // Merge career options into the institute list as plain
+      // selectable entries -- no separate step, no checkboxes.
+      // A student can pick "CSS/PMS" or "BBA" as a preference
+      // the same way they pick "NUST". pathway=null so they
+      // appear regardless of pathway. "career_" prefix avoids
+      // collisions with real institute UUIDs.
+      state.allCareers.forEach(function(c){
+        state.allInstitutes.push({
+          id: "career_" + c.id,
+          name: c.name,
+          category: c.category || "other",
+          pathway: null,
+          active: true,
+          display_order: 9000 + (c.display_order || 0),
+          campuses: [],
+          location: null
+        });
+      });
     });
   }
 
@@ -380,7 +397,7 @@
   }
 
   var MANIFEST_LABELS = {
-    profile: "STUDENT", pathway: "PATHWAY", careers: "CAREERS",
+    profile: "STUDENT", pathway: "PATHWAY",
     institutes: "INSTITUTES", faculties: "FACULTIES", additional: "NOTES", review: "REVIEW"
   };
 
@@ -396,10 +413,6 @@
     }
     if(stepKey === "pathway"){
       return state.pathway ? state.pathway.toUpperCase() : null;
-    }
-    if(stepKey === "careers"){
-      var n = state.careerIds.length + (state.customCareer ? 1 : 0);
-      return n > 0 ? (n + " SELECTED") : null;
     }
     if(stepKey === "institutes" || stepKey === "faculties"){
       var groups = stepKey === "institutes" ? state.instituteGroups : state.facultyGroups;
@@ -514,22 +527,15 @@
       }
     },
 
-    careers: function(){
-      if(!state.pathway) return '<p class="fp-step-desc">Pick a pathway first.</p>';
-      var opts = state.allCareers.map(function(c){
-        var checked = state.careerIds.indexOf(c.id) > -1 ? "checked" : "";
-        return '<label class="fp-checkbox-item"><input type="checkbox" data-career="' + c.id + '" ' + checked + '> ' + esc(c.name) + '</label>';
-      }).join("");
-      return '<h2 class="fp-step-title">Programs &amp; career interests</h2>' +
-        '<p class="fp-step-desc">Select every option being considered, alongside the main pathway.</p>' +
-        '<div class="fp-checkbox-grid">' + opts + '</div>' +
-        '<label style="margin-top:16px;">If "BS (Hons) Leading to ___" applies, specify' +
-          '<input type="text" id="fp-custom-career" value="' + esc(state.customCareer) + '"></label>';
-    },
+    careers: function(){ return ""; }, // removed -- career options now live in the institute list
 
     institutes: function(){
       if(!state.pathway) return '<p class="fp-step-desc">Pick a pathway first.</p>';
-      var options = state.allInstitutes.filter(function(i){ return i.pathway === state.pathway; });
+      // Include both pathway-specific institutes AND career options
+      // (which have pathway: null after the merge in loadMasterData)
+      var options = state.allInstitutes.filter(function(i){
+        return i.pathway === state.pathway || i.pathway === null;
+      });
       ensureGroupArrays();
       return '<h2 class="fp-step-title">Institute preferences</h2>' +
         '<p class="fp-step-desc">Rank up to 5 institutes in each group, 1 = highest preference. No repeats within a group.</p>' +
@@ -553,10 +559,8 @@
 
     review: function(){
       var p = state.profile;
-      var careerNames = state.allCareers.filter(function(c){ return state.careerIds.indexOf(c.id) > -1; }).map(function(c){ return c.name; });
-      if(state.customCareer) careerNames.push(state.customCareer);
 
-      var instHtml = groupsReviewHtml(state.instituteGroups, state.instituteCustom, state.allInstitutes.filter(function(i){ return i.pathway===state.pathway; }));
+      var instHtml = groupsReviewHtml(state.instituteGroups, state.instituteCustom, state.allInstitutes.filter(function(i){ return i.pathway===state.pathway || i.pathway===null; }));
       var facHtml = groupsReviewHtml(state.facultyGroups, state.facultyCustom, state.allFaculties.filter(function(f){ return f.pathway===state.pathway; }));
 
       var stampHtml = "";
@@ -575,7 +579,6 @@
           ["Roll number", p.roll_number], ["Matric marks", p.matric_marks], ["FSc Part 1 marks", p.first_year_marks]
         ]) +
         reviewSection("Pathway", [["Selected", state.pathway === "medical" ? "Medical / Health Sciences" : "Engineering / Non-Medical"]]) +
-        reviewSection("Programs & careers", [["Selected", careerNames.join(", ") || "\u2014"]]) +
         '<div class="fp-review-section"><h4>Institute preferences</h4>' + instHtml + '</div>' +
         '<div class="fp-review-section"><h4>Faculty preferences</h4>' + facHtml + '</div>' +
         reviewSection("Additional information", [["Notes", state.additionalInfo || "\u2014"]]);
@@ -660,17 +663,6 @@
           render();
         });
       });
-    }
-    if(step === "careers"){
-      container.querySelectorAll("[data-career]").forEach(function(cb){
-        cb.addEventListener("change", function(){
-          var id = cb.dataset.career;
-          if(cb.checked){ if(state.careerIds.indexOf(id) === -1) state.careerIds.push(id); }
-          else { state.careerIds = state.careerIds.filter(function(x){ return x !== id; }); }
-        });
-      });
-      var customEl = document.getElementById("fp-custom-career");
-      if(customEl) customEl.addEventListener("input", function(){ state.customCareer = customEl.value; });
     }
     if(step === "institutes" || step === "faculties"){
       container.querySelectorAll("select[data-kind]").forEach(function(sel){
@@ -771,22 +763,15 @@
         });
       });
     });
-    var progRows = state.careerIds.map(function(id, i){
-      return { future_pathway_id: fpId, rank: i+1, program_id: id };
-    });
-    if(state.customCareer){
-      progRows.push({ future_pathway_id: fpId, rank: progRows.length+1, custom_program_name: state.customCareer });
-    }
+    var progRows = []; // career step removed; program_preferences no longer written
 
     return Promise.all([
       FP.client.from("student_institute_preferences").delete().eq("future_pathway_id", fpId),
-      FP.client.from("student_faculty_preferences").delete().eq("future_pathway_id", fpId),
-      FP.client.from("student_program_preferences").delete().eq("future_pathway_id", fpId)
+      FP.client.from("student_faculty_preferences").delete().eq("future_pathway_id", fpId)
     ]).then(function(){
       var ops = [];
       if(instRows.length) ops.push(FP.client.from("student_institute_preferences").insert(instRows));
       if(facRows.length) ops.push(FP.client.from("student_faculty_preferences").insert(facRows));
-      if(progRows.length) ops.push(FP.client.from("student_program_preferences").insert(progRows));
       return Promise.all(ops);
     });
   }
@@ -794,7 +779,7 @@
   function persistStep(step){
     if(step === "profile") return saveProfile().then(saveDraftShell);
     if(step === "pathway" || step === "additional") return saveDraftShell();
-    if(step === "institutes" || step === "faculties" || step === "careers") return saveDraftShell().then(savePreferences);
+    if(step === "institutes" || step === "faculties") return saveDraftShell().then(savePreferences);
     return Promise.resolve();
   }
 

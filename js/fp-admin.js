@@ -592,7 +592,7 @@
         '<td><strong>' + esc(name) + '</strong></td>' +
         '<td class="fp-cap">' + esc(s.pathway) + '</td>' +
         '<td>' + esc(firstPriority) + '</td>' +
-        '<td><span class="fp-badge ' + s.status + '">' + s.status + '</span></td>' +
+        '<td><span class="fp-badge ' + esc(s.status) + '">' + esc(s.status) + '</span></td>' +
         '<td>' + (s.submitted_at ? new Date(s.submitted_at).toLocaleDateString() : "\u2014") + '</td>' +
         '<td class="fp-row-actions">' +
           '<a href="pathways.html?student=' + esc(s.student_id) + '" class="fp-row-action-link">Edit</a>' +
@@ -764,7 +764,7 @@
             '<button type="button" class="nav-link" id="fp-delete-student" style="color:var(--red);">Delete</button>' +
           '</div>' +
         '</div>' +
-        '<p class="fp-step-desc">' + esc(sub.pathway) + ' \u2014 <span class="fp-badge ' + sub.status + '">' + sub.status + '</span></p>' +
+        '<p class="fp-step-desc">' + esc(sub.pathway) + ' \u2014 <span class="fp-badge ' + esc(sub.status) + '">' + esc(sub.status) + '</span></p>' +
         '<div class="fp-review-section"><h4>Student information</h4>' + profileHtml + '</div>' +
         '<div class="fp-review-section"><h4>Programs &amp; careers</h4><div class="fp-review-row"><span>Selected</span><span>' + esc(careerNames.join(", ") || "\u2014") + '</span></div></div>' +
         '<div class="fp-review-section"><h4>Institute preferences</h4>' + groupedAccordion(instRows, lookups.institutes, "inst") + '</div>' +

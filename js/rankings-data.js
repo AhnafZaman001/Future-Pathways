@@ -34,17 +34,42 @@ window.RANKING_DATA = {
       { rank: 5, name: "COMSATS University Islamabad", detail: "QS overall #664 globally (2026); QS Engineering 251\u2013300", source: "QS World University Rankings 2026 / QS Subject Rankings 2026", sourceUrl: null, theBand: "601\u2013800" }
     ],
     overrides: {
+      // For subjects with a specific QS subject rank, NUST's
+      // position is more precise -- but the other strong
+      // universities still belong in the list with their general
+      // engineering rank as the detail, so city filtering works
+      // and students see a full picture.
       "Electrical Engineering": [
-        { rank: 1, name: "NUST", detail: "QS Electrical Engineering top 150 globally", source: "QS Subject Rankings 2025/2026", sourceUrl: "https://nust.edu.pk/about-us/nust-rankings/" }
+        { rank: 1, name: "NUST", detail: "QS Electrical Engineering top 150 globally", source: "QS Subject Rankings 2025/2026", sourceUrl: "https://nust.edu.pk/about-us/nust-rankings/" },
+        { rank: 2, name: "PIEAS", detail: "QS overall #721 globally; HEC #2 Engineering institution", source: "QS World University Rankings 2026", sourceUrl: null },
+        { rank: 3, name: "UET Lahore", detail: "QS Engineering 251\u2013400 globally; leading public engineering university in Punjab", source: "QS Subject Rankings 2026", sourceUrl: null },
+        { rank: 4, name: "GIK Institute (GIKI)", detail: "THE 2026 band 801\u20131000; HEC #3 Engineering institution", source: "THE 2026 / HEC", sourceUrl: null },
+        { rank: 5, name: "COMSATS University Islamabad", detail: "QS Engineering 251\u2013300 globally", source: "QS Subject Rankings 2026", sourceUrl: null }
       ],
       "Chemical Engineering": [
-        { rank: 1, name: "NUST", detail: "QS Chemical Engineering top 200 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://parhlai.com/blog/nust-qs-rankings" }
+        { rank: 1, name: "NUST", detail: "QS Chemical Engineering top 200 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://parhlai.com/blog/nust-qs-rankings" },
+        { rank: 2, name: "UET Lahore", detail: "QS Engineering 251\u2013400 globally; strong chemical engineering faculty", source: "QS Subject Rankings 2026", sourceUrl: null },
+        { rank: 3, name: "PIEAS", detail: "QS overall #721 globally; strong in chemical/nuclear engineering", source: "QS World University Rankings 2026", sourceUrl: null },
+        { rank: 4, name: "COMSATS University Islamabad", detail: "QS Engineering 251\u2013300 globally", source: "QS Subject Rankings 2026", sourceUrl: null }
       ],
       "Civil Engineering": [
-        { rank: 1, name: "NUST", detail: "QS Civil Engineering top 375 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://parhlai.com/blog/nust-qs-rankings" }
+        { rank: 1, name: "NUST", detail: "QS Civil Engineering top 375 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://parhlai.com/blog/nust-qs-rankings" },
+        { rank: 2, name: "UET Lahore", detail: "Pakistan's oldest engineering university; QS Engineering 251\u2013400 globally", source: "QS Subject Rankings 2026", sourceUrl: null },
+        { rank: 3, name: "PIEAS", detail: "QS overall #721 globally", source: "QS World University Rankings 2026", sourceUrl: null },
+        { rank: 4, name: "GIK Institute (GIKI)", detail: "THE 2026 band 801\u20131000", source: "THE 2026", sourceUrl: null },
+        { rank: 5, name: "COMSATS University Islamabad", detail: "QS Engineering 251\u2013300 globally", source: "QS Subject Rankings 2026", sourceUrl: null }
+      ],
+      "Mechanical Engineering": [
+        { rank: 1, name: "NUST", detail: "QS Mechanical & Aeronautical Engineering top 250 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://parhlai.com/blog/nust-qs-rankings" },
+        { rank: 2, name: "GIK Institute (GIKI)", detail: "Renowned for mechanical and materials engineering; THE 2026 band 801\u20131000", source: "THE 2026", sourceUrl: null },
+        { rank: 3, name: "UET Lahore", detail: "QS Engineering 251\u2013400 globally; strong mechanical faculty", source: "QS Subject Rankings 2026", sourceUrl: null },
+        { rank: 4, name: "PIEAS", detail: "QS overall #721 globally", source: "QS World University Rankings 2026", sourceUrl: null },
+        { rank: 5, name: "COMSATS University Islamabad", detail: "QS Engineering 251\u2013300 globally", source: "QS Subject Rankings 2026", sourceUrl: null }
       ],
       "Aerospace / Aeronautical": [
-        { rank: 1, name: "NUST", detail: "QS Mechanical & Aeronautical Engineering top 250 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://parhlai.com/blog/nust-qs-rankings" }
+        { rank: 1, name: "NUST", detail: "QS Mechanical & Aeronautical Engineering top 250 globally", source: "QS Subject Rankings 2025", sourceUrl: "https://parhlai.com/blog/nust-qs-rankings" },
+        { rank: 2, name: "Air University", detail: "Pakistan's leading dedicated aeronautical university; affiliated with PAF", source: "HEC / institutional", sourceUrl: null },
+        { rank: 3, name: "PIEAS", detail: "QS overall #721 globally; strong in aerospace-adjacent fields", source: "QS World University Rankings 2026", sourceUrl: null }
       ]
     },
     alsoOffered: [

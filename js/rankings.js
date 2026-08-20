@@ -24,7 +24,14 @@
     "GIK Institute (GIKI)": "GIK",
     "COMSATS University Islamabad": "COMSATS",
     "NUST (SEECS)": "NUST",
-    "University of the Punjab (PUCIT)": "Punjab University/PUCIT"
+    "University of the Punjab (PUCIT)": "Punjab University/PUCIT",
+    "Punjab University College of IT (PUCIT)": "Punjab University/PUCIT",
+    // alsoOffered entries carry a full parenthetical explanation appended
+    // to the name for display context -- the city-filter lookup needs to
+    // strip that to find the short database name.
+    "FAST-NUCES (widely regarded as Pakistan's leading dedicated computing university by employer surveys \u2014 not separately QS subject-ranked at a confirmed position)": "FAST-NUCES",
+    "ITU Lahore": "ITU",
+    "Namal University": "Namal",
   };
   function canonicalName(displayName){
     return INSTITUTE_ALIAS[displayName] || displayName;

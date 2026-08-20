@@ -42,6 +42,33 @@
     "NUST Business School": "NUST",
     "University of Karachi (School of Law)": "University of Karachi",
   };
+  // City data for institutes in rankings-data.js that are NOT in the
+  // live institutes DB -- hardcoded so city filter works without a
+  // SQL migration. Checked as a fallback in institutePresentInCity().
+  var EXTRA_CITY_DATA = {
+    "UMT Lahore":                               ["Lahore"],
+    "Shifa College of Medicine":                ["Islamabad"],
+    "CMH Lahore Medical College":               ["Lahore"],
+    "Army Medical College Rawalpindi":          ["Rawalpindi"],
+    "Sheikh Zayed Medical College":             ["Rahim Yar Khan"],
+    "DG Khan Medical College":                  ["Dera Ghazi Khan"],
+    "Muhammad Nawaz Shareef University of Agriculture Multan": ["Multan"],
+    "Sindh Agriculture University Tandojam":    ["Tandojam"],
+    "University of Agriculture Peshawar":       ["Peshawar"],
+    "SZABIST Islamabad / Karachi":              ["Islamabad","Karachi"],
+    "Government College University Lahore":     ["Lahore"],
+    "Superior University College of Law":       ["Lahore"],
+    "University of the Punjab Law College":     ["Lahore"],
+    "International Islamic University Islamabad": ["Islamabad"],
+    "Forman Christian College":                 ["Lahore"],
+    "Pir Mehr Ali Shah Arid Agriculture University Rawalpindi": ["Rawalpindi"],
+    "University of Veterinary & Animal Sciences Lahore": ["Lahore"],
+    "Habib University":                         ["Karachi"],
+    "University of Karachi (School of Law)":    ["Karachi"],
+    "GCU Lahore":                               ["Lahore"],
+    "Bahauddin Zakariya University":            ["Multan"],
+    "University of Peshawar":                   ["Peshawar"],
+  };
   function canonicalName(displayName){
     return INSTITUTE_ALIAS[displayName] || displayName;
   }
@@ -84,7 +111,8 @@
 
   function institutePresentInCity(name, city){
     if(!city) return true; // no city filter active
-    var cities = cityByInstitute[canonicalName(name)];
+    var canonical = canonicalName(name);
+    var cities = cityByInstitute[canonical] || EXTRA_CITY_DATA[name] || EXTRA_CITY_DATA[canonical];
     return !!(cities && cities.indexOf(city) !== -1);
   }
 

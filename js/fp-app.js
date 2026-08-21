@@ -359,18 +359,39 @@
       // faculties, not university names. pathway=null so they
       // appear regardless of engineering/medical selection.
       // "career_" prefix avoids collisions with real faculty UUIDs.
+      // Deduplicate by name (case-insensitive) so entries like
+      // "Architecture" that appear in both fp_faculties and
+      // career_options don't show twice.
+      var existingFacultyNames = {};
+      state.allFaculties.forEach(function(f){
+        existingFacultyNames[f.name.toLowerCase()] = true;
+      });
       state.allCareers.forEach(function(c){
-        state.allFaculties.push({
-          id: "career_" + c.id,
-          name: c.name,
-          category: c.category || "other",
-          pathway: null,
-          active: true,
-          display_order: 9000 + (c.display_order || 0)
-        });
+        if(!existingFacultyNames[c.name.toLowerCase()]){
+          state.allFaculties.push({
+            id: "career_" + c.id,
+            name: c.name,
+            category: c.category || "other",
+            pathway: null,
+            active: true,
+            display_order: 9000 + (c.display_order || 0)
+          });
+          existingFacultyNames[c.name.toLowerCase()] = true;
+        }
       });
       function byName(a, b){ return a.name.localeCompare(b.name); }
       state.allInstitutes.sort(byName);
+      // Deduplicate faculties by name before sorting -- the seed has
+      // two "Other" rows (one for engineering, one for computer_it)
+      // which both appear in the engineering pathway dropdown.
+      // Keep the first occurrence by name, drop the rest.
+      var seenFac = {};
+      state.allFaculties = state.allFaculties.filter(function(f){
+        var key = f.name.toLowerCase();
+        if(seenFac[key]) return false;
+        seenFac[key] = true;
+        return true;
+      });
       state.allFaculties.sort(byName);
     });
   }
@@ -514,7 +535,14 @@
             '</label>' +
           '</div>' +
           '<div class="fp-grid-2">' +
-            field("discipline", "Discipline", p.discipline) +
+            '<label>Discipline' +
+              '<select data-field="discipline" required>' +
+              '<option value="">\u2014 select \u2014</option>' +
+              ["Pre-Engineering","Pre-Medical","ICS","Commerce","Arts / Humanities",
+               "Forces (PAF/Army/Navy)","Other"].map(function(d){
+                return '<option value="' + esc(d) + '"'+(p.discipline===d?' selected':'')+'>'+esc(d)+'</option>';
+              }).join("") +
+            '</select></label>' +
             field("section", "Section", p.section) +
           '</div>' +
           '<div class="fp-grid-2">' +
@@ -627,6 +655,7 @@
         var searchHtml = '<input type="search" class="fp-pref-search" ' +
           'data-target="' + uid + '" ' +
           'placeholder="Type to search\u2026" autocomplete="off" ' +
+          'tabindex="-1" ' +
           'style="margin-bottom:4px;">';
         var selectHtml = '<select id="' + uid + '" data-kind="' + kind + '" data-group="' + gi + '" data-rank="' + ri + '">' +
           '<option value="">\u2014 select \u2014</option>' +
@@ -737,9 +766,35 @@
       container.querySelectorAll(".fp-pref-search").forEach(function(inp){
         var sel = document.getElementById(inp.dataset.target);
         if(!sel) return;
-        // Store full option list once on first keydown so filtering
-        // is always from the original set, not the already-filtered one.
         var allOptions = Array.from(sel.options);
+
+        // Focus search when the select above it is focused and user
+        // starts typing -- makes the workflow: Tab to select, type
+        // to filter, Enter/click to pick, Tab to next select.
+        sel.addEventListener("focus", function(){
+          inp.value = "";
+          // Restore full list on focus so search starts fresh
+          var cur = sel.value;
+          while(sel.options.length) sel.remove(0);
+          allOptions.forEach(function(opt){ sel.appendChild(opt.cloneNode(true)); });
+          sel.value = cur;
+        });
+
+        // Typing while the SELECT is focused triggers the search filter
+        sel.addEventListener("keydown", function(e){
+          // Let Tab and arrow keys pass through normally
+          if(e.key === "Tab" || e.key === "ArrowUp" || e.key === "ArrowDown" ||
+             e.key === "Enter" || e.key === "Escape") return;
+          // Any printable character: redirect focus to search input
+          if(e.key.length === 1){
+            e.preventDefault();
+            inp.removeAttribute("tabindex");
+            inp.focus();
+            inp.value = e.key;
+            inp.dispatchEvent(new Event("input"));
+          }
+        });
+
         inp.addEventListener("input", function(){
           var q = inp.value.trim().toLowerCase();
           // Rebuild option list -- show only matches, keep selected
@@ -756,14 +811,31 @@
             sel.value = realOpts[0].value;
             sel.dispatchEvent(new Event("change"));
             inp.value = "";
+            inp.setAttribute("tabindex", "-1");
+            sel.focus();
             // Restore full list after auto-select
             while(sel.options.length) sel.remove(0);
             allOptions.forEach(function(opt){ sel.appendChild(opt.cloneNode(true)); });
             sel.value = realOpts[0].value;
           }
         });
+
+        // On Escape in search: clear, restore full list, return focus to select
+        inp.addEventListener("keydown", function(e){
+          if(e.key === "Escape"){
+            inp.value = "";
+            inp.setAttribute("tabindex", "-1");
+            var cur = sel.value;
+            while(sel.options.length) sel.remove(0);
+            allOptions.forEach(function(opt){ sel.appendChild(opt.cloneNode(true)); });
+            sel.value = cur;
+            sel.focus();
+          }
+        });
+
         sel.addEventListener("change", function(){
           inp.value = "";
+          inp.setAttribute("tabindex", "-1");
           // Restore full option list when user picks from select
           var cur = sel.value;
           while(sel.options.length) sel.remove(0);

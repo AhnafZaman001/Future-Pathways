@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>
+  (function(){
+    try {
+      if (localStorage.getItem("kips-theme") === "light") {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    } catch (e) {}
+  })();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page not found &mdash; KIPS</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/pathways.css">
+</head>
+<body>
+
+  <div class="bearing-line" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="header-top">
+        <div class="brand">
+          <span class="brand-mark">&#9670;</span>
+          <span class="brand-name">KIPS</span>
+          <span class="brand-tag">future pathway university counsellor</span>
+        </div>
+        <button type="button" id="themeToggle" class="theme-toggle" aria-label="Switch to light theme"><span class="theme-toggle-glyph"></span><span class="theme-toggle-label">Dark</span></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" style="max-width:460px; padding-top:64px; text-align:center;">
+    <div class="fp-card">
+      <p class="fp-hint" style="font-family:'JetBrains Mono',monospace; font-size:.8rem; letter-spacing:.06em; margin:0 0 4px;">404</p>
+      <h1 style="margin:0 0 8px; font-size:1.3rem;">Page not found</h1>
+      <p class="fp-hint" style="margin:0 0 24px;">The page you're looking for doesn't exist, or the link may be out of date.</p>
+      <a href="index.html" class="btn-primary" style="display:inline-block; text-decoration:none;">Back to dashboard</a>
+    </div>
+  </main>
+
+  <script src="js/theme-toggle.js"></script>
+</body>
+</html>

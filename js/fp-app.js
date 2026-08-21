@@ -94,11 +94,7 @@
     if(editingStudentId){
       var role = result.profile ? result.profile.role : "student";
       if(role !== "counsellor" && role !== "admin"){
-        document.body.innerHTML = '<div class="wrap" style="max-width:520px; padding-top:60px;">' +
-          '<div class="fp-card"><p>This link is for counsellors/admins editing a student\u2019s form on their behalf. ' +
-          'Your account doesn\u2019t have that role.</p>' +
-          '<a href="pathways.html" class="btn-secondary" style="display:inline-block; text-decoration:none;">Go to my own form</a></div></div>';
-        document.body.style.visibility = "visible";
+        window.location.href = "access-denied.html";
         return;
       }
       state.studentId = editingStudentId;

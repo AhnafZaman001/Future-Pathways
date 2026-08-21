@@ -30,10 +30,7 @@
 
     var role = result.profile ? result.profile.role : "student";
     if(role !== "counsellor" && role !== "admin"){
-      document.getElementById("fp-admin-gate").innerHTML =
-        '<div class="fp-card"><p>This page is for counsellors and admins only.</p>' +
-        '<a href="pathways.html" class="btn-secondary" style="display:inline-block; text-decoration:none;">Go to the student form</a></div>';
-      document.getElementById("fp-admin-list-view").hidden = true;
+      window.location.href = "access-denied.html";
       return;
     }
 

@@ -33,6 +33,25 @@ window.FP = window.FP || {};
       });
   };
 
+  /** Sends a password-reset email. The link in that email lands on
+   *  reset-password.html with a recovery session already active. */
+  FP.requestPasswordReset = function(email){
+    return client.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + "/reset-password.html"
+    }).then(function(r){
+      if(r.error) throw r.error;
+      return r.data;
+    });
+  };
+
+  /** Call on reset-password.html once the user has picked a new password. */
+  FP.updatePassword = function(newPassword){
+    return client.auth.updateUser({ password: newPassword }).then(function(r){
+      if(r.error) throw r.error;
+      return r.data;
+    });
+  };
+
   FP.signOut = function(){
     return client.auth.signOut().then(function(){
       window.location.href = "login.html";

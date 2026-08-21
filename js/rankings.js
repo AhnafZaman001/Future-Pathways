@@ -117,6 +117,7 @@
      it lines up with the curated rankings-data.js entries above.
      ----------------------------------------------------------- */
   var cityByInstitute = {}; // canonical institute name -> [cities]
+  var institutesPromise; // set inside init(); reused by subsetEl's change handler to know when cityByInstitute is ready
 
   function institutePresentInCity(name, city){
     if(!city) return true; // no city filter active
@@ -145,19 +146,26 @@
   });
 
   function init(){
-    var institutesPromise = (FP && FP.client)
+    institutesPromise = (FP && FP.client)
       ? FP.client.from("institutes").select("name, location, campuses").eq("active", true)
       : Promise.resolve({ data: [] });
 
     institutesPromise.then(function(r){
       var all = r.data || [];
-      var citySet = {};
       all.forEach(function(inst){
         var cities = [];
         if(inst.location) cities.push(inst.location);
         (inst.campuses || []).forEach(function(c){ if(c) cities.push(c); });
         cityByInstitute[inst.name] = cities;
-        cities.forEach(function(c){ citySet[c] = true; });
+      });
+      // Default/pre-selection state: every city with ANY institute in
+      // the DB, regardless of field. Narrowed down to just the cities
+      // relevant to the current Field/Specialization the moment one is
+      // chosen -- see syncCityOptions(), called from the subsetEl
+      // change handler below.
+      var citySet = {};
+      all.forEach(function(inst){
+        (cityByInstitute[inst.name] || []).forEach(function(c){ citySet[c] = true; });
       });
       var sortedCities = Object.keys(citySet).sort();
       cityEl.innerHTML = '<option value="">All cities</option>' +
@@ -194,14 +202,56 @@
     subsetEl.addEventListener("change", function(){
       var field = DATA[fieldEl.value];
       if(!field || !subsetEl.value){ resultsEl.innerHTML = ""; lastField = null; lastSubset = null; return; }
-      render(field, subsetEl.value);
+      // Wait on institutesPromise (usually already resolved by the
+      // time someone gets this far) so cityByInstitute is populated
+      // before we decide which cities are actually relevant.
+      (institutesPromise || Promise.resolve()).then(function(){
+        syncCityOptions(field, subsetEl.value);
+        render(field, subsetEl.value);
+      });
     });
+  }
+
+  // Every raw name (ranked + alsoOffered + industryReputation) for a
+  // given field/subset combo, override-aware -- the exact same set
+  // render() turns into result cards. Shared so the city dropdown and
+  // the results list can never drift out of sync with each other.
+  function fieldEntries(field, subsetName){
+    var override = field.overrides ? field.overrides[subsetName] : null;
+    var allRanked = (override === "unranked") ? [] : (override || field.baseRanking);
+    var names = allRanked.map(function(entry){ return entry.name; });
+    (field.alsoOffered || []).forEach(function(n){ names.push(n); });
+    if(field.industryReputation){
+      field.industryReputation.names.forEach(function(n){ names.push(n); });
+    }
+    return names;
+  }
+
+  // Rebuilds the City dropdown to only the cities where at least one
+  // university actually offers the selected Field/Specialization --
+  // previously it always listed every city with any institute at all
+  // in the DB, most of which had nothing to do with the current
+  // selection and just produced "No universities found" dead ends.
+  function syncCityOptions(field, subsetName){
+    var citySet = {};
+    fieldEntries(field, subsetName).forEach(function(name){
+      var canonical = canonicalName(name);
+      var cities = cityByInstitute[canonical] || EXTRA_CITY_DATA[name] || EXTRA_CITY_DATA[canonical] || [];
+      cities.forEach(function(c){ citySet[c] = true; });
+    });
+    var cities = Object.keys(citySet).sort();
+
+    var prevValue = cityEl.value;
+    cityEl.innerHTML = '<option value="">All cities</option>' +
+      cities.map(function(c){ return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join("");
+    // Keep the previously-picked city selected if it's still a valid
+    // option for the new field/subset; otherwise fall back to "All
+    // cities" rather than silently pointing at a city with zero results.
+    cityEl.value = cities.indexOf(prevValue) !== -1 ? prevValue : "";
   }
 
   function render(field, subsetName){
     lastField = field; lastSubset = subsetName;
-    var override = field.overrides ? field.overrides[subsetName] : null;
-    var allRanked = (override === "unranked") ? [] : (override || field.baseRanking);
     var city = cityEl.value;
 
     // Collect all universities -- ranked entries + alsoOffered +
@@ -221,11 +271,7 @@
       }
     }
 
-    allRanked.forEach(function(entry){ addName(entry.name); });
-    (field.alsoOffered || []).forEach(addName);
-    if(field.industryReputation){
-      field.industryReputation.names.forEach(addName);
-    }
+    fieldEntries(field, subsetName).forEach(addName);
 
     var html = '<div class="fp-card rk-results-card">';
     html += '<h2 class="fp-step-title">' +

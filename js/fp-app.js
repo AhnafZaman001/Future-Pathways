@@ -362,12 +362,17 @@
       // Deduplicate by name (case-insensitive) so entries like
       // "Architecture" that appear in both fp_faculties and
       // career_options don't show twice.
+      // normKey strips trailing plural 's' so "Computer Science" and
+      // "Computer Sciences" collapse to the same dedup key.
+      function normKey(name){
+        return name.toLowerCase().replace(/\s+/g," ").trim().replace(/s$/, "");
+      }
       var existingFacultyNames = {};
       state.allFaculties.forEach(function(f){
-        existingFacultyNames[f.name.toLowerCase()] = true;
+        existingFacultyNames[normKey(f.name)] = true;
       });
       state.allCareers.forEach(function(c){
-        if(!existingFacultyNames[c.name.toLowerCase()]){
+        if(!existingFacultyNames[normKey(c.name)]){
           state.allFaculties.push({
             id: "career_" + c.id,
             name: c.name,
@@ -376,18 +381,14 @@
             active: true,
             display_order: 9000 + (c.display_order || 0)
           });
-          existingFacultyNames[c.name.toLowerCase()] = true;
+          existingFacultyNames[normKey(c.name)] = true;
         }
       });
       function byName(a, b){ return a.name.localeCompare(b.name); }
       state.allInstitutes.sort(byName);
-      // Deduplicate faculties by name before sorting -- the seed has
-      // two "Other" rows (one for engineering, one for computer_it)
-      // which both appear in the engineering pathway dropdown.
-      // Keep the first occurrence by name, drop the rest.
       var seenFac = {};
       state.allFaculties = state.allFaculties.filter(function(f){
-        var key = f.name.toLowerCase();
+        var key = normKey(f.name);
         if(seenFac[key]) return false;
         seenFac[key] = true;
         return true;

@@ -115,29 +115,8 @@
      (not a separate search tool). Uses institutes.location +
      institutes.campuses (real data) mapped by canonical name so
      it lines up with the curated rankings-data.js entries above.
-     Fired immediately on script load (this page has no auth gate)
-     so the city list is ready by the time Field/Specialization
-     produce a result set to filter.
      ----------------------------------------------------------- */
   var cityByInstitute = {}; // canonical institute name -> [cities]
-  var institutesPromise = (FP && FP.client)
-    ? FP.client.from("institutes").select("name, location, campuses").eq("active", true)
-    : Promise.resolve({ data: [] });
-
-  institutesPromise.then(function(r){
-    var all = r.data || [];
-    var citySet = {};
-    all.forEach(function(inst){
-      var cities = [];
-      if(inst.location) cities.push(inst.location);
-      (inst.campuses || []).forEach(function(c){ if(c) cities.push(c); });
-      cityByInstitute[inst.name] = cities;
-      cities.forEach(function(c){ citySet[c] = true; });
-    });
-    var sortedCities = Object.keys(citySet).sort();
-    cityEl.innerHTML = '<option value="">All cities</option>' +
-      sortedCities.map(function(c){ return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join("");
-  }).catch(function(err){ console.error("Institutes (for city filter) failed to load:", err); });
 
   function institutePresentInCity(name, city){
     if(!city) return true; // no city filter active
@@ -146,38 +125,78 @@
     return !!(cities && cities.indexOf(city) !== -1);
   }
 
-  cityEl.addEventListener("change", function(){
-    if(lastField && lastSubset) render(lastField, lastSubset);
+  // ---------------------------------------------------------
+  // Auth gate -- this page was previously reachable by anyone
+  // with the URL, signed in or not (the only page on the site
+  // without one). Same lightweight getSession() check used on
+  // merit.html/merit-calculator.html: no profile round-trip
+  // needed since this page doesn't branch on role, just on
+  // "is anyone signed in at all". Everything that touches the
+  // DOM now waits on this instead of firing at script-load time.
+  // ---------------------------------------------------------
+  FP.client.auth.getSession().then(function(r){
+    if(!r.data.session){ window.location.href = "login.html"; return; }
+    document.body.style.visibility = "visible";
+
+    var logoutBtn = document.getElementById("fp-logout");
+    if(logoutBtn) logoutBtn.addEventListener("click", function(){ FP.signOut(); });
+
+    init();
   });
 
-  Object.keys(DATA).forEach(function(key){
-    var opt = document.createElement("option");
-    opt.value = key;
-    opt.textContent = DATA[key].label;
-    fieldEl.appendChild(opt);
-  });
+  function init(){
+    var institutesPromise = (FP && FP.client)
+      ? FP.client.from("institutes").select("name, location, campuses").eq("active", true)
+      : Promise.resolve({ data: [] });
 
-  fieldEl.addEventListener("change", function(){
-    var field = DATA[fieldEl.value];
-    subsetEl.innerHTML = "";
-    resultsEl.innerHTML = "";
-    lastField = null; lastSubset = null;
+    institutesPromise.then(function(r){
+      var all = r.data || [];
+      var citySet = {};
+      all.forEach(function(inst){
+        var cities = [];
+        if(inst.location) cities.push(inst.location);
+        (inst.campuses || []).forEach(function(c){ if(c) cities.push(c); });
+        cityByInstitute[inst.name] = cities;
+        cities.forEach(function(c){ citySet[c] = true; });
+      });
+      var sortedCities = Object.keys(citySet).sort();
+      cityEl.innerHTML = '<option value="">All cities</option>' +
+        sortedCities.map(function(c){ return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join("");
+    }).catch(function(err){ console.error("Institutes (for city filter) failed to load:", err); });
 
-    if(!field){
-      subsetEl.disabled = true;
-      subsetEl.innerHTML = '<option value="">&mdash; Select a field first &mdash;</option>';
-      return;
-    }
-    subsetEl.disabled = false;
-    subsetEl.innerHTML = '<option value="">&mdash; Select a specialization &mdash;</option>' +
-      field.subsets.map(function(s){ return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join("");
-  });
+    cityEl.addEventListener("change", function(){
+      if(lastField && lastSubset) render(lastField, lastSubset);
+    });
 
-  subsetEl.addEventListener("change", function(){
-    var field = DATA[fieldEl.value];
-    if(!field || !subsetEl.value){ resultsEl.innerHTML = ""; lastField = null; lastSubset = null; return; }
-    render(field, subsetEl.value);
-  });
+    Object.keys(DATA).forEach(function(key){
+      var opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = DATA[key].label;
+      fieldEl.appendChild(opt);
+    });
+
+    fieldEl.addEventListener("change", function(){
+      var field = DATA[fieldEl.value];
+      subsetEl.innerHTML = "";
+      resultsEl.innerHTML = "";
+      lastField = null; lastSubset = null;
+
+      if(!field){
+        subsetEl.disabled = true;
+        subsetEl.innerHTML = '<option value="">&mdash; Select a field first &mdash;</option>';
+        return;
+      }
+      subsetEl.disabled = false;
+      subsetEl.innerHTML = '<option value="">&mdash; Select a specialization &mdash;</option>' +
+        field.subsets.map(function(s){ return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join("");
+    });
+
+    subsetEl.addEventListener("change", function(){
+      var field = DATA[fieldEl.value];
+      if(!field || !subsetEl.value){ resultsEl.innerHTML = ""; lastField = null; lastSubset = null; return; }
+      render(field, subsetEl.value);
+    });
+  }
 
   function render(field, subsetName){
     lastField = field; lastSubset = subsetName;

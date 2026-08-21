@@ -136,7 +136,7 @@ window.FP = window.FP || {};
       .map(function(k){ return '<div class="fp-review-row"><span>' + k.replace(/_/g," ") + '</span><span>' + esc(p[k]) + '</span></div>'; }).join("");
 
     document.getElementById("fpDashModalBody").innerHTML =
-      '<p class="fp-step-desc"><span class="fp-cap">' + esc(sub.pathway) + '</span> \u2014 <span class="fp-badge ' + esc(sub.status) + '">' + esc(sub.status) + '</span></p>' +
+      '<p class="fp-step-desc"><span class="fp-cap">' + esc(sub.pathway) + '</span> | <span class="fp-badge ' + esc(sub.status) + '">' + esc(sub.status) + '</span></p>' +
       '<div class="fp-review-section"><h4>Student information</h4>' + profileHtml + '</div>' +
       '<div class="fp-review-section"><h4>Programs &amp; careers</h4><div class="fp-review-row"><span>Selected</span><span>' + esc(careerNames.join(", ") || "\u2014") + '</span></div></div>' +
       '<div class="fp-review-section"><h4>Institute preferences</h4>' + groupedRows(instRows, lookups.institutes) + '</div>' +

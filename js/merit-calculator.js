@@ -27,7 +27,7 @@
   });
 
   function displayName(cfg){
-    return cfg.variantLabel ? (cfg.university + " \u2014 " + cfg.variantLabel) : cfg.university;
+    return cfg.variantLabel ? (cfg.university + " | " + cfg.variantLabel) : cfg.university;
   }
 
   function init(){

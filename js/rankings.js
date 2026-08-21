@@ -191,11 +191,11 @@
 
       if(!field){
         subsetEl.disabled = true;
-        subsetEl.innerHTML = '<option value="">&mdash; Select a field first &mdash;</option>';
+        subsetEl.innerHTML = '<option value="">Select a field first</option>';
         return;
       }
       subsetEl.disabled = false;
-      subsetEl.innerHTML = '<option value="">&mdash; Select a specialization &mdash;</option>' +
+      subsetEl.innerHTML = '<option value="">Select a specialization</option>' +
         field.subsets.map(function(s){ return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join("");
     });
 
@@ -275,8 +275,8 @@
 
     var html = '<div class="fp-card rk-results-card">';
     html += '<h2 class="fp-step-title">' +
-      esc(field.label) + ' &mdash; ' + esc(subsetName) +
-      (city ? ' &mdash; ' + esc(city) : '') +
+      esc(field.label) + ' | ' + esc(subsetName) +
+      (city ? ' | ' + esc(city) : '') +
     '</h2>';
 
     if(all.length === 0){

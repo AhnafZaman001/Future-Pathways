@@ -919,7 +919,7 @@
             '<button type="button" class="nav-link" id="fp-delete-student" style="color:var(--red);">Delete</button>' +
           '</div>' +
         '</div>' +
-        '<p class="fp-step-desc">' + esc(sub.pathway) + ' \u2014 <span class="fp-badge ' + esc(sub.status) + '">' + esc(sub.status) + '</span></p>' +
+        '<p class="fp-step-desc">' + esc(sub.pathway) + ' | <span class="fp-badge ' + esc(sub.status) + '">' + esc(sub.status) + '</span></p>' +
         '<div class="fp-review-section"><h4>Student information</h4>' + profileHtml + '</div>' +
         '<div class="fp-review-section"><h4>Programs &amp; careers</h4><div class="fp-review-row"><span>Selected</span><span>' + esc(careerNames.join(", ") || "\u2014") + '</span></div></div>' +
         '<div class="fp-review-section"><h4>Institute preferences</h4>' + groupedAccordion(instRows, lookups.institutes, "inst") + '</div>' +

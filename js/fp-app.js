@@ -534,7 +534,7 @@
           '<div class="fp-grid-2">' +
             '<label>Discipline' +
               '<select data-field="discipline" required>' +
-              '<option value="">\u2014 select \u2014</option>' +
+              '<option value="">select</option>' +
               ["Pre-Engineering","Pre-Medical","ICS","Commerce","Arts / Humanities",
                "Forces (PAF/Army/Navy)","Other"].map(function(d){
                 return '<option value="' + esc(d) + '"'+(p.discipline===d?' selected':'')+'>'+esc(d)+'</option>';
@@ -611,7 +611,7 @@
       if(state.status === "submitted"){
         var stampDate = state.submittedAt || new Date();
         stampHtml = '<div class="fp-transmit-stamp" style="margin-bottom:20px;">' +
-          '&#10003; TRANSMITTED &mdash; ' + esc(stampDate.toISOString().replace("T"," ").slice(0,19)) + ' UTC</div>';
+          '&#10003; TRANSMITTED | ' + esc(stampDate.toISOString().replace("T"," ").slice(0,19)) + ' UTC</div>';
       }
 
       return '<h2 class="fp-step-title">Review</h2>' +
@@ -655,7 +655,7 @@
           'tabindex="-1" ' +
           'style="margin-bottom:4px;">';
         var selectHtml = '<select id="' + uid + '" data-kind="' + kind + '" data-group="' + gi + '" data-rank="' + ri + '">' +
-          '<option value="">\u2014 select \u2014</option>' +
+          '<option value="">select</option>' +
           options.map(function(o){
             var sel = (val === o.id) ? "selected" : "";
             return '<option value="' + o.id + '" ' + sel + '>' + esc(o.name) + (o.location ? " (" + esc(o.location) + ")" : "") + '</option>';

@@ -70,7 +70,6 @@ UPDATE public.institutes SET location='Gujrat'      WHERE name='Nawaz Sharif Med
 UPDATE public.institutes SET location='Rahim Yar Khan' WHERE name='Sheikh Zayed Medical College'                  AND pathway='medical';
 UPDATE public.institutes SET location='Dera Ghazi Khan' WHERE name='DG Khan Medical College'                      AND pathway='medical';
 UPDATE public.institutes SET location='Narowal'     WHERE name='Narowal Medical College'                          AND pathway='medical';
-UPDATE public.institutes SET location='Gujranwala'  WHERE name='Kharian' WHERE FALSE; -- placeholder
 
 -- Islamabad / Rawalpindi (federal)
 UPDATE public.institutes SET location='Islamabad'   WHERE name='SZABMU'                                            AND pathway='medical';

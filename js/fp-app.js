@@ -353,28 +353,22 @@
       state.allInstitutes = results[0].data || [];
       state.allFaculties = results[1].data || [];
       state.allCareers = results[2].data || [];
-      // Merge career options into the institute list as plain
-      // selectable entries -- no separate step, no checkboxes.
-      // A student can pick "CSS/PMS" or "BBA" as a preference
-      // the same way they pick "NUST". pathway=null so they
-      // appear regardless of pathway. "career_" prefix avoids
-      // collisions with real institute UUIDs.
+      // Merge career options into the FACULTY list -- these are
+      // program/field choices (CA/ACCA, CSS/PMS, BBA, Forces,
+      // Computer Sciences, Architecture etc.) and belong alongside
+      // faculties, not university names. pathway=null so they
+      // appear regardless of engineering/medical selection.
+      // "career_" prefix avoids collisions with real faculty UUIDs.
       state.allCareers.forEach(function(c){
-        state.allInstitutes.push({
+        state.allFaculties.push({
           id: "career_" + c.id,
           name: c.name,
           category: c.category || "other",
           pathway: null,
           active: true,
-          display_order: 9000 + (c.display_order || 0),
-          campuses: [],
-          location: null
+          display_order: 9000 + (c.display_order || 0)
         });
       });
-      // Sort both lists alphabetically by name so the dropdowns
-      // are easy to scan -- previously ordered by display_order
-      // from the DB which is insertion order, not meaningful to
-      // the person reading the list.
       function byName(a, b){ return a.name.localeCompare(b.name); }
       state.allInstitutes.sort(byName);
       state.allFaculties.sort(byName);
@@ -559,7 +553,7 @@
       // Include both pathway-specific institutes AND career options
       // (which have pathway: null after the merge in loadMasterData)
       var options = state.allInstitutes.filter(function(i){
-        return i.pathway === state.pathway || i.pathway === null;
+        return i.pathway === state.pathway;
       });
       ensureGroupArrays();
       return '<h2 class="fp-step-title">Institute preferences</h2>' +
@@ -569,7 +563,7 @@
 
     faculties: function(){
       if(!state.pathway) return '<p class="fp-step-desc">Pick a pathway first.</p>';
-      var options = state.allFaculties.filter(function(f){ return f.pathway === state.pathway; });
+      var options = state.allFaculties.filter(function(f){ return f.pathway === state.pathway || f.pathway === null; });
       ensureGroupArrays();
       return '<h2 class="fp-step-title">Faculty preferences</h2>' +
         '<p class="fp-step-desc">Rank up to 5 faculties/programs in each group, 1 = highest preference. No repeats within a group.</p>' +
@@ -585,8 +579,8 @@
     review: function(){
       var p = state.profile;
 
-      var instHtml = groupsReviewHtml(state.instituteGroups, state.instituteCustom, state.allInstitutes.filter(function(i){ return i.pathway===state.pathway || i.pathway===null; }));
-      var facHtml = groupsReviewHtml(state.facultyGroups, state.facultyCustom, state.allFaculties.filter(function(f){ return f.pathway===state.pathway; }));
+      var instHtml = groupsReviewHtml(state.instituteGroups, state.instituteCustom, state.allInstitutes.filter(function(i){ return i.pathway===state.pathway; }));
+      var facHtml = groupsReviewHtml(state.facultyGroups, state.facultyCustom, state.allFaculties.filter(function(f){ return f.pathway===state.pathway || f.pathway===null; }));
 
       var stampHtml = "";
       if(state.status === "submitted"){

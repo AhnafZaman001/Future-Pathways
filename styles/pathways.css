@@ -111,6 +111,17 @@
 .fp-hint{ font-weight:400; color: var(--ink-soft); }
 .fp-error{ color: var(--red); font-size:.85rem; margin:0; }
 
+/* Inline section-level error banner (graceful degradation) -- shown
+   in place of a section's content when just that section's fetch
+   fails, with its own Retry button. The rest of the page keeps
+   working regardless. */
+.fp-error-banner{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  background: var(--red-dim); border:1px solid var(--red); border-radius:10px;
+  padding:10px 14px; margin-bottom:16px; font-size:.85rem; color: var(--red);
+}
+.fp-error-banner .fp-error-banner-retry{ flex-shrink:0; padding:4px 12px; font-size:.8rem; }
+
 .fp-field-hint{
   display: block;
   font-family: var(--font-mono);

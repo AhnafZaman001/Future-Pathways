@@ -10,20 +10,76 @@
   var lookups = { institutes:{}, faculties:{}, careers:{} };
   var firstPriorityByFpId = {}; // future_pathway_id -> institute name (or custom name)
 
-  // Fire every network request immediately, in parallel with the auth
-  // check -- RLS enforces access server-side regardless of when the
-  // client-side profile fetch resolves, so there's no correctness reason
-  // to make these wait on each other. Previously this was four fully
-  // sequential round-trips (auth -> lookups -> first-priorities ->
-  // submissions); now it's one round-trip's worth of latency, not four.
+  // ---------------------------------------------------------
+  // Graceful degradation: each fetch below owns its own data,
+  // its own failure, and its own retry -- none of them are
+  // chained off each other, so a failure in one (say, the
+  // institutes lookup) can't take the whole page down with it.
+  // Previously this was one long .then() chain with a single
+  // top-level .catch(); if any link failed, everything after it
+  // -- including the submissions table itself -- silently never
+  // rendered, and the counsellor was left staring at an empty
+  // page with no explanation. Now each piece resolves (or fails
+  // and shows its own inline retry) independently, in parallel.
+  // ---------------------------------------------------------
+  function fetchInstitutes(){
+    return FP.client.from("institutes").select("id,name").order("name").then(function(r){
+      if(r.error) throw r.error;
+      lookups.institutes = {};
+      (r.data||[]).forEach(function(x){ lookups.institutes[x.id] = x.name; });
+      return fetchFirstPriorities(); // depends on institutes for name resolution
+    }).catch(function(e){
+      console.error(e);
+      showSectionError("fp-lookups-error", "Some institute/program names may show as blank " +
+        "-- the name lookups didn't load.", fetchInstitutes);
+    });
+  }
+
+  function fetchFacultiesAndCareers(){
+    return Promise.all([
+      FP.client.from("fp_faculties").select("id,name"),
+      FP.client.from("career_options").select("id,name")
+    ]).then(function(rest){
+      if(rest[0].error) throw rest[0].error;
+      if(rest[1].error) throw rest[1].error;
+      lookups.faculties = {}; lookups.careers = {};
+      (rest[0].data||[]).forEach(function(x){ lookups.faculties[x.id] = x.name; });
+      (rest[1].data||[]).forEach(function(x){ lookups.careers[x.id] = x.name; });
+    }).catch(function(e){
+      console.error(e);
+      showSectionError("fp-lookups-error", "Some faculty/career names may show as blank " +
+        "-- the name lookups didn't load.", fetchFacultiesAndCareers);
+    });
+  }
+
+  function fetchFirstPriorities(){
+    return FP.client.from("student_institute_preferences")
+      .select("future_pathway_id, institute_id, custom_institute_name")
+      .eq("preference_group", 1).eq("rank", 1)
+      .then(function(r){
+        if(r.error) throw r.error;
+        applyFirstPriorities(r);
+      }).catch(function(e){
+        console.error(e);
+        // Non-fatal -- the "first priority" filter dropdown just stays
+        // empty/stale; the submissions table itself is unaffected.
+      });
+  }
+
+  function fetchSubmissions(){
+    hideSectionError("fp-submissions-error");
+    return FP.client.from("future_pathways").select("*, students(*)").order("created_at", { ascending:false })
+      .then(function(r){
+        if(r.error) throw r.error;
+        applySubmissions(r);
+      }).catch(function(e){
+        console.error(e);
+        showSectionError("fp-submissions-error",
+          "Couldn't load submissions. Check your connection and try again.", fetchSubmissions);
+      });
+  }
+
   var authPromise = FP.getSessionAndProfile();
-  var institutesPromise = FP.client.from("institutes").select("id,name").order("name");
-  var facultiesPromise  = FP.client.from("fp_faculties").select("id,name");
-  var careersPromise    = FP.client.from("career_options").select("id,name");
-  var firstPrioPromise  = FP.client.from("student_institute_preferences")
-    .select("future_pathway_id, institute_id, custom_institute_name")
-    .eq("preference_group", 1).eq("rank", 1);
-  var submissionsPromise = FP.client.from("future_pathways").select("*, students(*)").order("created_at", { ascending:false });
 
   authPromise.then(function(result){
     if(!result){ window.location.href = "login.html"; return; } // requireAuth's redirect, inlined
@@ -34,16 +90,40 @@
       return;
     }
 
-    return institutesPromise.then(function(r){
-      (r.data||[]).forEach(function(x){ lookups.institutes[x.id] = x.name; });
-      return Promise.all([facultiesPromise, careersPromise, firstPrioPromise, submissionsPromise]);
-    }).then(function(rest){
-      (rest[0].data||[]).forEach(function(x){ lookups.faculties[x.id] = x.name; });
-      (rest[1].data||[]).forEach(function(x){ lookups.careers[x.id] = x.name; });
-      applyFirstPriorities(rest[2]);
-      applySubmissions(rest[3]);
-    });
+    // All independent, all fire together -- a slow or failed lookup
+    // fetch no longer holds up the submissions table rendering.
+    fetchInstitutes();
+    fetchFacultiesAndCareers();
+    fetchSubmissions();
   }).catch(function(e){ console.error(e); });
+
+  /** Shows a small inline error banner with a Retry button inside a
+   *  named section. Reuses the same banner element on repeat calls
+   *  instead of stacking duplicates. */
+  function showSectionError(id, message, retryFn){
+    var host = document.getElementById("fp-admin-list-view") || document.body;
+    var el = document.getElementById(id);
+    if(!el){
+      el = document.createElement("div");
+      el.id = id;
+      el.className = "fp-error-banner";
+      host.insertBefore(el, host.firstChild);
+    }
+    el.innerHTML = '<span>' + esc(message) + '</span>' +
+      '<button type="button" class="btn-secondary fp-error-banner-retry">Retry</button>';
+    el.hidden = false;
+    el.querySelector(".fp-error-banner-retry").addEventListener("click", function(){
+      el.querySelector(".fp-error-banner-retry").disabled = true;
+      Promise.resolve(retryFn()).finally(function(){
+        if(el.parentNode) el.querySelector(".fp-error-banner-retry").disabled = false;
+      });
+    });
+  }
+
+  function hideSectionError(id){
+    var el = document.getElementById(id);
+    if(el) el.hidden = true;
+  }
 
   document.getElementById("fp-logout").addEventListener("click", function(){
     FP.signOut();

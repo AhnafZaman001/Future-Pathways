@@ -9,6 +9,8 @@
   var submissions = [];
   var lookups = { institutes:{}, faculties:{}, careers:{} };
   var firstPriorityByFpId = {}; // future_pathway_id -> institute name (or custom name)
+  var currentUserId = null; // the signed-in counsellor/admin's own id -- see
+    // the self-row handling in renderTable()/the delete handler below.
 
   // ---------------------------------------------------------
   // Graceful degradation: each fetch below owns its own data,
@@ -89,6 +91,8 @@
       window.location.href = "access-denied.html";
       return;
     }
+
+    currentUserId = result.session.user.id;
 
     // All independent, all fire together -- a slow or failed lookup
     // fetch no longer holds up the submissions table rendering.
@@ -287,30 +291,53 @@
     closeBulkMenu();
     var ids = Array.from(selectedIds);
     if(!ids.length) return;
-    var studentIds = ids.map(function(id){
+    var allSelected = ids.map(function(id){
       var sub = submissions.find(function(x){ return x.id === id; });
       return sub ? { fpId: id, studentId: sub.student_id, name: titleCase((sub.students && sub.students.student_name) || "") } : null;
     }).filter(Boolean);
+
+    // Own row can't go through counsellor_delete_student() (it
+    // deliberately refuses to target auth.uid()) -- drop it from the
+    // batch and point to the per-row "Remove my profile" action
+    // instead, rather than letting it silently fail inside Promise.all.
+    var studentIds = allSelected.filter(function(s){ return s.studentId !== currentUserId; });
+    var skippedSelf = allSelected.length !== studentIds.length;
+    if(!studentIds.length){
+      FP.toast.error("That's your own profile \u2014 use \u201cRemove my profile\u201d on that row instead.");
+      return;
+    }
+
     var names = studentIds.map(function(s){ return s.name; }).filter(Boolean);
     var confirmMsg = "Permanently delete " + studentIds.length + " student account" + (studentIds.length === 1 ? "" : "s") + "?\n\n" +
       (names.length ? names.slice(0, 6).join(", ") + (names.length > 6 ? ", and " + (names.length - 6) + " more" : "") + "\n\n" : "") +
-      "This removes their names, profiles, and all submitted data from the database completely. This cannot be undone.";
+      "This removes their names, profiles, and all submitted data from the database completely. This cannot be undone." +
+      (skippedSelf ? "\n\n(Your own profile was excluded \u2014 use \u201cRemove my profile\u201d on that row instead.)" : "");
     FP.confirm(confirmMsg).then(function(confirmed){
       if(!confirmed) return;
       setBulkLoading(true, "Deleting\u2026");
+      var failures = 0;
       Promise.all(studentIds.map(function(s){
         return new Promise(function(resolve){
           FP.client.rpc("counsellor_delete_student", { p_student_id: s.studentId }).then(function(r){
             if(!r.error){
               submissions = submissions.filter(function(x){ return x.id !== s.fpId; });
               selectedIds.delete(s.fpId);
+            } else {
+              failures++;
+              console.error("Bulk delete failed for", s.name, r.error);
             }
             resolve();
           });
         });
       })).then(function(){
         setBulkLoading(false);
-        FP.toast.success("Deleted " + studentIds.length + " student account" + (studentIds.length === 1 ? "" : "s"));
+        var succeeded = studentIds.length - failures;
+        if(succeeded > 0){
+          FP.toast.success("Deleted " + succeeded + " student account" + (succeeded === 1 ? "" : "s"));
+        }
+        if(failures > 0){
+          FP.toast.error(failures + " account" + (failures === 1 ? "" : "s") + " could not be deleted \u2014 see console for details");
+        }
         renderStatsStrip();
         renderTable();
         updateBulkActionsBar();
@@ -378,6 +405,25 @@
       FP.client.rpc("counsellor_delete_student", { p_student_id: studentId }).then(function(r){
         if(r.error){
           FP.toast.error("Could not delete: " + r.error.message);
+          if(triggerBtn) triggerBtn.disabled = false;
+          onDone(false);
+          return;
+        }
+        onDone(true);
+      });
+    });
+  }
+
+  function removeOwnStudentProfile(fpId, triggerBtn, onDone){
+    var confirmMsg = "Remove your own leftover student profile?\n\n" +
+      "This deletes any student name/marks and submitted form tied to your account, " +
+      "but keeps your counsellor/admin login intact \u2014 you'll still be able to sign in normally.";
+    FP.confirm(confirmMsg).then(function(confirmed){
+      if(!confirmed){ onDone(false); return; }
+      if(triggerBtn) triggerBtn.disabled = true;
+      FP.client.rpc("counsellor_remove_own_student_profile").then(function(r){
+        if(r.error){
+          FP.toast.error("Could not remove profile: " + r.error.message);
           if(triggerBtn) triggerBtn.disabled = false;
           onDone(false);
           return;
@@ -664,9 +710,22 @@
       var name = titleCase((s.students && s.students.student_name) || "") || "(no profile yet)";
       var firstPriority = firstPriorityByFpId[s.id] || "\u2014";
       var checked = selectedIds.has(s.id) ? " checked" : "";
+      var isSelf = currentUserId && s.student_id === currentUserId;
+      // A counsellor/admin's own account can end up with a leftover
+      // students/future_pathways row (tested it themselves, or was a
+      // student before being promoted). counsellor_delete_student()
+      // deliberately refuses to target auth.uid() -- see its own
+      // comment -- so the normal Delete button would just fail with
+      // "Cannot delete your own account through this function" for
+      // this one row. Swap in the narrow self-cleanup action instead
+      // (see counsellor_remove_own_student_profile.sql): removes the
+      // leftover student data only, keeps the actual login intact.
+      var deleteAction = isSelf
+        ? '<button type="button" class="fp-row-action-link fp-row-action-remove-self" data-remove-self-id="' + s.id + '">Remove my profile</button>'
+        : '<button type="button" class="fp-row-action-link fp-row-action-delete" data-delete-id="' + s.id + '" data-student-id="' + esc(s.student_id) + '">Delete</button>';
       return '<tr data-id="' + s.id + '">' +
         '<td class="fp-select-td"><label class="fp-select-cell"><input type="checkbox" class="fp-row-select" data-id="' + s.id + '" aria-label="Select ' + esc(name) + '"' + checked + '></label></td>' +
-        '<td><strong>' + esc(name) + '</strong></td>' +
+        '<td><strong>' + esc(name) + (isSelf ? ' <span class="fp-hint">(you)</span>' : '') + '</strong></td>' +
         '<td class="fp-cap">' + esc(s.pathway) + '</td>' +
         '<td>' + esc(firstPriority) + '</td>' +
         '<td><span class="fp-badge ' + esc(s.status) + '">' + esc(s.status) + '</span></td>' +
@@ -674,7 +733,7 @@
         '<td class="fp-row-actions">' +
           '<a href="pathways.html?student=' + esc(s.student_id) + '" class="fp-row-action-link">Edit</a>' +
           '<button type="button" class="fp-row-action-link fp-row-action-clear" data-clear-id="' + s.id + '">Clear data</button>' +
-          '<button type="button" class="fp-row-action-link fp-row-action-delete" data-delete-id="' + s.id + '" data-student-id="' + esc(s.student_id) + '">Delete</button>' +
+          deleteAction +
         '</td>' +
       '</tr>';
     }).join("");
@@ -734,6 +793,25 @@
           submissions = submissions.filter(function(x){ return x.id !== fpId; });
           selectedIds.delete(fpId);
           FP.toast.success("Deleted " + (studentName || "student") + "'s account");
+          renderStatsStrip();
+          renderTable();
+          updateBulkActionsBar();
+        });
+      });
+    });
+
+    // "Remove my profile" -- self-only cleanup for a counsellor/admin
+    // whose own account also has a leftover students/future_pathways
+    // row. See counsellor_remove_own_student_profile.sql.
+    document.querySelectorAll("#fp-admin-tbody .fp-row-action-remove-self").forEach(function(btn){
+      btn.addEventListener("click", function(e){
+        e.stopPropagation();
+        var fpId = btn.dataset.removeSelfId;
+        removeOwnStudentProfile(fpId, btn, function(ok){
+          if(!ok) return;
+          submissions = submissions.filter(function(x){ return x.id !== fpId; });
+          selectedIds.delete(fpId);
+          FP.toast.success("Removed your student profile");
           renderStatsStrip();
           renderTable();
           updateBulkActionsBar();

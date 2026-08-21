@@ -131,6 +131,23 @@ input::placeholder, textarea::placeholder{ color: var(--ink-faint); }
 
 input:hover, select:hover, textarea:hover{ border-color: var(--border-strong); }
 
+/* Password visibility toggle -- wraps a password input with a small
+   eye button on the right. Markup added at runtime by
+   js/fp-password-toggle.js; the input itself keeps its normal
+   border/background, this just reserves room for the button and
+   positions it. */
+.fp-password-field{ position:relative; }
+.fp-password-field input{ padding-right:40px; }
+.fp-password-toggle{
+  position:absolute; top:50%; right:4px; transform:translateY(-50%);
+  width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+  background:transparent; border:none; border-radius:8px; cursor:pointer;
+  color: var(--ink-soft); padding:0;
+}
+.fp-password-toggle:hover{ background: var(--surface-3, var(--surface-2)); color: var(--ink); }
+.fp-password-toggle:focus-visible{ outline:2px solid var(--violet); outline-offset:1px; }
+.fp-password-toggle svg{ width:18px; height:18px; display:block; }
+
 input:focus-visible, select:focus-visible, textarea:focus-visible{
   outline: none;
   border-color: var(--violet);

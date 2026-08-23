@@ -1,6 +1,7 @@
 /* =========================================================
    fp-chat-assistant.js -- floating chat widget backed by the
    chat-assistant Supabase Edge Function (Groq, rate-limited).
+   (redeploy trigger)
 
    Counsellor/admin only -- the edge function itself also enforces
    this server-side, so this client-side check is a UX nicety, not

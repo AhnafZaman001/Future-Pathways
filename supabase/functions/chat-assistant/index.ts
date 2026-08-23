@@ -65,7 +65,7 @@ How the site works, for context:
 - Counsellors review submissions in an admin dashboard, and can step through any of the 20 ranked positions to see which institute/faculty a student chose there.
 - The site also has a Merit & Entry Test Guide (weighted merit formulas per institute) and a Merit Calculator (students plug in marks to estimate their aggregate).
 
-You're talking to a counsellor or admin, not a student. Be concise, direct, and practical. If you don't know something (e.g. a specific institute's current admission deadline), say so plainly rather than guessing -- do not invent merit formulas, cutoffs, or policies that weren't given to you in context below.`;
+You're talking to a counsellor or admin, not a student. Be concise, direct, and practical. If you don't know something (e.g. a specific institute's current admission deadline), say so plainly rather than guessing -- do not invent merit formulas, cutoffs, policies, or student records that weren't given to you in context below. If asked to find a student and no matching records appear in context, say clearly that no match was found rather than guessing a name.`;
 
 async function buildStudentContext(adminClient: any, studentId: string): Promise<string> {
   const { data: fp } = await adminClient
@@ -112,6 +112,14 @@ async function buildStudentContext(adminClient: any, studentId: string): Promise
 }
 
 async function buildFaqContext(adminClient: any, message: string): Promise<string> {
+  const [meritBlock, studentBlock] = await Promise.all([
+    buildMeritContext(adminClient, message),
+    buildStudentSearchContext(adminClient, message),
+  ]);
+  return [studentBlock, meritBlock].filter(Boolean).join("\n\n");
+}
+
+async function buildMeritContext(adminClient: any, message: string): Promise<string> {
   // Lightweight grounding: pull merit formula rows whose institute
   // name appears (loosely) in the question, so answers about a
   // specific university's formula are backed by real stored data
@@ -138,6 +146,55 @@ async function buildFaqContext(adminClient: any, message: string): Promise<strin
       (f.weightages_text ? " | Weightages: " + f.weightages_text : "") +
       (f.effective_year ? " | Effective: " + f.effective_year : "")
     ).join("\n");
+}
+
+// Lets the general chat (no studentId scoped) answer "find student
+// named X" style questions directly, instead of only being able to
+// summarize a student when opened via the per-student "Ask
+// assistant" button. Candidate words come from the message itself,
+// stripped down to just plausible name tokens -- common query words
+// ("find", "student", "show"...) are filtered out so they don't get
+// matched against student_name as if they were part of a name.
+const STUDENT_SEARCH_STOPWORDS = new Set([
+  "find","student","students","named","search","looking","look","show",
+  "list","tell","about","who","the","for","name","please","info",
+  "information","details","this","that","with","from","give","get","has",
+]);
+
+async function buildStudentSearchContext(adminClient: any, message: string): Promise<string> {
+  const words = message.toLowerCase().split(/\W+/)
+    .filter((w: string) => w.length > 2 && !STUDENT_SEARCH_STOPWORDS.has(w));
+  if (!words.length) return "";
+
+  // Safe to interpolate directly into .or() -- the \W+ split above
+  // already stripped every character except letters/digits/underscore
+  // out of each token, so there's no way a comma, parenthesis, or
+  // other filter-syntax character survives into the query string.
+  const orFilter = words.map((w: string) => "student_name.ilike.%" + w + "%").join(",");
+  const { data: students } = await adminClient
+    .from("students")
+    .select("id, student_name")
+    .or(orFilter)
+    .limit(10);
+
+  if (!students || !students.length) return "";
+
+  const ids = students.map((s: any) => s.id);
+  const { data: fps } = await adminClient
+    .from("future_pathways")
+    .select("student_id, pathway, status, submitted_at")
+    .in("student_id", ids);
+
+  const fpByStudent: Record<string, any> = {};
+  (fps || []).forEach((f: any) => { fpByStudent[f.student_id] = f; });
+
+  return "Matching student records (real data -- use these exact names, don't invent students or guess at ones not listed here):\n" +
+    students.map((s: any) => {
+      const fp = fpByStudent[s.id];
+      return "- " + s.student_name + (fp
+        ? " | Pathway: " + fp.pathway + " | Status: " + fp.status
+        : " | No Future Pathways submission yet");
+    }).join("\n");
 }
 
 Deno.serve(async (req: Request) => {

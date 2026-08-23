@@ -180,51 +180,96 @@
     });
   }
 
-  // Export CSV
-  var exportCsvBtn = document.getElementById("fp-export-csv");
-  if(exportCsvBtn){
-    exportCsvBtn.addEventListener("click", function(){
-      exportSubmissionsToCSV();
+  // Print / Save as PDF
+  var printBtn = document.getElementById("fp-print-list");
+  if(printBtn){
+    printBtn.addEventListener("click", function(){
+      printSubmissions();
     });
   }
 
-  function exportSubmissionsToCSV(){
-    var filtered = getFilteredSubmissions();
+  function printSubmissions(){
+    var filtered = sortRows(getFilteredSubmissions());
     if(!filtered.length){
-      FP.toast.info("No submissions match the current filters to export.");
+      FP.toast.info("No submissions match the current filters to print.");
       return;
     }
-    var headers = ["Student Name", "Father Name", "Contact", "Roll Number", "Matric Marks", "First Year Marks", "Pathway", ordinal(priorityN) + " Priority", "Status", "Submitted At"];
-    var rows = filtered.map(function(s){
-      var p = s.students || {};
-      return [
-        titleCase(p.student_name || ""),
-        titleCase(p.father_name || ""),
-        p.contact || "",
-        p.roll_number || "",
-        p.matric_marks || "",
-        p.first_year_marks || "",
-        s.pathway || "",
-        firstPriorityByFpId[s.id] || "",
-        s.status || "",
-        s.submitted_at ? new Date(s.submitted_at).toLocaleString() : ""
-      ].map(function(val){
-        var str = String(val).replace(/"/g, '""');
-        return '"' + str + '"';
-      }).join(",");
+
+    var pathwayFilter = document.getElementById("filter-pathway").value;
+    var statusFilter = document.getElementById("filter-status").value;
+    var priorityFilterVal = document.getElementById("filter-first-priority").value;
+    var filterBits = [];
+    if(pathwayFilter) filterBits.push("Pathway: " + titleCase(pathwayFilter));
+    if(statusFilter) filterBits.push("Status: " + titleCase(statusFilter));
+    if(priorityFilterVal) filterBits.push(ordinal(priorityN) + " priority: " + priorityFilterVal);
+    var filterSummary = filterBits.length ? filterBits.join("  |  ") : "All students";
+
+    var priorityColLabel = ordinal(priorityN) + " Priority";
+    var generatedAt = new Date().toLocaleString(undefined, {
+      year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit"
     });
-    var csvContent = headers.join(",") + "\r\n" + rows.join("\r\n");
-    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.href = url;
-    a.download = "future_pathways_students_" + new Date().toISOString().slice(0,10) + ".csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    FP.toast.success("Exported " + filtered.length + " students to CSV");
+
+    var rowsHtml = filtered.map(function(s){
+      var p = s.students || {};
+      return "<tr>" +
+        "<td>" + esc(titleCase(p.student_name || "")) + "</td>" +
+        "<td>" + esc(titleCase(p.father_name || "")) + "</td>" +
+        "<td>" + esc(p.contact || "\u2014") + "</td>" +
+        "<td>" + esc(p.roll_number || "\u2014") + "</td>" +
+        "<td>" + esc(p.matric_marks != null ? p.matric_marks : "\u2014") + "</td>" +
+        "<td>" + esc(p.first_year_marks != null ? p.first_year_marks : "\u2014") + "</td>" +
+        "<td class=\"cap\">" + esc(s.pathway || "\u2014") + "</td>" +
+        "<td>" + esc(firstPriorityByFpId[s.id] || "\u2014") + "</td>" +
+        "<td class=\"cap\">" + esc(s.status || "\u2014") + "</td>" +
+        "<td>" + (s.submitted_at ? esc(new Date(s.submitted_at).toLocaleDateString()) : "\u2014") + "</td>" +
+      "</tr>";
+    }).join("");
+
+    var doc =
+      "<!DOCTYPE html><html><head><meta charset=\"UTF-8\">" +
+      "<title>Future Pathways Student List</title>" +
+      "<style>" +
+        "@page{ size: A4 landscape; margin: 16mm 14mm; }" +
+        "*{ box-sizing:border-box; }" +
+        "body{ font-family: -apple-system, 'Segoe UI', Inter, Arial, sans-serif; color:#1a1a1a; margin:0; padding:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }" +
+        ".report-header{ display:flex; align-items:baseline; justify-content:space-between; border-bottom:2px solid #1a1a1a; padding-bottom:10px; margin-bottom:4px; }" +
+        ".report-title{ font-size:18px; font-weight:700; letter-spacing:-0.01em; }" +
+        ".report-meta{ font-size:11px; color:#555; text-align:right; }" +
+        ".report-filters{ font-size:11px; color:#555; margin:6px 0 16px; }" +
+        "table{ width:100%; border-collapse:collapse; font-size:11px; }" +
+        "thead th{ text-align:left; background:#f0f0f0; border:1px solid #ccc; padding:6px 8px; font-weight:600; }" +
+        "tbody td{ border:1px solid #ddd; padding:6px 8px; }" +
+        "tbody tr:nth-child(even){ background:#fafafa; }" +
+        ".cap{ text-transform:capitalize; }" +
+        "tr{ page-break-inside: avoid; }" +
+        ".report-footer{ margin-top:14px; font-size:10px; color:#888; text-align:right; }" +
+      "</style></head><body>" +
+      "<div class=\"report-header\">" +
+        "<div class=\"report-title\">Future Pathways | Student List</div>" +
+        "<div class=\"report-meta\">KIPS Counsellor Office<br>Generated " + esc(generatedAt) + "</div>" +
+      "</div>" +
+      "<div class=\"report-filters\">" + esc(filterSummary) + " &nbsp;|&nbsp; " + filtered.length + " student" + (filtered.length === 1 ? "" : "s") + "</div>" +
+      "<table><thead><tr>" +
+        "<th>Student</th><th>Father</th><th>Contact</th><th>Roll #</th><th>Matric</th><th>1st Yr</th>" +
+        "<th>Pathway</th><th>" + esc(priorityColLabel) + "</th><th>Status</th><th>Submitted</th>" +
+      "</tr></thead><tbody>" + rowsHtml + "</tbody></table>" +
+      "<div class=\"report-footer\">Future Pathways &middot; KIPS College</div>" +
+      "</body></html>";
+
+    var win = window.open("", "_blank");
+    if(!win){
+      FP.toast.error("Pop-up blocked \u2014 allow pop-ups for this site to print.");
+      return;
+    }
+    win.document.open();
+    win.document.write(doc);
+    win.document.close();
+    win.focus();
+    // Give the new document a beat to finish laying out before the
+    // print dialog opens, especially for fonts/table reflow.
+    setTimeout(function(){ win.print(); }, 250);
   }
+
 
   // Shows whichever preference position priorityN currently points at
   // (1st by default). Resets the map first -- without this, switching

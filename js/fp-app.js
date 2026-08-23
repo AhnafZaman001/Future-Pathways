@@ -641,6 +641,17 @@
     if(state.facultyGroups.length !== n){ state.facultyGroups = emptyGroups(n); state.facultyCustom = emptyCustom(n); }
   }
 
+  // Preferences are grouped into 4 sets of 5 ranked slots (2 sets for
+  // medical -- see groupCount()). Previously each group's UI numbered
+  // its own slots 1-5 from scratch, so Group 2's "1st" choice actually
+  // looked identical to Group 1's "1st" -- confusing, since it's really
+  // the student's 6th choice overall. This gives each group a global
+  // range label and numbers every slot by its true overall position.
+  function priorityRange(gi){
+    var start = gi * 5 + 1, end = gi * 5 + 5;
+    return start + "\u2013" + end;
+  }
+
   function prefGroupsHTML(kind, options, groups, customArr){
     return groups.map(function(ranks, gi){
       var dupes = findDupes(ranks);
@@ -665,9 +676,9 @@
         var showCustom = customName && customName.name === "Other";
         var customInput = showCustom ?
           '<input type="text" placeholder="Name it" data-kind="' + kind + '-custom" data-group="' + gi + '" data-rank="' + ri + '" value="' + esc(customArr[gi][ri]) + '" style="max-width:160px;">' : "";
-        return '<div class="fp-pref-rank ' + (isDupe?"has-dupe":"") + '"><span class="fp-rank-badge">' + (ri+1) + '</span><div class="fp-pref-rank-inner">' + searchHtml + selectHtml + customInput + '</div></div>';
+        return '<div class="fp-pref-rank ' + (isDupe?"has-dupe":"") + '"><span class="fp-rank-badge">' + (gi*5 + ri + 1) + '</span><div class="fp-pref-rank-inner">' + searchHtml + selectHtml + customInput + '</div></div>';
       }).join("");
-      return '<div class="fp-pref-group"><h4>Preference group ' + (gi+1) + '</h4><div class="fp-pref-ranks">' + ranksHtml + '</div></div>';
+      return '<div class="fp-pref-group"><h4>Preference group ' + (gi+1) + ' <span class="fp-hint">(' + priorityRange(gi) + ')</span></h4><div class="fp-pref-ranks">' + ranksHtml + '</div></div>';
     }).join("");
   }
 
@@ -687,9 +698,9 @@
         var o = options.find(function(x){ return x.id === v; });
         var name = o ? o.name : v;
         if(name === "Other" && customArr[gi][ri]) name = customArr[gi][ri];
-        return (ri+1) + ". " + name;
+        return (gi*5 + ri + 1) + ". " + name;
       }).filter(Boolean).join(", ");
-      return '<div class="fp-review-row"><span>Group ' + (gi+1) + '</span><span>' + esc(names || "\u2014") + '</span></div>';
+      return '<div class="fp-review-row"><span>Group ' + (gi+1) + ' (' + priorityRange(gi) + ')</span><span>' + esc(names || "\u2014") + '</span></div>';
     }).join("");
   }
 

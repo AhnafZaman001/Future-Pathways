@@ -256,18 +256,40 @@
       "<div class=\"report-footer\">Future Pathways &middot; KIPS College</div>" +
       "</body></html>";
 
-    var win = window.open("", "_blank");
-    if(!win){
-      FP.toast.error("Pop-up blocked \u2014 allow pop-ups for this site to print.");
-      return;
+    // A hidden iframe instead of window.open() -- prints straight to
+    // the OS/browser print dialog without ever showing a visible new
+    // tab. Positioned off-screen rather than display:none, since a
+    // fully display:none iframe fails to print in some browsers.
+    var iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.left = "-10000px";
+    iframe.style.top = "-10000px";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    document.body.appendChild(iframe);
+
+    var idoc = iframe.contentWindow.document;
+    idoc.open();
+    idoc.write(doc);
+    idoc.close();
+
+    function cleanup(){
+      if(iframe.parentNode) iframe.parentNode.removeChild(iframe);
     }
-    win.document.open();
-    win.document.write(doc);
-    win.document.close();
-    win.focus();
-    // Give the new document a beat to finish laying out before the
-    // print dialog opens, especially for fonts/table reflow.
-    setTimeout(function(){ win.print(); }, 250);
+    // afterprint fires once the dialog is dismissed (printed OR
+    // cancelled) in every browser that matters here -- but it's not
+    // universally guaranteed, so a fallback timeout also removes the
+    // iframe in case it never fires.
+    iframe.contentWindow.onafterprint = cleanup;
+    setTimeout(cleanup, 15000);
+
+    // Give the iframe's document a beat to finish laying out before
+    // the print dialog opens, especially for fonts/table reflow.
+    setTimeout(function(){
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    }, 250);
   }
 
 

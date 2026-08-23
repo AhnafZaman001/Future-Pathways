@@ -63,14 +63,16 @@ const SYSTEM_PROMPT = `You are a helpful assistant embedded in Future Pathways, 
 How the site works, for context:
 - Students fill out a form ranking their preferences: institutes, faculties, and programs, in 4 groups of 5 ranked choices each (20 total ranked positions -- 2 groups / 10 positions for the medical pathway). Group 1 = positions 1-5, Group 2 = positions 6-10, Group 3 = positions 11-15, Group 4 = positions 16-20.
 - Counsellors review submissions in an admin dashboard, and can step through any of the 20 ranked positions to see which institute/faculty a student chose there.
-- The site also has a Merit & Entry Test Guide (weighted merit formulas per institute) and a Merit Calculator (students plug in marks to estimate their aggregate).
+- The site also has a Merit & Entry Test Guide (weighted merit formulas per institute), a Merit Calculator (students plug in marks to estimate their aggregate), and closing merit records (last year's actual cutoffs).
+
+You have access to real data injected below as context when relevant: student profiles (name, contact, marks, all preference ranks, counsellor evaluation notes), merit formulas, closing merit cutoffs, and the institute/faculty/program/career catalog. This may include personal contact information (phone numbers) and marks -- that's expected and appropriate, since you're only ever talking to an authenticated counsellor/admin who already has access to this same data throughout the rest of the site.
 
 You're talking to a counsellor or admin, not a student. Be concise, direct, and practical. If you don't know something (e.g. a specific institute's current admission deadline), say so plainly rather than guessing -- do not invent merit formulas, cutoffs, policies, or student records that weren't given to you in context below. If asked to find a student and no matching records appear in context, say clearly that no match was found rather than guessing a name.`;
 
 async function buildStudentContext(adminClient: any, studentId: string): Promise<string> {
   const { data: fp } = await adminClient
     .from("future_pathways")
-    .select("id, pathway, status, students(student_name, matric_marks, first_year_marks)")
+    .select("id, pathway, status, additional_information, submitted_at, students(*)")
     .eq("student_id", studentId)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -78,13 +80,17 @@ async function buildStudentContext(adminClient: any, studentId: string): Promise
 
   if (!fp) return "No Future Pathways submission found for this student.";
 
-  const [instPrefs, facPrefs] = await Promise.all([
+  const [instPrefs, facPrefs, progPrefs, evalRes] = await Promise.all([
     adminClient.from("student_institute_preferences")
       .select("preference_group, rank, custom_institute_name, institutes(name)")
       .eq("future_pathway_id", fp.id).order("preference_group").order("rank"),
     adminClient.from("student_faculty_preferences")
       .select("preference_group, rank, custom_faculty_name, fp_faculties(name)")
       .eq("future_pathway_id", fp.id).order("preference_group").order("rank"),
+    adminClient.from("student_program_preferences")
+      .select("rank, custom_program_name, program_options(name)")
+      .eq("future_pathway_id", fp.id).order("rank"),
+    adminClient.from("office_evaluations").select("*").eq("future_pathway_id", fp.id).maybeSingle(),
   ]);
 
   function fmtRows(rows: any[] | null, customKey: string, lookupKey: string) {
@@ -96,27 +102,47 @@ async function buildStudentContext(adminClient: any, studentId: string): Promise
   }
 
   const student = fp.students || {};
+  const evalRow = evalRes.data || {};
+  const recommendations = Array.from({ length: 12 }, (_, i) => evalRow["recommendation_" + (i + 1)]).filter(Boolean);
+
+  const programLines = (progPrefs.data || []).map((r: any) =>
+    r.rank + ". " + (r.custom_program_name || r.program_options?.name || "(unset)")
+  ).join("\n") || "(none set)";
+
   return [
-    "Current student being discussed:",
+    "Current student being discussed (full profile -- real data):",
     "Name: " + (student.student_name || "(unknown)"),
+    "Father's name: " + (student.father_name || "n/a") + ", Father's profession: " + (student.father_profession || "n/a"),
+    "Contact: " + (student.contact || "n/a"),
+    "Discipline: " + (student.discipline || "n/a") + ", Section: " + (student.section || "n/a") + ", Roll number: " + (student.roll_number || "n/a"),
     "Pathway: " + fp.pathway,
-    "Status: " + fp.status,
+    "Status: " + fp.status + (fp.submitted_at ? " (submitted " + fp.submitted_at + ")" : ""),
     "Matric marks: " + (student.matric_marks ?? "n/a") + ", First year marks: " + (student.first_year_marks ?? "n/a"),
+    "Additional information from student: " + (fp.additional_information || "none provided"),
     "",
     "Institute preferences (position. name):",
     fmtRows(instPrefs.data, "custom_institute_name", "institutes"),
     "",
     "Faculty preferences (position. name):",
     fmtRows(facPrefs.data, "custom_faculty_name", "fp_faculties"),
-  ].join("\n");
+    "",
+    "Program/career preferences (rank. name):",
+    programLines,
+    "",
+    recommendations.length ? "Counsellor office evaluation notes: " + recommendations.join("; ") : "",
+    evalRow.remarks ? "Office remarks: " + evalRow.remarks : "",
+    evalRow.counsellor_name ? "Evaluated by: " + evalRow.counsellor_name : "",
+  ].filter(function(line){ return line !== ""; }).join("\n");
 }
 
 async function buildFaqContext(adminClient: any, message: string): Promise<string> {
-  const [meritBlock, studentBlock] = await Promise.all([
+  const [meritBlock, closingBlock, catalogBlock, studentBlock] = await Promise.all([
     buildMeritContext(adminClient, message),
+    buildClosingMeritContext(adminClient, message),
+    buildCatalogContext(adminClient, message),
     buildStudentSearchContext(adminClient, message),
   ]);
-  return [studentBlock, meritBlock].filter(Boolean).join("\n\n");
+  return [studentBlock, meritBlock, closingBlock, catalogBlock].filter(Boolean).join("\n\n");
 }
 
 async function buildMeritContext(adminClient: any, message: string): Promise<string> {
@@ -146,6 +172,83 @@ async function buildMeritContext(adminClient: any, message: string): Promise<str
       (f.weightages_text ? " | Weightages: " + f.weightages_text : "") +
       (f.effective_year ? " | Effective: " + f.effective_year : "")
     ).join("\n");
+}
+
+async function buildClosingMeritContext(adminClient: any, message: string): Promise<string> {
+  // Same keyword-match approach as merit formulas, against last
+  // cycle's actual closing-merit cutoffs -- lets the assistant answer
+  // "what was the closing merit for X last year" with real numbers.
+  const { data: records } = await adminClient
+    .from("closing_merit_records")
+    .select("university_name_raw, campus, program, closing_merit_percentage, admission_year, data_status")
+    .eq("active", true)
+    .limit(300);
+
+  if (!records || !records.length) return "";
+
+  const words = message.toLowerCase().split(/\W+/).filter((w: string) => w.length > 3);
+  const matches = records.filter((r: any) => {
+    const name = ((r.university_name_raw || "") + " " + (r.program || "")).toLowerCase();
+    return words.some((w: string) => name.indexOf(w) !== -1);
+  }).slice(0, 8);
+
+  if (!matches.length) return "";
+
+  return "Relevant closing merit records (real cutoffs, use these -- don't invent a percentage):\n" +
+    matches.map((r: any) =>
+      "- " + r.university_name_raw + (r.campus ? " (" + r.campus + ")" : "") +
+      " -- " + r.program + ": " +
+      (r.closing_merit_percentage != null ? r.closing_merit_percentage + "%" : "not found") +
+      " (" + r.admission_year + ", " + r.data_status + ")"
+    ).join("\n");
+}
+
+async function buildCatalogContext(adminClient: any, message: string): Promise<string> {
+  // General "what institutes/faculties/programs/careers exist" style
+  // questions -- e.g. "does NUST offer X faculty", "what careers are
+  // listed under medical". Runs all four lookup tables in parallel,
+  // keyword-matched the same way as the other grounding sources.
+  const words = message.toLowerCase().split(/\W+/).filter((w: string) => w.length > 3);
+  if (!words.length) return "";
+
+  const [inst, fac, prog, career] = await Promise.all([
+    adminClient.from("institutes").select("name, location, pathway").eq("active", true).limit(300),
+    adminClient.from("fp_faculties").select("name, pathway").eq("active", true).limit(300),
+    adminClient.from("program_options").select("name, category, pathway").eq("active", true).limit(300),
+    adminClient.from("career_options").select("name, category").eq("active", true).limit(300),
+  ]);
+
+  function matchRows(rows: any[] | null, nameKey: string) {
+    return (rows || []).filter((r: any) => {
+      const name = (r[nameKey] || "").toLowerCase();
+      return words.some((w: string) => name.indexOf(w) !== -1);
+    }).slice(0, 8);
+  }
+
+  const instMatches = matchRows(inst.data, "name");
+  const facMatches = matchRows(fac.data, "name");
+  const progMatches = matchRows(prog.data, "name");
+  const careerMatches = matchRows(career.data, "name");
+
+  const blocks: string[] = [];
+  if (instMatches.length) {
+    blocks.push("Matching institutes:\n" + instMatches.map((r: any) =>
+      "- " + r.name + (r.location ? " (" + r.location + ")" : "") + " -- " + r.pathway
+    ).join("\n"));
+  }
+  if (facMatches.length) {
+    blocks.push("Matching faculties:\n" + facMatches.map((r: any) => "- " + r.name + " (" + r.pathway + ")").join("\n"));
+  }
+  if (progMatches.length) {
+    blocks.push("Matching programs:\n" + progMatches.map((r: any) =>
+      "- " + r.name + (r.category ? " (" + r.category + ")" : "") + " -- " + r.pathway
+    ).join("\n"));
+  }
+  if (careerMatches.length) {
+    blocks.push("Matching careers:\n" + careerMatches.map((r: any) => "- " + r.name + (r.category ? " (" + r.category + ")" : "")).join("\n"));
+  }
+
+  return blocks.join("\n\n");
 }
 
 // Lets the general chat (no studentId scoped) answer "find student
@@ -179,21 +282,30 @@ async function buildStudentSearchContext(adminClient: any, message: string): Pro
 
   if (!students || !students.length) return "";
 
+  // Few matches -- pull the FULL per-student profile (same detail as
+  // the per-student "Ask assistant" mode) for each, so a question
+  // like "what's Maheen's contact number" can be answered directly
+  // instead of pointing back to the admin dashboard.
+  if (students.length <= 3) {
+    const blocks = await Promise.all(students.map((s: any) => buildStudentContext(adminClient, s.id)));
+    return blocks.join("\n\n---\n\n");
+  }
+
+  // Too many matches for full detail without blowing up the prompt --
+  // list names + pathway/status so the person can narrow it down.
   const ids = students.map((s: any) => s.id);
   const { data: fps } = await adminClient
     .from("future_pathways")
-    .select("student_id, pathway, status, submitted_at")
+    .select("student_id, pathway, status")
     .in("student_id", ids);
 
   const fpByStudent: Record<string, any> = {};
   (fps || []).forEach((f: any) => { fpByStudent[f.student_id] = f; });
 
-  return "Matching student records (real data -- use these exact names, don't invent students or guess at ones not listed here):\n" +
+  return "Multiple matching students found (" + students.length + ") -- ask which one specifically:\n" +
     students.map((s: any) => {
       const fp = fpByStudent[s.id];
-      return "- " + s.student_name + (fp
-        ? " | Pathway: " + fp.pathway + " | Status: " + fp.status
-        : " | No Future Pathways submission yet");
+      return "- " + s.student_name + (fp ? " | " + fp.pathway + " | " + fp.status : " | no submission yet");
     }).join("\n");
 }
 

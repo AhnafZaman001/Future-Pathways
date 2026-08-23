@@ -39,7 +39,7 @@ const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 // Adjust these two numbers to taste -- they're the only rate-limit
-// knobs. Groq's free tier for llama-3.3-70b-versatile is generous
+// knobs. Groq's free tier for openai/gpt-oss-120b is generous
 // (thousands of requests/day), so these are conservative per-user
 // caps meant to stop one person from hogging it, not to ration a
 // scarce resource.
@@ -219,7 +219,7 @@ Deno.serve(async (req: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "openai/gpt-oss-120b",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message },

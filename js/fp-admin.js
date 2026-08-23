@@ -401,19 +401,31 @@
   document.getElementById("filter-status").addEventListener("change", function(){ paginationState.page = 1; renderTable(); });
   document.getElementById("filter-first-priority").addEventListener("change", function(){ paginationState.page = 1; renderTable(); });
 
-  // Cycles priorityN 1 -> 2 -> ... -> 20 -> 1. Re-fetches which
-  // institute each student has at that position and rebuilds both
-  // the filter dropdown (only institutes someone actually has at
-  // that exact position show up as options) and the table column.
-  var cycleBtn = document.getElementById("fp-priority-cycle");
-  if(cycleBtn){
-    cycleBtn.addEventListener("click", function(){
-      priorityN = priorityN >= 20 ? 1 : priorityN + 1;
-      document.getElementById("filter-first-priority").value = ""; // old selection may not exist at the new rank
-      cycleBtn.disabled = true;
-      fetchFirstPriorities().finally(function(){ cycleBtn.disabled = false; });
+  // Steps priorityN forward (1 -> 2 -> ... -> 20 -> 1) or backward
+  // (20 -> 19 -> ... -> 1 -> 20). Re-fetches which institute each
+  // student has at that position and rebuilds both the filter
+  // dropdown (only institutes someone actually has at that exact
+  // position show up as options) and the table column.
+  function stepPriority(delta){
+    priorityN = priorityN + delta;
+    if(priorityN > 20) priorityN = 1;
+    if(priorityN < 1) priorityN = 20;
+    document.getElementById("filter-first-priority").value = ""; // old selection may not exist at the new rank
+    var nextBtn = document.getElementById("fp-priority-cycle");
+    var prevBtn = document.getElementById("fp-priority-prev");
+    if(nextBtn) nextBtn.disabled = true;
+    if(prevBtn) prevBtn.disabled = true;
+    fetchFirstPriorities().finally(function(){
+      if(nextBtn) nextBtn.disabled = false;
+      if(prevBtn) prevBtn.disabled = false;
     });
   }
+
+  var cycleBtn = document.getElementById("fp-priority-cycle");
+  if(cycleBtn) cycleBtn.addEventListener("click", function(){ stepPriority(1); });
+
+  var prevBtn = document.getElementById("fp-priority-prev");
+  if(prevBtn) prevBtn.addEventListener("click", function(){ stepPriority(-1); });
 
   // ---------------------------------------------------------
   // Action functions (missing from overhaul commit)

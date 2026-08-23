@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>
+  (function(){
+    try {
+      if (localStorage.getItem("kips-theme") === "light") {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    } catch (e) {}
+  })();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Faculties | Admin</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/pathways.css">
+</head>
+<body>
+
+  <div class="bearing-line" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <span class="brand-mark">&#9670;</span>
+        <span class="brand-name">KIPS</span>
+        <span class="brand-tag">counsellor / admin</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" style="max-width:960px;">
+    <div class="fp-topbar">
+      <a href="index.html" class="nav-link">&larr; Back to dashboard</a>
+      <a href="admin.html" class="nav-link">Student submissions</a>
+      <a href="student-faculties.html" class="nav-link is-active">Student faculties</a>
+      <a href="merit.html" class="nav-link">Merit &amp; entry test guide</a>
+      <a href="merit-calculator.html" class="nav-link">Calculate your merit</a>
+      <a href="rankings.html" class="nav-link">University Explorer</a>
+      <span class="nav-spacer"></span>
+      <button type="button" id="themeToggle" class="theme-toggle" aria-label="Switch to light theme"><span class="theme-toggle-glyph"></span><span class="theme-toggle-label">Dark</span></button>
+      <button type="button" id="fp-logout" class="nav-link is-muted">Log out</button>
+    </div>
+
+    <div id="fp-admin-gate"></div>
+
+    <div id="fp-sf-list-view">
+      <div class="fp-card">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+          <h2 class="fp-step-title" style="margin-bottom:0;">Student faculties</h2>
+        </div>
+        <p class="fp-hint" style="margin:0 0 16px;">Every student's faculty/department preferences, one ranked position at a time. Step through 1st&ndash;20th using Prev/Next below.</p>
+
+        <div class="fp-grid-2" style="margin-bottom:10px;">
+          <label>Search by name
+            <input type="search" id="sf-filter-name" placeholder="Type a name&hellip;" autocomplete="off">
+          </label>
+          <label>Pathway
+            <select id="sf-filter-pathway">
+              <option value="">All</option>
+              <option value="engineering">Engineering / Non-Medical</option>
+              <option value="medical">Medical / Health Sciences</option>
+            </select>
+          </label>
+          <label>
+            <span id="sf-priority-label">1st priority faculty</span>
+            <span style="display:flex; gap:6px; align-items:center;">
+              <select id="sf-filter-priority" style="flex:1;">
+                <option value="">All</option>
+              </select>
+              <button type="button" id="sf-priority-prev" class="btn-secondary"
+                style="padding:6px 10px; flex-shrink:0;"
+                title="Show the previous preference rank">&#8592; Prev</button>
+              <button type="button" id="sf-priority-next" class="btn-secondary"
+                style="padding:6px 10px; flex-shrink:0;"
+                title="Show the next preference rank (cycles 1st through 20th)">Next &#8594;</button>
+            </span>
+          </label>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="fp-admin-table" id="sf-table">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Pathway</th>
+                <th><span id="sf-priority-col-label">1st Priority Faculty</span></th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="sf-tbody"></tbody>
+          </table>
+        </div>
+        <p class="fp-hint" id="sf-empty-hint" hidden style="margin:16px 0 0;">No students have a faculty preference set at this rank.</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/theme-toggle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/fp-client.js"></script>
+  <script src="js/fp-toast.js"></script>
+  <script src="js/student-faculties.js"></script>
+</body>
+</html>

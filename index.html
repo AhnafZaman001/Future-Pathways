@@ -45,6 +45,7 @@
       <nav class="site-nav">
         <a href="index.html" class="nav-link is-active">Dashboard</a>
         <a href="admin.html" class="nav-link" id="nav-admin-link" hidden>Submissions</a>
+        <a href="student-faculties.html" class="nav-link" id="nav-faculties-link" hidden>Student faculties</a>
         <a href="pathways.html" class="nav-link">Future Pathways form</a>
         <a href="rankings.html" class="nav-link">University Explorer</a>
         <a href="merit.html" class="nav-link">Merit guide</a>
@@ -281,6 +282,8 @@
       if(role === "counsellor" || role === "admin"){
         var adminLink = document.getElementById("nav-admin-link");
         if(adminLink) adminLink.hidden = false;
+        var facultiesLink = document.getElementById("nav-faculties-link");
+        if(facultiesLink) facultiesLink.hidden = false;
       }
       if(FP.initSavedSubmissionsWidget){
         FP.initSavedSubmissionsWidget(role);

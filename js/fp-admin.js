@@ -1041,6 +1041,7 @@
           '<h2 class="fp-step-title" style="margin-bottom:0;">' + esc(p.student_name || "Student") + '</h2>' +
           '<div style="display:flex; gap:8px;">' +
             '<a href="pathways.html?student=' + esc(sub.student_id) + '" class="nav-link">Edit this form</a>' +
+            '<button type="button" class="nav-link" id="fp-ask-assistant">Ask assistant</button>' +
             '<button type="button" class="nav-link" id="fp-reset-submission" style="color:var(--amber);">Clear student\'s data</button>' +
             '<button type="button" class="nav-link" id="fp-delete-student" style="color:var(--red);">Delete</button>' +
           '</div>' +
@@ -1070,6 +1071,15 @@
       document.getElementById("fp-admin-detail-view").hidden = true;
       document.getElementById("fp-admin-list-view").hidden = false;
     });
+
+    var askBtn = document.getElementById("fp-ask-assistant");
+    if(askBtn){
+      askBtn.addEventListener("click", function(){
+        if(window.FP && FP.chatAssistant){
+          FP.chatAssistant.openForStudent(sub.student_id, titleCase(p.student_name || ""));
+        }
+      });
+    }
 
     document.querySelectorAll(".fp-accordion-header").forEach(function(btn){
       btn.addEventListener("click", function(){

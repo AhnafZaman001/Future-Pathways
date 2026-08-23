@@ -8,7 +8,8 @@
 (function(){
   var submissions = [];
   var lookups = { institutes:{}, faculties:{}, careers:{} };
-  var firstPriorityByFpId = {}; // future_pathway_id -> institute name (or custom name)
+  var firstPriorityByFpId = {}; // future_pathway_id -> institute name (or custom name) at the CURRENT priorityN
+  var priorityN = 1; // which preference position (1-20) the "priority" column/filter currently shows
   var currentUserId = null; // the signed-in counsellor/admin's own id -- see
     // the self-row handling in renderTable()/the delete handler below.
 
@@ -54,16 +55,37 @@
     });
   }
 
+  // Preferences are stored as 4 groups of 5 ranked slots each (2 groups
+  // for medical, per groupCount() in fp-app.js) -- 20 total positions
+  // for most pathways. priorityN (1-20) is the flattened linear
+  // position across that grid; this maps it back to the actual
+  // (preference_group, rank) pair the DB uses.
+  function groupRankFromPriority(n){
+    return { group: Math.floor((n - 1) / 5) + 1, rank: ((n - 1) % 5) + 1 };
+  }
+
+  function ordinal(n){
+    var rem100 = n % 100;
+    if(rem100 >= 11 && rem100 <= 13) return n + "th";
+    switch(n % 10){
+      case 1: return n + "st";
+      case 2: return n + "nd";
+      case 3: return n + "rd";
+      default: return n + "th";
+    }
+  }
+
   function fetchFirstPriorities(){
+    var gr = groupRankFromPriority(priorityN);
     return FP.client.from("student_institute_preferences")
       .select("future_pathway_id, institute_id, custom_institute_name")
-      .eq("preference_group", 1).eq("rank", 1)
+      .eq("preference_group", gr.group).eq("rank", gr.rank)
       .then(function(r){
         if(r.error) throw r.error;
         applyFirstPriorities(r);
       }).catch(function(e){
         console.error(e);
-        // Non-fatal -- the "first priority" filter dropdown just stays
+        // Non-fatal -- the priority filter dropdown just stays
         // empty/stale; the submissions table itself is unaffected.
       });
   }
@@ -172,7 +194,7 @@
       FP.toast.info("No submissions match the current filters to export.");
       return;
     }
-    var headers = ["Student Name", "Father Name", "Contact", "Roll Number", "Matric Marks", "First Year Marks", "Pathway", "First Priority", "Status", "Submitted At"];
+    var headers = ["Student Name", "Father Name", "Contact", "Roll Number", "Matric Marks", "First Year Marks", "Pathway", ordinal(priorityN) + " Priority", "Status", "Submitted At"];
     var rows = filtered.map(function(s){
       var p = s.students || {};
       return [
@@ -204,9 +226,14 @@
     FP.toast.success("Exported " + filtered.length + " students to CSV");
   }
 
-  // "First priority" = preference_group 1, rank 1
+  // Shows whichever preference position priorityN currently points at
+  // (1st by default). Resets the map first -- without this, switching
+  // from e.g. 1st to 5th priority would leave stale 1st-priority names
+  // sitting in the map for any student who didn't set a 5th preference,
+  // silently showing the wrong rank's data instead of a blank "—".
   function applyFirstPriorities(r){
     if(r.error){ console.error(r.error); return; }
+    firstPriorityByFpId = {};
     (r.data||[]).forEach(function(row){
       var name = row.custom_institute_name || lookups.institutes[row.institute_id] || null;
       if(name) firstPriorityByFpId[row.future_pathway_id] = name;
@@ -216,6 +243,12 @@
     var select = document.getElementById("filter-first-priority");
     select.innerHTML = '<option value="">All</option>' +
       usedNames.map(function(n){ return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join("");
+
+    var label = document.getElementById("fp-priority-label");
+    if(label) label.textContent = ordinal(priorityN) + " priority university";
+    var colLabel = document.getElementById("fp-priority-col-label");
+    if(colLabel) colLabel.textContent = ordinal(priorityN) + " Priority";
+
     renderTable();
   }
 
@@ -367,6 +400,20 @@
   document.getElementById("filter-pathway").addEventListener("change", function(){ paginationState.page = 1; renderTable(); });
   document.getElementById("filter-status").addEventListener("change", function(){ paginationState.page = 1; renderTable(); });
   document.getElementById("filter-first-priority").addEventListener("change", function(){ paginationState.page = 1; renderTable(); });
+
+  // Cycles priorityN 1 -> 2 -> ... -> 20 -> 1. Re-fetches which
+  // institute each student has at that position and rebuilds both
+  // the filter dropdown (only institutes someone actually has at
+  // that exact position show up as options) and the table column.
+  var cycleBtn = document.getElementById("fp-priority-cycle");
+  if(cycleBtn){
+    cycleBtn.addEventListener("click", function(){
+      priorityN = priorityN >= 20 ? 1 : priorityN + 1;
+      document.getElementById("filter-first-priority").value = ""; // old selection may not exist at the new rank
+      cycleBtn.disabled = true;
+      fetchFirstPriorities().finally(function(){ cycleBtn.disabled = false; });
+    });
+  }
 
   // ---------------------------------------------------------
   // Action functions (missing from overhaul commit)
@@ -556,7 +603,7 @@
     if(name) chips.push({ type: "name", label: 'Search: "' + name + '"' });
     if(pathway) chips.push({ type: "pathway", label: 'Pathway: ' + (pathway === "engineering" ? "Engineering" : "Medical") });
     if(status) chips.push({ type: "status", label: 'Status: ' + status });
-    if(firstPrio) chips.push({ type: "first_priority", label: '1st Choice: ' + firstPrio });
+    if(firstPrio) chips.push({ type: "first_priority", label: ordinal(priorityN) + " choice: " + firstPrio });
 
     if(!chips.length){
       chipsContainer.hidden = true;

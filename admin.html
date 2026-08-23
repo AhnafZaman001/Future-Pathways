@@ -84,10 +84,16 @@
               <option value="submitted">Submitted</option>
             </select>
           </label>
-          <label>First priority university
-            <select id="filter-first-priority">
-              <option value="">All</option>
-            </select>
+          <label>
+            <span id="fp-priority-label">1st priority university</span>
+            <span style="display:flex; gap:6px; align-items:center;">
+              <select id="filter-first-priority" style="flex:1;">
+                <option value="">All</option>
+              </select>
+              <button type="button" id="fp-priority-cycle" class="btn-secondary"
+                style="padding:6px 10px; flex-shrink:0;"
+                title="Show a different preference rank (cycles 1st through 20th)">Next &#8594;</button>
+            </span>
           </label>
         </div>
         <div id="fp-active-filter-chips" class="fp-filter-chips" style="margin-bottom:16px;" hidden></div>
@@ -114,7 +120,7 @@
                 <th style="width:1%;"><input type="checkbox" id="fp-select-all" aria-label="Select all"></th>
                 <th class="fp-th-sortable" data-sort="name"><button type="button" class="fp-th-btn">Student <span class="fp-th-sort-icon">&#8693;</span></button></th>
                 <th class="fp-th-sortable" data-sort="pathway"><button type="button" class="fp-th-btn">Pathway <span class="fp-th-sort-icon">&#8693;</span></button></th>
-                <th class="fp-th-sortable" data-sort="first_priority"><button type="button" class="fp-th-btn">First Priority <span class="fp-th-sort-icon">&#8693;</span></button></th>
+                <th class="fp-th-sortable" data-sort="first_priority"><button type="button" class="fp-th-btn"><span id="fp-priority-col-label">First Priority</span> <span class="fp-th-sort-icon">&#8693;</span></button></th>
                 <th class="fp-th-sortable" data-sort="status"><button type="button" class="fp-th-btn">Status <span class="fp-th-sort-icon">&#8693;</span></button></th>
                 <th class="fp-th-sortable" data-sort="submitted_at"><button type="button" class="fp-th-btn">Submitted <span class="fp-th-sort-icon">&#8693;</span></button></th>
                 <th>Actions</th>

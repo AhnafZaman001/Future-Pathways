@@ -89,8 +89,7 @@ window.Dashboard = window.Dashboard || {};
 
     var candidates = [
       ["INSTITUTES TRACKED", counts.institutes],
-      ["MERIT FORMULAS SOURCED", counts.meritFormulas],
-      ["CLOSING MERIT RECORDS", counts.closingMerits]
+      ["MERIT FORMULAS SOURCED", counts.meritFormulas]
     ];
     // Only ever render a stat backed by a real number. This strip's
     // whole point is being a hard-numbers confidence signal -- a

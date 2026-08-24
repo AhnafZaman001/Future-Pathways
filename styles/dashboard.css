@@ -179,26 +179,34 @@
    in the same order the cards appear in the DOM. Layered on top of
    (not replacing) the cursor-tracking grid effect above -- these
    also override --glow-line-color so that inner effect matches the
-   card's own color instead of staying the shared default violet. */
-.dash-tool-card.glow-violet{ border-color: rgba(124,92,255,.55); box-shadow: 0 0 14px rgba(124,92,255,.22); --glow-line-color: rgba(124,92,255,.5); }
-.dash-tool-card.glow-cyan{   border-color: rgba(34,211,238,.55);  box-shadow: 0 0 14px rgba(34,211,238,.22);  --glow-line-color: rgba(34,211,238,.5); }
-.dash-tool-card.glow-pink{   border-color: rgba(244,114,182,.55); box-shadow: 0 0 14px rgba(244,114,182,.22); --glow-line-color: rgba(244,114,182,.5); }
-.dash-tool-card.glow-green{  border-color: rgba(52,211,153,.55);  box-shadow: 0 0 14px rgba(52,211,153,.22);  --glow-line-color: rgba(52,211,153,.5); }
-.dash-tool-card.glow-orange{ border-color: rgba(251,146,60,.55);  box-shadow: 0 0 14px rgba(251,146,60,.22);  --glow-line-color: rgba(251,146,60,.5); }
-.dash-tool-card.glow-blue{   border-color: rgba(96,165,250,.55);  box-shadow: 0 0 14px rgba(96,165,250,.22);  --glow-line-color: rgba(96,165,250,.5); }
-.dash-tool-card.glow-yellow{ border-color: rgba(250,204,21,.55);  box-shadow: 0 0 14px rgba(250,204,21,.22);  --glow-line-color: rgba(250,204,21,.5); }
+   card's own color instead of staying the shared default violet.
+
+   Deliberately a muted, jewel-tone palette rather than saturated
+   neon/candy colors (bright pink, pure yellow, etc.) -- those read
+   as gaudy on a professional counselling tool. Each hue is a deeper,
+   more restrained shade of the same idea (e.g. wine instead of hot
+   pink, amber instead of neon orange), and the glow itself is
+   softer -- lower opacity, tighter blur -- than a typical loud
+   "AI demo" glow effect. */
+.dash-tool-card.glow-violet{  border-color: rgba(124,92,255,.5); box-shadow: 0 0 10px rgba(124,92,255,.16); --glow-line-color: rgba(124,92,255,.45); }
+.dash-tool-card.glow-teal{    border-color: rgba(13,148,136,.5);  box-shadow: 0 0 10px rgba(13,148,136,.16);  --glow-line-color: rgba(13,148,136,.45); }
+.dash-tool-card.glow-wine{    border-color: rgba(159,18,57,.5);   box-shadow: 0 0 10px rgba(159,18,57,.16);   --glow-line-color: rgba(159,18,57,.45); }
+.dash-tool-card.glow-emerald{ border-color: rgba(5,150,105,.5);   box-shadow: 0 0 10px rgba(5,150,105,.16);   --glow-line-color: rgba(5,150,105,.45); }
+.dash-tool-card.glow-amber{   border-color: rgba(180,83,9,.5);    box-shadow: 0 0 10px rgba(180,83,9,.16);    --glow-line-color: rgba(180,83,9,.45); }
+.dash-tool-card.glow-indigo{  border-color: rgba(79,70,229,.5);   box-shadow: 0 0 10px rgba(79,70,229,.16);   --glow-line-color: rgba(79,70,229,.45); }
+.dash-tool-card.glow-gold{    border-color: rgba(161,98,7,.5);    box-shadow: 0 0 10px rgba(161,98,7,.16);    --glow-line-color: rgba(161,98,7,.45); }
 
 /* Hover intensifies each card's own color instead of falling back
    to the neutral --border-strong the base :hover rule below sets --
    these need to win over that shared rule, so they're written after
    it in source order at matching specificity (one class + :hover). */
-.dash-tool-card.glow-violet:hover{ border-color: rgba(124,92,255,.9); box-shadow: 0 8px 24px rgba(124,92,255,.28); }
-.dash-tool-card.glow-cyan:hover{   border-color: rgba(34,211,238,.9);  box-shadow: 0 8px 24px rgba(34,211,238,.28); }
-.dash-tool-card.glow-pink:hover{   border-color: rgba(244,114,182,.9); box-shadow: 0 8px 24px rgba(244,114,182,.28); }
-.dash-tool-card.glow-green:hover{  border-color: rgba(52,211,153,.9);  box-shadow: 0 8px 24px rgba(52,211,153,.28); }
-.dash-tool-card.glow-orange:hover{ border-color: rgba(251,146,60,.9);  box-shadow: 0 8px 24px rgba(251,146,60,.28); }
-.dash-tool-card.glow-blue:hover{   border-color: rgba(96,165,250,.9);  box-shadow: 0 8px 24px rgba(96,165,250,.28); }
-.dash-tool-card.glow-yellow:hover{ border-color: rgba(250,204,21,.9);  box-shadow: 0 8px 24px rgba(250,204,21,.28); }
+.dash-tool-card.glow-violet:hover{  border-color: rgba(124,92,255,.85); box-shadow: 0 8px 20px rgba(124,92,255,.22); }
+.dash-tool-card.glow-teal:hover{    border-color: rgba(13,148,136,.85);  box-shadow: 0 8px 20px rgba(13,148,136,.22); }
+.dash-tool-card.glow-wine:hover{    border-color: rgba(159,18,57,.85);   box-shadow: 0 8px 20px rgba(159,18,57,.22); }
+.dash-tool-card.glow-emerald:hover{ border-color: rgba(5,150,105,.85);   box-shadow: 0 8px 20px rgba(5,150,105,.22); }
+.dash-tool-card.glow-amber:hover{   border-color: rgba(180,83,9,.85);    box-shadow: 0 8px 20px rgba(180,83,9,.22); }
+.dash-tool-card.glow-indigo:hover{  border-color: rgba(79,70,229,.85);   box-shadow: 0 8px 20px rgba(79,70,229,.22); }
+.dash-tool-card.glow-gold:hover{    border-color: rgba(161,98,7,.85);    box-shadow: 0 8px 20px rgba(161,98,7,.22); }
 
 .dash-tool-card:hover{
   border-color: var(--border-strong);

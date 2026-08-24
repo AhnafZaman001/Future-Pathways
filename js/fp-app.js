@@ -511,6 +511,11 @@
     });
   }
 
+  // Some legacy-imported student records have names in ALL CAPS
+  function titleCase(s){
+    return String(s || "").toLowerCase().replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+  }
+
   var RENDERERS = {
     profile: function(){
       var p = state.profile;
@@ -518,7 +523,10 @@
         '<p class="fp-step-desc">We\'ve filled in what we already know — check it over.</p>' +
         '<div class="fp-form">' +
           '<div class="fp-grid-2">' +
-            field("student_name", "Full name", p.student_name) +
+            '<label>Full name' +
+              '<input type="text" data-field="student_name" id="fp-student-name-input" value="' + esc(p.student_name) + '" required>' +
+              '<span class="fp-field-hint" id="fp-duplicate-name-hint"></span>' +
+            '</label>' +
             field("father_name", "Father\'s name", p.father_name) +
           '</div>' +
           '<div class="fp-grid-2">' +
@@ -707,10 +715,57 @@
   // ---------------------------------------------------------
   // Event binding per step
   // ---------------------------------------------------------
+  // ---------------------------------------------------------
+  // Duplicate-name check -- warns (doesn't block) when another
+  // student record already has a similar name. Doesn't try to
+  // decide whether it's the same person re-entered or a genuine
+  // namesake -- just surfaces the possibility so a counsellor can
+  // make that call themselves instead of it going unnoticed.
+  //
+  // Only ever finds anything when the signed-in account is
+  // counsellor/admin -- RLS on `students` restricts a plain student
+  // to their own row only ("id = auth.uid() or current_role() in
+  // (...)"), so a genuine self-service student querying this always
+  // gets an empty result back, not an error. That's fine: this
+  // feature is only meaningful for the counsellor-managed workflow
+  // this site actually runs on.
+  // ---------------------------------------------------------
+  function checkDuplicateName(name){
+    var hint = document.getElementById("fp-duplicate-name-hint");
+    if(!hint) return;
+    var trimmed = (name || "").trim();
+    if(trimmed.length < 3){
+      hint.textContent = "";
+      hint.className = "fp-field-hint";
+      return;
+    }
+    FP.client.from("students")
+      .select("id, student_name, future_pathways(pathway, status)")
+      .ilike("student_name", "%" + trimmed + "%")
+      .neq("id", state.studentId)
+      .limit(5)
+      .then(function(r){
+        if(r.error || !r.data || !r.data.length){
+          hint.textContent = "";
+          hint.className = "fp-field-hint";
+          return;
+        }
+        var others = r.data.map(function(s){
+          var fp = (s.future_pathways && s.future_pathways[0]) || {};
+          return titleCase(s.student_name) + (fp.pathway ? " (" + fp.pathway + ", " + fp.status + ")" : "");
+        }).join("; ");
+        hint.textContent = "\u26A0 " + r.data.length + " existing student" + (r.data.length === 1 ? "" : "s") +
+          " with a similar name: " + others + " \u2014 confirm this is a different student, not a re-entry.";
+        hint.className = "fp-field-hint is-warn";
+      });
+  }
+
   function bindStepEvents(step){
     var container = document.getElementById("fp-step-container");
 
     if(step === "profile"){
+      var duplicateCheckTimer = null;
+
       container.querySelectorAll("[data-field]").forEach(function(input){
         input.addEventListener("input", function(){
           // Strip non-digits for the contact field and enforce 11-digit mask
@@ -734,6 +789,15 @@
                 hint.className = "fp-field-hint is-ok";
               }
             }
+            return;
+          }
+          if(input.dataset.field === "student_name"){
+            state.profile.student_name = input.value;
+            // Debounced -- checks 500ms after typing pauses, not on
+            // every keystroke, to avoid hammering the DB while
+            // someone's still mid-name.
+            clearTimeout(duplicateCheckTimer);
+            duplicateCheckTimer = setTimeout(function(){ checkDuplicateName(input.value); }, 500);
             return;
           }
           state.profile[input.dataset.field] = input.value;

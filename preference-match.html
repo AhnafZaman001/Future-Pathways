@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>
+  (function(){
+    try {
+      if (localStorage.getItem("kips-theme") === "light") {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    } catch (e) {}
+  })();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preference Match | Admin</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/pathways.css">
+</head>
+<body>
+
+  <div class="bearing-line" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <span class="brand-mark">&#9670;</span>
+        <span class="brand-name">KIPS</span>
+        <span class="brand-tag">counsellor / admin</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" style="max-width:960px;">
+    <div class="fp-topbar">
+      <a href="index.html" class="nav-link">&larr; Back to dashboard</a>
+      <a href="admin.html" class="nav-link">Student submissions</a>
+      <a href="student-faculties.html" class="nav-link">Student faculties</a>
+      <a href="preference-match.html" class="nav-link is-active">Preference match</a>
+      <span class="nav-spacer"></span>
+      <button type="button" id="themeToggle" class="theme-toggle" aria-label="Switch to light theme"><span class="theme-toggle-glyph"></span><span class="theme-toggle-label">Dark</span></button>
+      <button type="button" id="fp-logout" class="nav-link is-muted">Log out</button>
+    </div>
+
+    <div class="fp-card">
+      <h2 class="fp-step-title" style="margin-bottom:4px;">Preference match</h2>
+      <p class="fp-hint" style="margin:0 0 16px;">Pick a university and/or a faculty to find every student who listed either &mdash; and exactly which of their 20 ranked positions each one is at.</p>
+
+      <div style="margin-bottom:6px; max-width:280px;">
+        <label>Pathway
+          <select id="pm-pathway">
+            <option value="">All</option>
+            <option value="engineering">Engineering / Non-Medical</option>
+            <option value="medical">Medical / Health Sciences</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="fp-grid-2">
+        <label>University
+          <input type="search" id="pm-university-search" class="fp-pref-search" data-target="pm-university" placeholder="Type to search&hellip;" autocomplete="off" style="margin-bottom:4px;">
+          <select id="pm-university">
+            <option value="">&mdash; Any university &mdash;</option>
+          </select>
+        </label>
+        <label>Faculty
+          <input type="search" id="pm-faculty-search" class="fp-pref-search" data-target="pm-faculty" placeholder="Type to search&hellip;" autocomplete="off" style="margin-bottom:4px;">
+          <select id="pm-faculty">
+            <option value="">&mdash; Any faculty &mdash;</option>
+          </select>
+        </label>
+      </div>
+
+      <p class="fp-hint" id="pm-prompt" style="margin:8px 0 0;">Pick at least one to see matching students.</p>
+    </div>
+
+    <div class="fp-card" id="pm-results-card" hidden>
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+        <h3 style="margin:0; font-size:1rem;" id="pm-results-title"></h3>
+        <button type="button" class="btn-secondary" id="pm-print" title="Print or save as PDF">&#128438; Print</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="fp-admin-table" id="pm-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Pathway</th>
+              <th id="pm-th-university" hidden>University rank</th>
+              <th id="pm-th-faculty" hidden>Faculty rank</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="pm-tbody"></tbody>
+        </table>
+      </div>
+      <p class="fp-hint" id="pm-empty-hint" hidden style="margin:16px 0 0;">No students match this combination.</p>
+    </div>
+  </main>
+
+  <script src="js/theme-toggle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/fp-client.js"></script>
+  <script src="js/fp-toast.js"></script>
+  <script src="js/preference-match.js"></script>
+  <script src="js/fp-chat-assistant.js"></script>
+</body>
+</html>

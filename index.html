@@ -152,6 +152,13 @@
           <span class="dash-tool-cta">Open &rarr;</span>
         </a>
 
+        <a class="dash-tool-card" href="preference-match.html" id="dash-tool-preference-match" hidden>
+          <span class="dash-tool-glyph">&#9670;</span>
+          <h3>Preference match</h3>
+          <p>Search a specific university and/or faculty and see which students picked it, and at what rank.</p>
+          <span class="dash-tool-cta">Open &rarr;</span>
+        </a>
+
         <a class="dash-tool-card" href="rankings.html">
           <span class="dash-tool-glyph">&#9670;</span>
           <h3>University Explorer</h3>
@@ -288,6 +295,8 @@
         if(universityPrefsCard) universityPrefsCard.hidden = false;
         var facultyPrefsCard = document.getElementById("dash-tool-faculty-prefs");
         if(facultyPrefsCard) facultyPrefsCard.hidden = false;
+        var preferenceMatchCard = document.getElementById("dash-tool-preference-match");
+        if(preferenceMatchCard) preferenceMatchCard.hidden = false;
       }
       if(FP.initSavedSubmissionsWidget){
         FP.initSavedSubmissionsWidget(role);

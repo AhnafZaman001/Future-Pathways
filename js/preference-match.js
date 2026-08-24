@@ -86,17 +86,24 @@
 
     // Rewire the searchable-select filter against the freshly
     // rebuilt option lists (see wireSearchableSelect below).
-    wireSearchableSelect(document.getElementById("pm-university-search"), uniSel);
-    wireSearchableSelect(document.getElementById("pm-faculty-search"), facSel);
+    wireSearchableSelect("pm-university-search", uniSel);
+    wireSearchableSelect("pm-faculty-search", facSel);
   }
 
   // Lightweight version of the type-to-filter pattern used on
   // pathways.html -- typing in the paired search box narrows the
   // <select>'s options live. Re-run any time a select's underlying
-  // option list changes (e.g. after a pathway filter change), since
-  // it snapshots the full option list at wiring time.
-  function wireSearchableSelect(input, select){
-    if(!input || !select) return;
+  // option list changes (e.g. after a pathway filter change) --
+  // takes the input's ID (not the element itself) because it clones
+  // and replaces the input each call to strip any listeners from a
+  // previous call, rather than stacking duplicate ones that would
+  // each capture an increasingly stale option-list snapshot.
+  function wireSearchableSelect(inputId, select){
+    var oldInput = document.getElementById(inputId);
+    if(!oldInput || !select) return;
+    var input = oldInput.cloneNode(true);
+    oldInput.parentNode.replaceChild(input, oldInput);
+
     var fullOptionsHtml = select.innerHTML;
     input.addEventListener("input", function(){
       var q = input.value.trim().toLowerCase();
@@ -111,6 +118,19 @@
       if(Array.from(select.options).some(function(o){ return o.value === cur; })){
         select.value = cur;
       }
+    });
+
+    // Type a few letters + Enter picks the top filtered match
+    // directly, instead of having to then click into the dropdown
+    // and select it manually.
+    input.addEventListener("keydown", function(e){
+      if(e.key !== "Enter") return;
+      e.preventDefault();
+      var firstMatch = Array.from(select.options).find(function(o){ return o.value; });
+      if(!firstMatch) return;
+      select.value = firstMatch.value;
+      select.dispatchEvent(new Event("change"));
+      input.blur();
     });
   }
 

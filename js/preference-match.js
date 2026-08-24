@@ -84,53 +84,118 @@
     uniSel.value = uniList.some(function(i){ return i.id === prevUni; }) ? prevUni : "";
     facSel.value = facList.some(function(f){ return f.id === prevFac; }) ? prevFac : "";
 
-    // Rewire the searchable-select filter against the freshly
+    // Rewire the searchable-select mechanism against the freshly
     // rebuilt option lists (see wireSearchableSelect below).
-    wireSearchableSelect("pm-university-search", uniSel);
-    wireSearchableSelect("pm-faculty-search", facSel);
+    wireSearchableSelect("pm-university-search", "pm-university", runSearch);
+    wireSearchableSelect("pm-faculty-search", "pm-faculty", runSearch);
   }
 
-  // Lightweight version of the type-to-filter pattern used on
-  // pathways.html -- typing in the paired search box narrows the
-  // <select>'s options live. Re-run any time a select's underlying
-  // option list changes (e.g. after a pathway filter change) --
-  // takes the input's ID (not the element itself) because it clones
-  // and replaces the input each call to strip any listeners from a
-  // previous call, rather than stacking duplicate ones that would
-  // each capture an increasingly stale option-list snapshot.
-  function wireSearchableSelect(inputId, select){
+  // Exact same searchable-select mechanism as the student form on
+  // pathways.html (js/fp-app.js) -- ported over rather than
+  // reimplemented, so the interaction feels identical everywhere on
+  // the site:
+  //   - Tab into the <select> and start typing -> focus jumps to the
+  //     paired search input, first keystroke carries over
+  //   - Typing filters the select's options live; narrowing to
+  //     exactly one match auto-selects it and returns focus to the
+  //     select
+  //   - Escape clears the search and restores the full option list
+  //   - Picking an option (however it happened) resets the search
+  //     box and restores the full list for next time
+  //
+  // Takes IDs rather than element references because it clones and
+  // replaces BOTH the input and the select on every call -- this is
+  // called again each time the Pathway filter changes the underlying
+  // option list, and cloning is what cleanly drops the previous
+  // call's listeners instead of stacking duplicates on top (which
+  // would otherwise happen on the select as much as the input, since
+  // this mechanism attaches listeners to both).
+  function wireSearchableSelect(inputId, selectId, onChange){
     var oldInput = document.getElementById(inputId);
-    if(!oldInput || !select) return;
-    var input = oldInput.cloneNode(true);
-    oldInput.parentNode.replaceChild(input, oldInput);
+    var oldSelect = document.getElementById(selectId);
+    if(!oldInput || !oldSelect) return;
 
-    var fullOptionsHtml = select.innerHTML;
-    input.addEventListener("input", function(){
-      var q = input.value.trim().toLowerCase();
-      var cur = select.value;
-      select.innerHTML = fullOptionsHtml;
-      if(q){
-        Array.from(select.options).forEach(function(opt){
-          if(opt.value && opt.textContent.toLowerCase().indexOf(q) === -1) opt.remove();
-        });
-      }
-      // Keep the current selection if it's still present after filtering
-      if(Array.from(select.options).some(function(o){ return o.value === cur; })){
-        select.value = cur;
+    var inp = oldInput.cloneNode(true);
+    oldInput.parentNode.replaceChild(inp, oldInput);
+    var sel = oldSelect.cloneNode(true);
+    oldSelect.parentNode.replaceChild(sel, oldSelect);
+
+    var allOptions = Array.from(sel.options);
+
+    // Focus search when the select above it is focused and user
+    // starts typing -- makes the workflow: Tab to select, type
+    // to filter, Enter/click to pick, Tab to next select.
+    sel.addEventListener("focus", function(){
+      inp.value = "";
+      // Restore full list on focus so search starts fresh
+      var cur = sel.value;
+      while(sel.options.length) sel.remove(0);
+      allOptions.forEach(function(opt){ sel.appendChild(opt.cloneNode(true)); });
+      sel.value = cur;
+    });
+
+    // Typing while the SELECT is focused triggers the search filter
+    sel.addEventListener("keydown", function(e){
+      // Let Tab and arrow keys pass through normally
+      if(e.key === "Tab" || e.key === "ArrowUp" || e.key === "ArrowDown" ||
+         e.key === "Enter" || e.key === "Escape") return;
+      // Any printable character: redirect focus to search input
+      if(e.key.length === 1){
+        e.preventDefault();
+        inp.removeAttribute("tabindex");
+        inp.focus();
+        inp.value = e.key;
+        inp.dispatchEvent(new Event("input"));
       }
     });
 
-    // Type a few letters + Enter picks the top filtered match
-    // directly, instead of having to then click into the dropdown
-    // and select it manually.
-    input.addEventListener("keydown", function(e){
-      if(e.key !== "Enter") return;
-      e.preventDefault();
-      var firstMatch = Array.from(select.options).find(function(o){ return o.value; });
-      if(!firstMatch) return;
-      select.value = firstMatch.value;
-      select.dispatchEvent(new Event("change"));
-      input.blur();
+    inp.addEventListener("input", function(){
+      var q = inp.value.trim().toLowerCase();
+      // Rebuild option list -- show only matches, keep selected
+      // value even if it's now filtered out (so state isn't lost)
+      while(sel.options.length) sel.remove(0);
+      allOptions.forEach(function(opt){
+        if(!q || opt.text.toLowerCase().indexOf(q) !== -1){
+          sel.appendChild(opt.cloneNode(true));
+        }
+      });
+      // Auto-select if exactly one result (not the blank placeholder)
+      var realOpts = Array.from(sel.options).filter(function(o){ return o.value; });
+      if(realOpts.length === 1){
+        sel.value = realOpts[0].value;
+        sel.dispatchEvent(new Event("change"));
+        inp.value = "";
+        inp.setAttribute("tabindex", "-1");
+        sel.focus();
+        // Restore full list after auto-select
+        while(sel.options.length) sel.remove(0);
+        allOptions.forEach(function(opt){ sel.appendChild(opt.cloneNode(true)); });
+        sel.value = realOpts[0].value;
+      }
+    });
+
+    // On Escape in search: clear, restore full list, return focus to select
+    inp.addEventListener("keydown", function(e){
+      if(e.key === "Escape"){
+        inp.value = "";
+        inp.setAttribute("tabindex", "-1");
+        var cur = sel.value;
+        while(sel.options.length) sel.remove(0);
+        allOptions.forEach(function(opt){ sel.appendChild(opt.cloneNode(true)); });
+        sel.value = cur;
+        sel.focus();
+      }
+    });
+
+    sel.addEventListener("change", function(){
+      inp.value = "";
+      inp.setAttribute("tabindex", "-1");
+      // Restore full option list when user picks from select
+      var cur = sel.value;
+      while(sel.options.length) sel.remove(0);
+      allOptions.forEach(function(opt){ sel.appendChild(opt.cloneNode(true)); });
+      sel.value = cur;
+      if(onChange) onChange();
     });
   }
 
@@ -138,8 +203,12 @@
     populateSelects();
     runSearch();
   });
-  document.getElementById("pm-university").addEventListener("change", runSearch);
-  document.getElementById("pm-faculty").addEventListener("change", runSearch);
+  // Note: no separate change listeners for pm-university/pm-faculty
+  // here -- wireSearchableSelect() attaches those itself (via its
+  // onChange callback) to whichever select node is currently live,
+  // since it replaces the select element on every populateSelects()
+  // call. A listener attached here to the original nodes would go
+  // stale the moment the first clone-and-replace happens.
 
   function runSearch(){
     var uniId = document.getElementById("pm-university").value;

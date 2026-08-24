@@ -209,7 +209,7 @@
       var name = titleCase((s.students && s.students.student_name) || "") || "(no profile yet)";
       var uniCell = uniId ? '<td>' + (uniByFp[s.id] ? ordinal(uniByFp[s.id]) : "\u2014") + '</td>' : "";
       var facCell = facId ? '<td>' + (facByFp[s.id] ? ordinal(facByFp[s.id]) : "\u2014") + '</td>' : "";
-      return '<tr>' +
+      return '<tr data-id="' + s.id + '">' +
         '<td><strong>' + esc(name) + '</strong></td>' +
         '<td class="fp-cap">' + esc(s.pathway) + '</td>' +
         uniCell + facCell +
@@ -218,6 +218,14 @@
     }).join("");
 
     document.getElementById("pm-empty-hint").hidden = rows.length > 0;
+
+    // Clicking a row opens the same detail view admin.html uses --
+    // same pattern as student-faculties.html's rows.
+    document.querySelectorAll("#pm-tbody tr[data-id]").forEach(function(tr){
+      tr.addEventListener("click", function(){
+        window.location.href = "admin.html?open=" + encodeURIComponent(tr.dataset.id);
+      });
+    });
   }
 
   // ---------------------------------------------------------

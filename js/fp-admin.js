@@ -319,11 +319,25 @@
     renderTable();
   }
 
+  var autoOpenHandled = false; // guards the ?open=<id> URL param check below from firing on every re-render
+
   function applySubmissions(r){
     if(r.error){ console.error(r.error); return; }
     submissions = r.data || [];
     renderStatsStrip();
     renderTable();
+
+    // Lets other pages (e.g. student-faculties.html) deep-link
+    // straight into a specific student's detail view here, instead
+    // of that page needing its own separate copy of renderDetail's
+    // ~150 lines. Only fires once per page load.
+    if(!autoOpenHandled){
+      autoOpenHandled = true;
+      var openId = new URLSearchParams(window.location.search).get("open");
+      if(openId && submissions.some(function(s){ return s.id === openId; })){
+        openDetail(openId);
+      }
+    }
   }
 
   // ---------------------------------------------------------
@@ -1002,15 +1016,21 @@
     return '<div class="fp-accordion">' + groupNums.map(function(g){
       var picks = byGroup[g];
       var panelId = idPrefix + "-group-" + g;
+      var gi = Number(g) - 1; // groups are 1-indexed in the data; gi is the 0-indexed position used for global numbering
+      var rangeStart = gi * 5 + 1, rangeEnd = gi * 5 + 5;
+      // <li value> is the global flattened position (6, 7, 8...), not
+      // the 1-5 position within this group -- otherwise every group's
+      // list looks identical ("1, 2, 3, 4, 5") regardless of whether
+      // it's actually the student's 1st or 16th choice.
       var listItems = picks.map(function(name, i){
-        return name ? '<li value="' + (i+1) + '">' + esc(name) + '</li>' : "";
+        return name ? '<li value="' + (gi * 5 + i + 1) + '">' + esc(name) + '</li>' : "";
       }).filter(Boolean).join("");
       var body = listItems ? '<ol class="fp-accordion-list">' + listItems + '</ol>' : '<p class="fp-accordion-empty">No picks in this group yet.</p>';
 
       return (
         '<div class="fp-accordion-item">' +
           '<button type="button" class="fp-accordion-header" aria-expanded="false" data-accordion-target="' + panelId + '">' +
-            '<span>Group ' + esc(g) + '</span>' +
+            '<span>Group ' + esc(g) + ' <span class="fp-hint">(' + rangeStart + '\u2013' + rangeEnd + ')</span></span>' +
             '<span class="fp-accordion-chevron">&#9662;</span>' +
           '</button>' +
           '<div class="fp-accordion-panel-wrapper" id="' + panelId + '">' +
@@ -1042,6 +1062,7 @@
           '<div style="display:flex; gap:8px;">' +
             '<a href="pathways.html?student=' + esc(sub.student_id) + '" class="nav-link">Edit this form</a>' +
             '<button type="button" class="nav-link" id="fp-ask-assistant">Ask assistant</button>' +
+            '<button type="button" class="nav-link" id="fp-print-student">&#128438; Print</button>' +
             '<button type="button" class="nav-link" id="fp-reset-submission" style="color:var(--amber);">Clear student\'s data</button>' +
             '<button type="button" class="nav-link" id="fp-delete-student" style="color:var(--red);">Delete</button>' +
           '</div>' +
@@ -1078,6 +1099,13 @@
         if(window.FP && FP.chatAssistant){
           FP.chatAssistant.openForStudent(sub.student_id, titleCase(p.student_name || ""));
         }
+      });
+    }
+
+    var printBtn = document.getElementById("fp-print-student");
+    if(printBtn){
+      printBtn.addEventListener("click", function(){
+        printStudentForm(sub, instRows, facRows, careerNames, evalRow);
       });
     }
 
@@ -1142,5 +1170,135 @@
         FP.toast.success("Office evaluation saved successfully");
       });
     });
+  }
+
+  // Flattens grouped preference rows (preference_group + rank) into a
+  // single list ordered by global position (1-20), same convention
+  // used throughout the site -- Group 2's 1st slot is position 6, etc.
+  function flattenPrefsForPrint(rows, nameLookup){
+    return rows
+      .map(function(r){
+        var pos = (r.preference_group - 1) * 5 + r.rank;
+        var name = r.custom_institute_name || r.custom_faculty_name || nameLookup[r.institute_id || r.faculty_id] || null;
+        return name ? { pos: pos, name: name } : null;
+      })
+      .filter(Boolean)
+      .sort(function(a, b){ return a.pos - b.pos; });
+  }
+
+  function printStudentForm(sub, instRows, facRows, careerNames, evalRow){
+    var p = sub.students || {};
+    evalRow = evalRow || {};
+    var name = titleCase(p.student_name || "Student");
+
+    var instList = flattenPrefsForPrint(instRows, lookups.institutes);
+    var facList = flattenPrefsForPrint(facRows, lookups.faculties);
+    var recommendations = [];
+    for(var i=1;i<=12;i++){
+      if(evalRow["recommendation_"+i]) recommendations.push(evalRow["recommendation_"+i]);
+    }
+
+    function rowHtml(label, value){
+      return "<tr><td class=\"label\">" + esc(label) + "</td><td>" + esc(value || "\u2014") + "</td></tr>";
+    }
+    function prefListHtml(list){
+      if(!list.length) return "<p class=\"empty\">No preferences submitted yet.</p>";
+      return "<ol class=\"pref-list\">" + list.map(function(item){
+        return "<li value=\"" + item.pos + "\">" + esc(item.name) + "</li>";
+      }).join("") + "</ol>";
+    }
+
+    var generatedAt = new Date().toLocaleString(undefined, {
+      year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit"
+    });
+
+    var doc =
+      "<!DOCTYPE html><html><head><meta charset=\"UTF-8\">" +
+      "<title>" + esc(name) + " | Future Pathways Form</title>" +
+      "<style>" +
+        "@page{ size: A4; margin: 16mm; }" +
+        "*{ box-sizing:border-box; }" +
+        "body{ font-family: -apple-system, 'Segoe UI', Inter, Arial, sans-serif; color:#1a1a1a; margin:0; padding:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }" +
+        ".report-header{ display:flex; align-items:baseline; justify-content:space-between; border-bottom:2px solid #1a1a1a; padding-bottom:10px; margin-bottom:16px; }" +
+        ".report-title{ font-size:20px; font-weight:700; letter-spacing:-0.01em; }" +
+        ".report-meta{ font-size:11px; color:#555; text-align:right; }" +
+        "h2{ font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:#444; border-bottom:1px solid #ddd; padding-bottom:4px; margin:20px 0 8px; }" +
+        "h2:first-of-type{ margin-top:0; }" +
+        "table{ width:100%; border-collapse:collapse; font-size:12px; }" +
+        "td{ padding:5px 8px; border-bottom:1px solid #eee; vertical-align:top; }" +
+        "td.label{ width:36%; color:#666; font-weight:600; }" +
+        ".two-col{ display:grid; grid-template-columns:1fr 1fr; gap:0 24px; }" +
+        ".pref-list{ margin:0; padding-left:22px; font-size:12px; columns:2; column-gap:24px; }" +
+        ".pref-list li{ break-inside: avoid; padding:2px 0; }" +
+        ".empty{ font-size:12px; color:#888; font-style:italic; margin:4px 0; }" +
+        "ul.recs{ margin:4px 0; padding-left:18px; font-size:12px; }" +
+        "ul.recs li{ padding:2px 0; }" +
+        ".report-footer{ margin-top:20px; font-size:10px; color:#888; text-align:right; }" +
+        "section{ page-break-inside: avoid; }" +
+      "</style></head><body>" +
+      "<div class=\"report-header\">" +
+        "<div class=\"report-title\">" + esc(name) + "</div>" +
+        "<div class=\"report-meta\">Future Pathways Form &middot; KIPS College<br>Generated " + esc(generatedAt) + "</div>" +
+      "</div>" +
+
+      "<section><h2>Student Information</h2><table>" +
+        rowHtml("Full name", titleCase(p.student_name)) +
+        rowHtml("Father's name", titleCase(p.father_name)) +
+        rowHtml("Father's profession", p.father_profession) +
+        rowHtml("Contact", p.contact) +
+        rowHtml("Discipline", p.discipline) +
+        rowHtml("Section", p.section) +
+        rowHtml("Roll number", p.roll_number) +
+        rowHtml("Matric marks", p.matric_marks != null ? p.matric_marks : null) +
+        rowHtml("First year marks", p.first_year_marks != null ? p.first_year_marks : null) +
+        rowHtml("Pathway", sub.pathway) +
+        rowHtml("Status", sub.status) +
+        rowHtml("Submitted", sub.submitted_at ? new Date(sub.submitted_at).toLocaleString() : null) +
+      "</table></section>" +
+
+      "<section><h2>Programs &amp; Careers</h2><p style=\"font-size:12px; margin:4px 0;\">" + esc(careerNames.join(", ") || "\u2014") + "</p></section>" +
+
+      "<section><h2>Institute Preferences (1st\u201320th)</h2>" + prefListHtml(instList) + "</section>" +
+
+      "<section><h2>Faculty Preferences (1st\u201320th)</h2>" + prefListHtml(facList) + "</section>" +
+
+      "<section><h2>Additional Information</h2><p style=\"font-size:12px; margin:4px 0;\">" + esc(sub.additional_information || "\u2014") + "</p></section>" +
+
+      (recommendations.length || evalRow.remarks ?
+        "<section><h2>Office Evaluation</h2>" +
+        (recommendations.length ? "<ul class=\"recs\">" + recommendations.map(function(r){ return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>" : "") +
+        (evalRow.remarks ? "<p style=\"font-size:12px;\"><strong>Remarks:</strong> " + esc(evalRow.remarks) + "</p>" : "") +
+        (evalRow.counsellor_name ? "<p style=\"font-size:12px;\"><strong>Counsellor:</strong> " + esc(evalRow.counsellor_name) + "</p>" : "") +
+        (evalRow.principal ? "<p style=\"font-size:12px;\"><strong>Principal:</strong> " + esc(evalRow.principal) + "</p>" : "") +
+        "</section>"
+        : "") +
+
+      "<div class=\"report-footer\">Future Pathways &middot; KIPS College</div>" +
+      "</body></html>";
+
+    var iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.left = "-10000px";
+    iframe.style.top = "-10000px";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    document.body.appendChild(iframe);
+
+    var idoc = iframe.contentWindow.document;
+    idoc.open();
+    idoc.write(doc);
+    idoc.close();
+
+    function cleanup(){
+      if(iframe.parentNode) iframe.parentNode.removeChild(iframe);
+    }
+    iframe.contentWindow.onafterprint = cleanup;
+    setTimeout(cleanup, 15000);
+
+    setTimeout(function(){
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    }, 250);
   }
 })();

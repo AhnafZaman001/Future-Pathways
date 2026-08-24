@@ -112,6 +112,7 @@ input[type="number"],
 input[type="email"],
 input[type="password"],
 input[type="search"],
+input[type="tel"],
 select,
 textarea{
   -webkit-appearance: none;

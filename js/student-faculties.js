@@ -129,23 +129,27 @@
   // ---------------------------------------------------------
   // Rendering
   // ---------------------------------------------------------
-  function renderTable(){
+  function getFilteredRows(){
     var nameFilter = document.getElementById("sf-filter-name").value.trim().toLowerCase();
     var pathwayFilter = document.getElementById("sf-filter-pathway").value;
     var priorityFilter = document.getElementById("sf-filter-priority").value;
 
-    var rows = submissions.filter(function(s){
+    return submissions.filter(function(s){
       var name = titleCase((s.students && s.students.student_name) || "");
       return (!nameFilter || name.toLowerCase().indexOf(nameFilter) !== -1)
         && (!pathwayFilter || s.pathway === pathwayFilter)
         && (!priorityFilter || facultyByFpId[s.id] === priorityFilter);
     });
+  }
+
+  function renderTable(){
+    var rows = getFilteredRows();
 
     var tbody = document.getElementById("sf-tbody");
     tbody.innerHTML = rows.map(function(s){
       var name = titleCase((s.students && s.students.student_name) || "") || "(no profile yet)";
       var faculty = facultyByFpId[s.id] || "\u2014";
-      return '<tr>' +
+      return '<tr data-id="' + s.id + '">' +
         '<td><strong>' + esc(name) + '</strong></td>' +
         '<td class="fp-cap">' + esc(s.pathway) + '</td>' +
         '<td>' + esc(faculty) + '</td>' +
@@ -154,6 +158,16 @@
     }).join("");
 
     document.getElementById("sf-empty-hint").hidden = rows.length > 0;
+
+    // Clicking a row opens the SAME detail view admin.html uses --
+    // rather than duplicating renderDetail's ~150 lines here, this
+    // just navigates to admin.html with a ?open=<id> param that its
+    // own applySubmissions() checks for on load (see fp-admin.js).
+    document.querySelectorAll("#sf-tbody tr[data-id]").forEach(function(tr){
+      tr.addEventListener("click", function(){
+        window.location.href = "admin.html?open=" + encodeURIComponent(tr.dataset.id);
+      });
+    });
   }
 
   document.getElementById("sf-filter-name").addEventListener("input", renderTable);
@@ -180,4 +194,89 @@
 
   document.getElementById("sf-priority-prev").addEventListener("click", function(){ stepPriority(-1); });
   document.getElementById("sf-priority-next").addEventListener("click", function(){ stepPriority(1); });
+
+  // ---------------------------------------------------------
+  // Print -- same hidden-iframe technique as admin.html's printout
+  // (no visible new tab, straight to the OS/browser print dialog).
+  // Always reflects whichever of the 20 preference positions is
+  // currently selected, same as the on-screen table.
+  // ---------------------------------------------------------
+  document.getElementById("sf-print-list").addEventListener("click", function(){
+    var rows = getFilteredRows();
+    if(!rows.length){
+      FP.toast.info("No students match the current filters to print.");
+      return;
+    }
+
+    var priorityColLabel = ordinal(priorityN) + " Priority Faculty";
+    var generatedAt = new Date().toLocaleString(undefined, {
+      year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit"
+    });
+
+    var rowsHtml = rows.map(function(s){
+      var name = titleCase((s.students && s.students.student_name) || "");
+      var faculty = facultyByFpId[s.id] || "\u2014";
+      return "<tr>" +
+        "<td>" + esc(name) + "</td>" +
+        "<td class=\"cap\">" + esc(s.pathway) + "</td>" +
+        "<td>" + esc(faculty) + "</td>" +
+        "<td class=\"cap\">" + esc(s.status) + "</td>" +
+      "</tr>";
+    }).join("");
+
+    var doc =
+      "<!DOCTYPE html><html><head><meta charset=\"UTF-8\">" +
+      "<title>Student Faculties</title>" +
+      "<style>" +
+        "@page{ size: A4 landscape; margin: 16mm 14mm; }" +
+        "*{ box-sizing:border-box; }" +
+        "body{ font-family: -apple-system, 'Segoe UI', Inter, Arial, sans-serif; color:#1a1a1a; margin:0; padding:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }" +
+        ".report-header{ display:flex; align-items:baseline; justify-content:space-between; border-bottom:2px solid #1a1a1a; padding-bottom:10px; margin-bottom:4px; }" +
+        ".report-title{ font-size:18px; font-weight:700; letter-spacing:-0.01em; }" +
+        ".report-meta{ font-size:11px; color:#555; text-align:right; }" +
+        ".report-filters{ font-size:11px; color:#555; margin:6px 0 16px; }" +
+        "table{ width:100%; border-collapse:collapse; font-size:12px; }" +
+        "thead th{ text-align:left; background:#f0f0f0; border:1px solid #ccc; padding:6px 8px; font-weight:600; }" +
+        "tbody td{ border:1px solid #ddd; padding:6px 8px; }" +
+        "tbody tr:nth-child(even){ background:#fafafa; }" +
+        ".cap{ text-transform:capitalize; }" +
+        "tr{ page-break-inside: avoid; }" +
+        ".report-footer{ margin-top:14px; font-size:10px; color:#888; text-align:right; }" +
+      "</style></head><body>" +
+      "<div class=\"report-header\">" +
+        "<div class=\"report-title\">Future Pathways | Student Faculties</div>" +
+        "<div class=\"report-meta\">KIPS Counsellor Office<br>Generated " + esc(generatedAt) + "</div>" +
+      "</div>" +
+      "<div class=\"report-filters\">" + rows.length + " student" + (rows.length === 1 ? "" : "s") + "</div>" +
+      "<table><thead><tr>" +
+        "<th>Student</th><th>Pathway</th><th>" + esc(priorityColLabel) + "</th><th>Status</th>" +
+      "</tr></thead><tbody>" + rowsHtml + "</tbody></table>" +
+      "<div class=\"report-footer\">Future Pathways | KIPS College</div>" +
+      "</body></html>";
+
+    var iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.left = "-10000px";
+    iframe.style.top = "-10000px";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    document.body.appendChild(iframe);
+
+    var idoc = iframe.contentWindow.document;
+    idoc.open();
+    idoc.write(doc);
+    idoc.close();
+
+    function cleanup(){
+      if(iframe.parentNode) iframe.parentNode.removeChild(iframe);
+    }
+    iframe.contentWindow.onafterprint = cleanup;
+    setTimeout(cleanup, 15000);
+
+    setTimeout(function(){
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    }, 250);
+  });
 })();

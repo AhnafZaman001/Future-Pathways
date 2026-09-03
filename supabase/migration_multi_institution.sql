@@ -441,3 +441,26 @@ $$;
 grant execute on function public.counsellor_delete_student(uuid) to authenticated;
 grant execute on function public.counsellor_create_student() to authenticated;
 grant execute on function public.counsellor_reset_submission(uuid) to authenticated;
+
+-- ---------------------------------------------------------
+-- 8. Fix an oversight from step 1: the institutions table itself
+-- was never given RLS + a policy, only a plain GRANT. Harmless as
+-- long as RLS stays disabled on it (grants alone controlled access
+-- correctly), but inconsistent with every other table in this
+-- schema, and if RLS gets enabled on it without a policy first,
+-- Postgres defaults to denying everything -- silently breaking
+-- every institution-name lookup in the app. Fixing properly now:
+-- enable RLS AND add the read policy together, so there's no
+-- window where one exists without the other.
+-- ---------------------------------------------------------
+alter table public.institutions enable row level security;
+
+drop policy if exists "Anyone can read institutions" on public.institutions;
+create policy "Anyone can read institutions"
+  on public.institutions for select
+  to anon, authenticated
+  using (true);
+
+-- No insert/update/delete policy given on purpose -- institutions
+-- are meant to be a small, fixed list managed directly via the
+-- Supabase dashboard/SQL editor, not edited through the app.

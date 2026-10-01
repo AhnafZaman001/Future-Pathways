@@ -435,6 +435,7 @@
     renderStatusBanner();
     var step = STEPS[state.stepIndex];
     var container = document.getElementById("fp-step-container");
+    if(step !== "review") reviewEditKey = null;
     var focusInfo = captureFocus(container);
     container.innerHTML = RENDERERS[step]();
     bindStepEvents(step);
@@ -552,6 +553,17 @@
     return String(s || "").toLowerCase().replace(/\b\w/g, function(c){ return c.toUpperCase(); });
   }
 
+  // Review-step inline editing: which row (if any) is currently open.
+  var reviewEditKey = null;
+  var DISCIPLINES = ["Pre-Engineering","Pre-Medical","ICS","Commerce","Arts / Humanities","Forces (PAF/Army/Navy)","Other"];
+  // [state.profile key, label, input type]
+  var REVIEW_FIELDS = [
+    ["student_name","Name","text"], ["father_name","Father's name","text"], ["father_profession","Father's profession","text"],
+    ["contact","Contact","tel"], ["discipline","Discipline","select"], ["section","Section","text"],
+    ["roll_number","Roll number","text"], ["matric_marks","Matric marks","number"], ["first_year_marks","FSc Part 1 marks","number"]
+  ];
+  var REVIEW_REQUIRED = ["student_name","father_name","contact","discipline","roll_number","matric_marks","first_year_marks"];
+
   var RENDERERS = {
     profile: function(){
       var p = state.profile;
@@ -658,23 +670,60 @@
           '&#10003; TRANSMITTED | ' + esc(stampDate.toISOString().replace("T"," ").slice(0,19)) + ' UTC</div>';
       }
 
+      var canEdit = !(state.status === "submitted" && !state.actingAsStaff);
+      var hint = canEdit
+        ? 'Check everything before submitting. Use <strong>Edit</strong> next to a student detail or your notes to fix it right here. Preferences are changed on their own steps.'
+        : 'Check everything before submitting. This cannot be edited after submission.';
+
       return '<h2 class="fp-step-title">Review</h2>' +
         stampHtml +
-        '<p class="fp-step-desc">Check everything before submitting. This cannot be edited after submission.</p>' +
-        reviewSection("Student information", [
-          ["Name", p.student_name], ["Father's name", p.father_name], ["Father's profession", p.father_profession],
-          ["Contact", p.contact], ["Discipline", p.discipline], ["Section", p.section],
-          ["Roll number", p.roll_number], ["Matric marks", p.matric_marks], ["FSc Part 1 marks", p.first_year_marks]
-        ]) +
+        '<p class="fp-step-desc">' + hint + '</p>' +
+        '<div class="fp-review-section"><h4>Student information</h4>' +
+          REVIEW_FIELDS.map(function(f){ return editableRow(f[0], f[1], p[f[0]], canEdit); }).join("") +
+        '</div>' +
         reviewSection("Pathway", [["Selected", state.pathway === "medical" ? "Medical / Health Sciences" : "Engineering / Non-Medical"]]) +
         '<div class="fp-review-section"><h4>Institute preferences</h4>' + instHtml + '</div>' +
         '<div class="fp-review-section"><h4>Faculty preferences</h4>' + facHtml + '</div>' +
-        reviewSection("Additional information", [["Notes", state.additionalInfo || "\u2014"]]);
+        '<div class="fp-review-section"><h4>Additional information</h4>' +
+          editableRow("additionalInfo", "Notes", state.additionalInfo, canEdit) +
+        '</div>';
 
       function reviewSection(title, rows){
         return '<div class="fp-review-section"><h4>' + title + '</h4>' +
           rows.map(function(r){ return '<div class="fp-review-row"><span>' + r[0] + '</span><span>' + esc(r[1] || "\u2014") + '</span></div>'; }).join("") +
           '</div>';
+      }
+
+      function editableRow(key, label, value, canEdit){
+        var editing = canEdit && reviewEditKey === key;
+        var cell;
+        if(editing){
+          var cur = (value == null ? "" : value);
+          var input;
+          if(key === "discipline"){
+            input = '<select id="fp-review-edit-input" data-edit-input="' + key + '">' +
+              '<option value="">select</option>' +
+              DISCIPLINES.map(function(d){ return '<option value="' + esc(d) + '"' + (cur === d ? ' selected' : '') + '>' + esc(d) + '</option>'; }).join("") +
+              '</select>';
+          } else if(key === "additionalInfo"){
+            input = '<textarea id="fp-review-edit-input" data-edit-input="' + key + '" rows="4">' + esc(cur) + '</textarea>';
+          } else {
+            var f = REVIEW_FIELDS.filter(function(x){ return x[0] === key; })[0];
+            var type = f ? f[2] : "text";
+            input = '<input id="fp-review-edit-input" data-edit-input="' + key + '" type="' + type + '" value="' + esc(cur) + '"' +
+              (key === "contact" ? ' maxlength="11" inputmode="numeric" placeholder="03XXXXXXXXX"' : '') + '>';
+          }
+          cell = '<span class="fp-review-val fp-review-editing">' + input +
+            '<span class="fp-review-edit-actions">' +
+              '<button type="button" class="btn-primary fp-edit-save" data-edit-save="' + key + '">Save</button>' +
+              '<button type="button" class="btn-ghost fp-edit-cancel" data-edit-cancel="' + key + '">Cancel</button>' +
+            '</span></span>';
+        } else {
+          cell = '<span class="fp-review-val"><span class="fp-review-text">' + esc(value || "\u2014") + '</span>' +
+            (canEdit ? '<button type="button" class="btn-ghost fp-edit-btn" data-edit="' + key + '" aria-label="Edit ' + esc(label) + '">Edit</button>' : '') +
+            '</span>';
+        }
+        return '<div class="fp-review-row' + (editing ? ' is-editing' : '') + '"><span>' + label + '</span>' + cell + '</div>';
       }
     }
   };
@@ -796,8 +845,100 @@
       });
   }
 
+
+  // ---------------------------------------------------------
+  // Review step: edit student details / notes in place
+  // ---------------------------------------------------------
+  function validateReviewValue(key, value){
+    var v = (value == null ? "" : String(value)).trim();
+    if(key === "additionalInfo") return null;
+    if(REVIEW_REQUIRED.indexOf(key) > -1 && !v) return "This field can't be empty.";
+    if(key === "contact"){
+      if(v.length !== 11) return "Contact number must be exactly 11 digits \u2014 e.g. 03214908865.";
+      if(v.indexOf("03") !== 0) return "Contact number must start with 03 \u2014 e.g. 03214908865.";
+    }
+    return null;
+  }
+
+  function commitReviewEdit(key, rawValue){
+    if(state.saving) return;
+    var err = validateReviewValue(key, rawValue);
+    if(err){ if(FP.toast) FP.toast.error(err); return; }
+
+    var value = String(rawValue).trim();
+    if(key === "contact") value = value.replace(/\D/g, "").slice(0, 11);
+    var isNotes = key === "additionalInfo";
+    var previous = isNotes ? state.additionalInfo : state.profile[key];
+    if(value === String(previous == null ? "" : previous)){ reviewEditKey = null; render(); focusEditButton(key); return; }
+
+    if(isNotes) state.additionalInfo = value; else state.profile[key] = value;
+    state.saving = true;
+    var save = isNotes ? saveDraftShell() : saveProfile().then(saveDraftShell);
+    save.then(function(){
+      state.saving = false;
+      reviewEditKey = null;
+      render();
+      focusEditButton(key);
+      if(FP.toast) FP.toast.success("Saved.");
+    }).catch(function(e){
+      console.error(e);
+      state.saving = false;
+      if(isNotes) state.additionalInfo = previous; else state.profile[key] = previous;
+      if(FP.toast) FP.toast.error("Couldn't save that change: " + (e.message || e));
+    });
+  }
+
+  function focusEditButton(key){
+    var btn = document.querySelector('[data-edit="' + key + '"]');
+    if(btn) btn.focus({ preventScroll: true });
+  }
+
+  function bindReviewEvents(container){
+    container.querySelectorAll("[data-edit]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        reviewEditKey = btn.dataset.edit;
+        render();
+        var input = document.getElementById("fp-review-edit-input");
+        if(input){
+          input.focus();
+          if(input.select && input.tagName !== "SELECT") input.select();
+        }
+      });
+    });
+    container.querySelectorAll("[data-edit-save]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var input = document.getElementById("fp-review-edit-input");
+        if(input) commitReviewEdit(btn.dataset.editSave, input.value);
+      });
+    });
+    container.querySelectorAll("[data-edit-cancel]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var key = btn.dataset.editCancel;
+        reviewEditKey = null; render(); focusEditButton(key);
+      });
+    });
+    var input = document.getElementById("fp-review-edit-input");
+    if(input){
+      var key = input.dataset.editInput;
+      input.addEventListener("input", function(){
+        if(key === "contact") input.value = input.value.replace(/\D/g, "").slice(0, 11);
+      });
+      input.addEventListener("keydown", function(e){
+        if(e.key === "Escape"){ e.preventDefault(); reviewEditKey = null; render(); focusEditButton(key); return; }
+        if(e.key === "Enter"){
+          // Notes is multi-line: Ctrl/Cmd+Enter saves, plain Enter adds a line.
+          if(input.tagName === "TEXTAREA" && !(e.ctrlKey || e.metaKey)) return;
+          e.preventDefault();
+          commitReviewEdit(key, input.value);
+        }
+      });
+    }
+  }
+
   function bindStepEvents(step){
     var container = document.getElementById("fp-step-container");
+
+    if(step === "review"){ bindReviewEvents(container); }
 
     if(step === "profile"){
       var duplicateCheckTimer = null;
@@ -1055,6 +1196,7 @@
     if(step === "profile") return saveProfile().then(saveDraftShell);
     if(step === "pathway" || step === "additional") return saveDraftShell();
     if(step === "institutes" || step === "faculties") return saveDraftShell().then(savePreferences);
+    if(step === "review") return saveProfile().then(saveDraftShell);
     return Promise.resolve();
   }
 

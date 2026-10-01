@@ -396,13 +396,49 @@
   // ---------------------------------------------------------
   // Render
   // ---------------------------------------------------------
+  // ---------------------------------------------------------
+  // Focus preservation across re-renders
+  // render() rebuilds the whole step with innerHTML, which destroys the
+  // element the admin was typing in. The browser then drops focus back to
+  // the top of the page, so the next Tab press lands on the first button
+  // instead of the next field. These helpers remember which field had
+  // focus and put it back, so Tab continues in normal sequence.
+  // ---------------------------------------------------------
+  function captureFocus(container){
+    var el = document.activeElement;
+    if(!el || el === document.body || !container.contains(el)) return null;
+    var info = { id: el.id || null, kind: el.dataset ? el.dataset.kind : null,
+                 group: el.dataset ? el.dataset.group : null, rank: el.dataset ? el.dataset.rank : null,
+                 tag: el.tagName, type: el.type || null, field: el.dataset ? el.dataset.field : null,
+                 name: el.getAttribute("name") };
+    try { info.start = el.selectionStart; info.end = el.selectionEnd; } catch(e){}
+    return info;
+  }
+
+  function restoreFocus(container, info){
+    if(!info) return;
+    var target = null;
+    if(info.id) target = document.getElementById(info.id);
+    if(!target && info.kind != null && info.group != null && info.rank != null){
+      target = container.querySelector(info.tag.toLowerCase() + '[data-kind="' + info.kind + '"][data-group="' + info.group + '"][data-rank="' + info.rank + '"]');
+    }
+    if(!target && info.name){
+      target = container.querySelector('[name="' + info.name + '"]');
+    }
+    if(!target || !container.contains(target)) return;
+    target.focus({ preventScroll: true });
+    try { if(info.start != null) target.setSelectionRange(info.start, info.end); } catch(e){}
+  }
+
   function render(){
     renderProgress();
     renderStatusBanner();
     var step = STEPS[state.stepIndex];
     var container = document.getElementById("fp-step-container");
+    var focusInfo = captureFocus(container);
     container.innerHTML = RENDERERS[step]();
     bindStepEvents(step);
+    restoreFocus(container, focusInfo);
 
     document.getElementById("fp-back").style.visibility = state.stepIndex === 0 ? "hidden" : "visible";
     var nextBtn = document.getElementById("fp-next");
